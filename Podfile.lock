@@ -1,0 +1,25 @@
+PODS:
+  - PIDatePicker (0.1.2)
+  - RDVTabBarController (1.1.9)
+  - SCPageViewController (2.0.5):
+    - SCScrollView (~> 1.1)
+  - SCScrollView (1.1.7)
+  - SWRevealViewController (2.3.0)
+  - WebViewJavascriptBridge (5.0.5)
+
+DEPENDENCIES:
+  - PIDatePicker (~> 0.1.0)
+  - RDVTabBarController
+  - SCPageViewController (~> 2.0)
+  - SWRevealViewController
+  - WebViewJavascriptBridge (~> 5.0)
+
+SPEC CHECKSUMS:
+  PIDatePicker: 36548c3466dec16e7918e533486ffe86687f65e3
+  RDVTabBarController: 67794f7a7a37f8e32f046f85ac67d06ab92d624a
+  SCPageViewController: e6223bb96f535cbe71c5b7204e130ca132ff90fa
+  SCScrollView: 59e93b7f230e7ee3c963f06dd0c67b57b8b9e237
+  SWRevealViewController: 6d3fd97f70112fd7cef9de14df4260eacce4c63a
+  WebViewJavascriptBridge: a4d502315f1b8d9a51cd6a9174147ed567ec3bc5
+
+COCOAPODS: 0.39.0

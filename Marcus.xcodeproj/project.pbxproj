@@ -1,0 +1,510 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		610FB8AD1BF1AF0F0014FEE7 /* background-stripes.png in Resources */ = {isa = PBXBuildFile; fileRef = 610FB8AB1BF1AF0F0014FEE7 /* background-stripes.png */; };
+		610FB8AE1BF1AF0F0014FEE7 /* grid_noise.png in Resources */ = {isa = PBXBuildFile; fileRef = 610FB8AC1BF1AF0F0014FEE7 /* grid_noise.png */; };
+		612825D01BEFB7BF000B25C1 /* parchment.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 612825CF1BEFB7BF000B25C1 /* parchment.jpg */; };
+		612AF3D31C65C01C003B3ABD /* scratchpad in Resources */ = {isa = PBXBuildFile; fileRef = 612AF3D21C65C01C003B3ABD /* scratchpad */; };
+		615118141BEEDEA100F2B485 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 615118131BEEDEA100F2B485 /* main.m */; };
+		615118171BEEDEA100F2B485 /* SMGAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 615118161BEEDEA100F2B485 /* SMGAppDelegate.m */; };
+		615118341BEEF44100F2B485 /* SMGViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 615118331BEEF44100F2B485 /* SMGViewController.m */; };
+		6151183B1BEEFE1C00F2B485 /* book.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118351BEEFE1C00F2B485 /* book.png */; };
+		6151183C1BEEFE1C00F2B485 /* book@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118361BEEFE1C00F2B485 /* book@2x.png */; };
+		6151183D1BEEFE1C00F2B485 /* quote.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118371BEEFE1C00F2B485 /* quote.png */; };
+		6151183E1BEEFE1C00F2B485 /* quote@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118381BEEFE1C00F2B485 /* quote@2x.png */; };
+		6151183F1BEEFE1C00F2B485 /* settings.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118391BEEFE1C00F2B485 /* settings.png */; };
+		615118401BEEFE1C00F2B485 /* settings@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6151183A1BEEFE1C00F2B485 /* settings@2x.png */; };
+		6151184B1BEF034700F2B485 /* app-info.html in Resources */ = {isa = PBXBuildFile; fileRef = 6151184A1BEF034700F2B485 /* app-info.html */; };
+		6151184D1BEF042700F2B485 /* app-info.css in Resources */ = {isa = PBXBuildFile; fileRef = 6151184C1BEF042700F2B485 /* app-info.css */; };
+		615118571BEF978300F2B485 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118561BEF978300F2B485 /* Default-568h@2x.png */; };
+		61518B101C65F33200266581 /* SMGAppDelegateCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = 61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */; };
+		61BC81351C659D6000BB26BA /* meditations-manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81321C659D6000BB26BA /* meditations-manifest.json */; };
+		61BC81361C659D6000BB26BA /* meditations-quotes.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81331C659D6000BB26BA /* meditations-quotes.json */; };
+		61BC81371C659D6000BB26BA /* meditations-verses-english-classic.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81341C659D6000BB26BA /* meditations-verses-english-classic.json */; };
+		61BC814D1C65A80700BB26BA /* jquery-1.10.2.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81421C65A80700BB26BA /* jquery-1.10.2.min.js */; };
+		61BC814E1C65A80700BB26BA /* jquery-2.1.4.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81431C65A80700BB26BA /* jquery-2.1.4.min.js */; };
+		61BC814F1C65A80700BB26BA /* jquery.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81441C65A80700BB26BA /* jquery.min.js */; };
+		61BC81501C65A80700BB26BA /* jquery.mobile-1.4.5.min.css in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81451C65A80700BB26BA /* jquery.mobile-1.4.5.min.css */; };
+		61BC81511C65A80700BB26BA /* jquery.mobile-1.4.5.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81461C65A80700BB26BA /* jquery.mobile-1.4.5.min.js */; };
+		61BC81521C65A80700BB26BA /* book.html in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81471C65A80700BB26BA /* book.html */; };
+		61BC81531C65A80700BB26BA /* meditations-book-lang-english-classic.html in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81481C65A80700BB26BA /* meditations-book-lang-english-classic.html */; };
+		61BC81541C65A80700BB26BA /* meditations-book-lang-english-modern.html in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81491C65A80700BB26BA /* meditations-book-lang-english-modern.html */; };
+		61BC81551C65A80700BB26BA /* meditations.css in Resources */ = {isa = PBXBuildFile; fileRef = 61BC814A1C65A80700BB26BA /* meditations.css */; };
+		61BC81561C65A80700BB26BA /* meditations.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC814B1C65A80700BB26BA /* meditations.js */; };
+		61BC81571C65A80700BB26BA /* quote.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC814C1C65A80700BB26BA /* quote.js */; };
+		61BC81591C65AA7C00BB26BA /* quote.html in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81581C65AA7C00BB26BA /* quote.html */; };
+		61C1C44B1C64EEB30077BC35 /* graphics.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C1C44A1C64EEB30077BC35 /* graphics.m */; };
+		61C1C44E1C6507510077BC35 /* UITabbar-Appearance.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */; };
+		61E24DA21BF755F80054D375 /* stone.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61E24DA11BF755F80054D375 /* stone.jpg */; };
+		61E24DA41BF79E7C0054D375 /* concrete.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61E24DA31BF79E7C0054D375 /* concrete.jpg */; };
+		764C17A6AD89E47DA98C4500 /* Pods_Marcus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08BF1C1EAA454DA97CC6AD6F /* Pods_Marcus.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08BF1C1EAA454DA97CC6AD6F /* Pods_Marcus.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Marcus.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CB2EC032024681E4DFAD1E8 /* Pods-Marcus.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Marcus.release.xcconfig"; path = "Pods/Target Support Files/Pods-Marcus/Pods-Marcus.release.xcconfig"; sourceTree = "<group>"; };
+		610FB8AB1BF1AF0F0014FEE7 /* background-stripes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "background-stripes.png"; sourceTree = "<group>"; };
+		610FB8AC1BF1AF0F0014FEE7 /* grid_noise.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grid_noise.png; sourceTree = "<group>"; };
+		612825CF1BEFB7BF000B25C1 /* parchment.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = parchment.jpg; sourceTree = "<group>"; };
+		612AF3D21C65C01C003B3ABD /* scratchpad */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = scratchpad; sourceTree = "<group>"; };
+		6151180F1BEEDEA100F2B485 /* Marcus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marcus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		615118131BEEDEA100F2B485 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		615118151BEEDEA100F2B485 /* SMGAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMGAppDelegate.h; sourceTree = "<group>"; };
+		615118161BEEDEA100F2B485 /* SMGAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMGAppDelegate.m; sourceTree = "<group>"; };
+		615118231BEEDEA100F2B485 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		615118321BEEF44100F2B485 /* SMGViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGViewController.h; sourceTree = "<group>"; };
+		615118331BEEF44100F2B485 /* SMGViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGViewController.m; sourceTree = "<group>"; };
+		615118351BEEFE1C00F2B485 /* book.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = book.png; sourceTree = "<group>"; };
+		615118361BEEFE1C00F2B485 /* book@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "book@2x.png"; sourceTree = "<group>"; };
+		615118371BEEFE1C00F2B485 /* quote.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = quote.png; sourceTree = "<group>"; };
+		615118381BEEFE1C00F2B485 /* quote@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "quote@2x.png"; sourceTree = "<group>"; };
+		615118391BEEFE1C00F2B485 /* settings.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings.png; sourceTree = "<group>"; };
+		6151183A1BEEFE1C00F2B485 /* settings@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settings@2x.png"; sourceTree = "<group>"; };
+		6151184A1BEF034700F2B485 /* app-info.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "app-info.html"; path = "Marcus/app-info.html"; sourceTree = "<group>"; };
+		6151184C1BEF042700F2B485 /* app-info.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = "app-info.css"; path = "Marcus/app-info.css"; sourceTree = "<group>"; };
+		615118561BEF978300F2B485 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGAppDelegateCopy.m; sourceTree = "<group>"; };
+		61BC81321C659D6000BB26BA /* meditations-manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-manifest.json"; sourceTree = "<group>"; };
+		61BC81331C659D6000BB26BA /* meditations-quotes.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-quotes.json"; sourceTree = "<group>"; };
+		61BC81341C659D6000BB26BA /* meditations-verses-english-classic.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-verses-english-classic.json"; sourceTree = "<group>"; };
+		61BC81421C65A80700BB26BA /* jquery-1.10.2.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "jquery-1.10.2.min.js"; path = "Marcus/jquery-1.10.2.min.js"; sourceTree = "<group>"; };
+		61BC81431C65A80700BB26BA /* jquery-2.1.4.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.4.min.js"; path = "Marcus/jquery-2.1.4.min.js"; sourceTree = "<group>"; };
+		61BC81441C65A80700BB26BA /* jquery.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = jquery.min.js; path = Marcus/jquery.min.js; sourceTree = "<group>"; };
+		61BC81451C65A80700BB26BA /* jquery.mobile-1.4.5.min.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = "jquery.mobile-1.4.5.min.css"; path = "Marcus/jquery.mobile-1.4.5.min.css"; sourceTree = "<group>"; };
+		61BC81461C65A80700BB26BA /* jquery.mobile-1.4.5.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "jquery.mobile-1.4.5.min.js"; path = "Marcus/jquery.mobile-1.4.5.min.js"; sourceTree = "<group>"; };
+		61BC81471C65A80700BB26BA /* book.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = book.html; path = Marcus/book.html; sourceTree = "<group>"; };
+		61BC81481C65A80700BB26BA /* meditations-book-lang-english-classic.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "meditations-book-lang-english-classic.html"; path = "Marcus/meditations-book-lang-english-classic.html"; sourceTree = "<group>"; };
+		61BC81491C65A80700BB26BA /* meditations-book-lang-english-modern.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "meditations-book-lang-english-modern.html"; path = "Marcus/meditations-book-lang-english-modern.html"; sourceTree = "<group>"; };
+		61BC814A1C65A80700BB26BA /* meditations.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = meditations.css; path = Marcus/meditations.css; sourceTree = "<group>"; };
+		61BC814B1C65A80700BB26BA /* meditations.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = meditations.js; path = Marcus/meditations.js; sourceTree = "<group>"; };
+		61BC814C1C65A80700BB26BA /* quote.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = quote.js; path = Marcus/quote.js; sourceTree = "<group>"; };
+		61BC81581C65AA7C00BB26BA /* quote.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = quote.html; path = Marcus/quote.html; sourceTree = "<group>"; };
+		61C1C44A1C64EEB30077BC35 /* graphics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = graphics.m; sourceTree = "<group>"; };
+		61C1C44C1C64EED90077BC35 /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graphics.h; sourceTree = "<group>"; };
+		61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = "UITabbar-Appearance.jpg"; path = "Marcus/UITabbar-Appearance.jpg"; sourceTree = "<group>"; };
+		61E24DA11BF755F80054D375 /* stone.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = stone.jpg; sourceTree = "<group>"; };
+		61E24DA31BF79E7C0054D375 /* concrete.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = concrete.jpg; sourceTree = "<group>"; };
+		9EB5D67883DA48182DF2D762 /* Pods-Marcus.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Marcus.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Marcus/Pods-Marcus.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6151180C1BEEDEA100F2B485 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				764C17A6AD89E47DA98C4500 /* Pods_Marcus.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5A13771689E2D7E8D083B313 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9EB5D67883DA48182DF2D762 /* Pods-Marcus.debug.xcconfig */,
+				4CB2EC032024681E4DFAD1E8 /* Pods-Marcus.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		615118061BEEDEA100F2B485 = {
+			isa = PBXGroup;
+			children = (
+				61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */,
+				615118411BEEFE3300F2B485 /* Images & App Icons */,
+				615118121BEEDEA100F2B485 /* Supporting Files */,
+				615118111BEEDEA100F2B485 /* Classes */,
+				619C0E561C658D1600BAA27A /* html */,
+				615118101BEEDEA100F2B485 /* Products */,
+				5A13771689E2D7E8D083B313 /* Pods */,
+				FC38D78D420A427B0BEF0C8F /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		615118101BEEDEA100F2B485 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6151180F1BEEDEA100F2B485 /* Marcus.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		615118111BEEDEA100F2B485 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				615118151BEEDEA100F2B485 /* SMGAppDelegate.h */,
+				615118161BEEDEA100F2B485 /* SMGAppDelegate.m */,
+				615118321BEEF44100F2B485 /* SMGViewController.h */,
+				615118331BEEF44100F2B485 /* SMGViewController.m */,
+				61C1C44A1C64EEB30077BC35 /* graphics.m */,
+				61C1C44C1C64EED90077BC35 /* graphics.h */,
+				612AF3D21C65C01C003B3ABD /* scratchpad */,
+				61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */,
+			);
+			name = Classes;
+			path = Marcus;
+			sourceTree = "<group>";
+		};
+		615118121BEEDEA100F2B485 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				61BC81321C659D6000BB26BA /* meditations-manifest.json */,
+				61BC81331C659D6000BB26BA /* meditations-quotes.json */,
+				61BC81341C659D6000BB26BA /* meditations-verses-english-classic.json */,
+				615118231BEEDEA100F2B485 /* Info.plist */,
+				615118131BEEDEA100F2B485 /* main.m */,
+			);
+			name = "Supporting Files";
+			path = Marcus;
+			sourceTree = "<group>";
+		};
+		615118411BEEFE3300F2B485 /* Images & App Icons */ = {
+			isa = PBXGroup;
+			children = (
+				61E24DA11BF755F80054D375 /* stone.jpg */,
+				61E24DA31BF79E7C0054D375 /* concrete.jpg */,
+				610FB8AB1BF1AF0F0014FEE7 /* background-stripes.png */,
+				610FB8AC1BF1AF0F0014FEE7 /* grid_noise.png */,
+				612825CF1BEFB7BF000B25C1 /* parchment.jpg */,
+				615118561BEF978300F2B485 /* Default-568h@2x.png */,
+				615118361BEEFE1C00F2B485 /* book@2x.png */,
+				615118371BEEFE1C00F2B485 /* quote.png */,
+				615118381BEEFE1C00F2B485 /* quote@2x.png */,
+				615118391BEEFE1C00F2B485 /* settings.png */,
+				6151183A1BEEFE1C00F2B485 /* settings@2x.png */,
+				615118351BEEFE1C00F2B485 /* book.png */,
+			);
+			name = "Images & App Icons";
+			path = Marcus;
+			sourceTree = "<group>";
+		};
+		619C0E561C658D1600BAA27A /* html */ = {
+			isa = PBXGroup;
+			children = (
+				61BC81421C65A80700BB26BA /* jquery-1.10.2.min.js */,
+				61BC81431C65A80700BB26BA /* jquery-2.1.4.min.js */,
+				61BC81441C65A80700BB26BA /* jquery.min.js */,
+				61BC81451C65A80700BB26BA /* jquery.mobile-1.4.5.min.css */,
+				61BC81461C65A80700BB26BA /* jquery.mobile-1.4.5.min.js */,
+				61BC81471C65A80700BB26BA /* book.html */,
+				61BC81581C65AA7C00BB26BA /* quote.html */,
+				61BC81481C65A80700BB26BA /* meditations-book-lang-english-classic.html */,
+				61BC81491C65A80700BB26BA /* meditations-book-lang-english-modern.html */,
+				61BC814A1C65A80700BB26BA /* meditations.css */,
+				61BC814B1C65A80700BB26BA /* meditations.js */,
+				61BC814C1C65A80700BB26BA /* quote.js */,
+				6151184C1BEF042700F2B485 /* app-info.css */,
+				6151184A1BEF034700F2B485 /* app-info.html */,
+			);
+			name = html;
+			sourceTree = "<group>";
+		};
+		FC38D78D420A427B0BEF0C8F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				08BF1C1EAA454DA97CC6AD6F /* Pods_Marcus.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6151180E1BEEDEA100F2B485 /* Marcus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 615118261BEEDEA100F2B485 /* Build configuration list for PBXNativeTarget "Marcus" */;
+			buildPhases = (
+				8C36B702A822B3254A4A3791 /* Check Pods Manifest.lock */,
+				6151180B1BEEDEA100F2B485 /* Sources */,
+				6151180C1BEEDEA100F2B485 /* Frameworks */,
+				6151180D1BEEDEA100F2B485 /* Resources */,
+				CBCF2055B07BF371920E7B90 /* Embed Pods Frameworks */,
+				2052662CCACF2127C16931FE /* Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Marcus;
+			productName = Marcus;
+			productReference = 6151180F1BEEDEA100F2B485 /* Marcus.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		615118071BEEDEA100F2B485 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0700;
+				ORGANIZATIONNAME = SMGMobile;
+				TargetAttributes = {
+					6151180E1BEEDEA100F2B485 = {
+						CreatedOnToolsVersion = 7.0;
+						DevelopmentTeam = AU9ACKWA7Q;
+					};
+				};
+			};
+			buildConfigurationList = 6151180A1BEEDEA100F2B485 /* Build configuration list for PBXProject "Marcus" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 615118061BEEDEA100F2B485;
+			productRefGroup = 615118101BEEDEA100F2B485 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6151180E1BEEDEA100F2B485 /* Marcus */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6151180D1BEEDEA100F2B485 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				610FB8AD1BF1AF0F0014FEE7 /* background-stripes.png in Resources */,
+				6151183B1BEEFE1C00F2B485 /* book.png in Resources */,
+				61E24DA21BF755F80054D375 /* stone.jpg in Resources */,
+				61BC814D1C65A80700BB26BA /* jquery-1.10.2.min.js in Resources */,
+				612825D01BEFB7BF000B25C1 /* parchment.jpg in Resources */,
+				61BC81531C65A80700BB26BA /* meditations-book-lang-english-classic.html in Resources */,
+				61E24DA41BF79E7C0054D375 /* concrete.jpg in Resources */,
+				61BC81521C65A80700BB26BA /* book.html in Resources */,
+				6151184B1BEF034700F2B485 /* app-info.html in Resources */,
+				61BC81551C65A80700BB26BA /* meditations.css in Resources */,
+				615118401BEEFE1C00F2B485 /* settings@2x.png in Resources */,
+				61BC814E1C65A80700BB26BA /* jquery-2.1.4.min.js in Resources */,
+				61BC81501C65A80700BB26BA /* jquery.mobile-1.4.5.min.css in Resources */,
+				6151183F1BEEFE1C00F2B485 /* settings.png in Resources */,
+				6151183C1BEEFE1C00F2B485 /* book@2x.png in Resources */,
+				61BC81371C659D6000BB26BA /* meditations-verses-english-classic.json in Resources */,
+				61BC81351C659D6000BB26BA /* meditations-manifest.json in Resources */,
+				6151183D1BEEFE1C00F2B485 /* quote.png in Resources */,
+				61BC81561C65A80700BB26BA /* meditations.js in Resources */,
+				610FB8AE1BF1AF0F0014FEE7 /* grid_noise.png in Resources */,
+				615118571BEF978300F2B485 /* Default-568h@2x.png in Resources */,
+				61BC814F1C65A80700BB26BA /* jquery.min.js in Resources */,
+				6151184D1BEF042700F2B485 /* app-info.css in Resources */,
+				612AF3D31C65C01C003B3ABD /* scratchpad in Resources */,
+				61BC81541C65A80700BB26BA /* meditations-book-lang-english-modern.html in Resources */,
+				61BC81571C65A80700BB26BA /* quote.js in Resources */,
+				6151183E1BEEFE1C00F2B485 /* quote@2x.png in Resources */,
+				61C1C44E1C6507510077BC35 /* UITabbar-Appearance.jpg in Resources */,
+				61BC81591C65AA7C00BB26BA /* quote.html in Resources */,
+				61BC81361C659D6000BB26BA /* meditations-quotes.json in Resources */,
+				61BC81511C65A80700BB26BA /* jquery.mobile-1.4.5.min.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2052662CCACF2127C16931FE /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Marcus/Pods-Marcus-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8C36B702A822B3254A4A3791 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		CBCF2055B07BF371920E7B90 /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Marcus/Pods-Marcus-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6151180B1BEEDEA100F2B485 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				615118341BEEF44100F2B485 /* SMGViewController.m in Sources */,
+				615118171BEEDEA100F2B485 /* SMGAppDelegate.m in Sources */,
+				61518B101C65F33200266581 /* SMGAppDelegateCopy.m in Sources */,
+				61C1C44B1C64EEB30077BC35 /* graphics.m in Sources */,
+				615118141BEEDEA100F2B485 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		615118241BEEDEA100F2B485 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		615118251BEEDEA100F2B485 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		615118271BEEDEA100F2B485 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9EB5D67883DA48182DF2D762 /* Pods-Marcus.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Marcus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.smgmobile.Marcus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		615118281BEEDEA100F2B485 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4CB2EC032024681E4DFAD1E8 /* Pods-Marcus.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Marcus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.smgmobile.Marcus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6151180A1BEEDEA100F2B485 /* Build configuration list for PBXProject "Marcus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				615118241BEEDEA100F2B485 /* Debug */,
+				615118251BEEDEA100F2B485 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		615118261BEEDEA100F2B485 /* Build configuration list for PBXNativeTarget "Marcus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				615118271BEEDEA100F2B485 /* Debug */,
+				615118281BEEDEA100F2B485 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 615118071BEEDEA100F2B485 /* Project object */;
+}
