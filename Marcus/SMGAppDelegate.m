@@ -7,384 +7,296 @@
 //
 //
 
-
 #import "SMGAppDelegate.h"
-#import "SMGViewController.h"
-#import "graphics.h"
+#import "SettingsVC.h"
+#import "BookVC.h"
+#import "QuoteVC.h"
+#import "SMGGraphics.h"
+#import "RDVTabBarController.h"
+#import "RDVTabBar.h"
+#import "RDVTabBarItem.h"
 
 
 
-@interface SMGAppDelegate () <UIScrollViewDelegate, UITabBarControllerDelegate, UIWebViewDelegate, UITableViewDelegate, UITableViewDataSource>
+@interface SMGAppDelegate () <RDVTabBarControllerDelegate>
 
-@property (nonatomic)                  CGRect               mainViewFrame;
-@property (nonatomic, strong)          SMGViewController*   bookVC;
-@property (nonatomic, strong)          SMGViewController*   quoteVC;
-@property (nonatomic, strong)          SMGViewController*   settingsVC;
-@property (nonatomic, strong)          SMGViewController*   tableVC;
-
-@property (nonatomic, strong)          UILabel*             myNavLabel;
-@property (nonatomic, strong)          UIView*              myNavView;
-@property (nonatomic, strong)          UIView*              settingsView;
-@property (nonatomic, strong)          UIWebView*           bookWebView;
-@property (nonatomic, strong)          UIWebView*           quoteWebView;
-@property (nonatomic, strong)          NSMutableDictionary* appState;
-@property (nonatomic, strong)          UIImage*             bgSelected;
-@property (nonatomic, strong)          UIButton*             menuButton;
-
-@property (nonatomic, strong)          UITableView*         tableView;
-@property (nonatomic, strong)          NSArray*             books;
+@property (nonatomic, strong)          RDVTabBarController* tabBarController;
+@property (nonatomic, strong)          BookVC*              bookVC;
+@property (nonatomic, strong)          QuoteVC*             quoteVC;
+@property (nonatomic, strong)          SettingsVC*          settingsVC;
 
 @end
 
 @implementation SMGAppDelegate
 
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    
+  
 #ifdef DEBUG
-    NSLog(@"Debug Mode!");
+  NSLog(@"Debug Mode!");
 #endif
-    
-    //
-    // Construct frame for views
-    // -------------------------
-    _mainViewFrame = UIScreen.mainScreen.bounds;
-    
-    //
-    // Initialize Tab Bar, Views & View Controllers
-    // --------------------------------------------
-    [self setUpApp];
-    
-    //
-    // Initialize Main Window
-    // ----------------------
-    _window = [[UIWindow alloc] initWithFrame:_mainViewFrame];
-
-    
-    //
-    // Configure Main Window
-    // ---------------------
-    [_window setRootViewController:_tabBarController];
-    [_window makeKeyAndVisible];
-    
-    return YES;
+  
+  //
+  // Initialize Tab Bar, Views & View Controllers
+  // --------------------------------------------
+  [self setUpApp];
+  
+  //
+  // Initialize Main Window
+  // ----------------------
+  _window = [[UIWindow alloc] initWithFrame: BOUNDS];
+  
+  //
+  // Configure Main Window
+  // ---------------------
+  [_window setRootViewController: _tabBarController];
+  [_window makeKeyAndVisible];
+  _window.backgroundColor = [SMGGraphics Gray33];
+  
+  return YES;
 }
-
 
 
 - (void) setUpApp {
-    
-    // Initialize Tab Bar Controller
-    _tabBarController = [[UITabBarController alloc] init];
-    _tabBarController.viewControllers = NULL;
-    
-    // Init VCs
-    _bookVC = [[SMGViewController alloc] initwithTitle:@"BOOK"];
-    _quoteVC = [[SMGViewController alloc] initwithTitle:@"Q.O.D."];
-    _settingsVC = [[SMGViewController alloc] initwithTitle:@"SETTINGS"];
-    _tableVC = [[SMGViewController alloc] init];
-    
-    // Add VCs to Tab Bar Controller
-    [_tabBarController setViewControllers: @[_bookVC,_quoteVC, _settingsVC]];
-    
-    // Initialize Views
-    // Book WebView
-    _bookWebView = [[UIWebView alloc] initWithFrame: _mainViewFrame];
-    NSURL *bookURL = [[NSBundle mainBundle] URLForResource:@"book" withExtension:@"html"];
-    [_bookWebView loadRequest:[NSURLRequest requestWithURL:bookURL]];
-    _bookWebView.delegate = self;
-    _bookWebView.scrollView.bounces = NO;
-    
-    // Quote WebView
-    _quoteWebView = [[UIWebView alloc] initWithFrame: _mainViewFrame];
-    NSURL *quoteURL = [[NSBundle mainBundle] URLForResource:@"quote" withExtension:@"html"];
-    [_quoteWebView loadRequest:[NSURLRequest requestWithURL:quoteURL]];
-    _quoteWebView.delegate = self;
-    _quoteWebView.scrollView.bounces = NO;
-    
-    // Settings View
-    
-    // Table Views
-    _tableView = [[UITableView alloc] initWithFrame:_mainViewFrame];
-    _tableView.delegate = self;
-    _tableView.dataSource = self;
-    [_tableView reloadData];
-    
-    
-    // Add Views to VCs
-    _bookVC.view = _bookWebView;
-    _quoteVC.view = _quoteWebView;    
-    _tableVC.view = _tableView;
-    
-    // Set Up Tab, Nav Bars Color & Style, NavBar
-    [self customizeTabBar];
-    [self makeNavBar];
-    
-    
-    // Hide Tab Bar When Pressing on Book View
-    //_bookVC.hidesBottomBarWhenPushed = YES;
-    
-}
+  
+  //
+  // Get App Settings
+  //-----------------
+  [self getAppSettings];
+  
+  //
+  // Initialize Main VCs
+  // -------------------
+  _bookVC = [[BookVC alloc] initWithTabTitle:@"BOOK" headerTitle:@"M E D I T A T I O N S"];
+  _quoteVC = [[QuoteVC alloc] initWithTabTitle:@"Q.O.D." headerTitle:@"Q U O T E"];
+  _settingsVC = [[SettingsVC alloc] initWithTabTitle:@"SETTINGS" headerTitle:@"S E T T I N G S"];
+  
+  //
+  // Set Up TabBar
+  // -------------
+  _tabBarController = [[RDVTabBarController alloc] init];
+  [_tabBarController setViewControllers: @[_bookVC, _quoteVC, _settingsVC]];
 
-- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController {
-    // If a certain view selected do something spesh
-    
-}
+  //
+  // Set Status Bar
+  // --------------
+  [_tabBarController showStatusBar: _statusBarShown]; // _statusBarShown also queried by VCs
 
+  //
+  // Style TabBar
+  // ------------
+  RDVTabBar* tabBar = _tabBarController.tabBar;
+  tabBar.backgroundView.backgroundColor = [SMGGraphics Gray33];
 
-- (void) makeNavBar {
+  NSDictionary* unselectedTextAttributes = @{
+                                             NSFontAttributeName: [UIFont systemFontOfSize:10.5],
+                                             NSForegroundColorAttributeName: [UIColor whiteColor],
+                                             };
+  NSDictionary* selectedTextAttributes = @{
+                                             NSFontAttributeName: [UIFont systemFontOfSize:10.5],
+                                             NSForegroundColorAttributeName: [SMGGraphics Blue22AADD],
+                                             };
+  NSInteger count = 1;
+  for (RDVTabBarItem *item in tabBar.items) {
     
-    // Custom Nav Bar
-    _myNavView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _mainViewFrame.size.width, _mainViewFrame.size.height/18.0)];
-    _myNavLabel = [[UILabel alloc] initWithFrame: _myNavView.frame];
-    
-    _myNavLabel.textColor = [UIColor whiteColor];
-    _myNavLabel.text = @"M E D I T A T I O N S";
-    _myNavLabel.textAlignment = NSTextAlignmentCenter;
-    _myNavLabel.font = [UIFont boldSystemFontOfSize:14];
-    _myNavView.backgroundColor = [[self colorWithHexString:@"#22aadd"] colorWithAlphaComponent:.9];
-
-    UIImageView * myNavBG = [[UIImageView alloc] initWithImage:_bgSelected]; //make better later
-    myNavBG.frame =  _myNavView.frame;
-
-    [_myNavView addSubview:myNavBG];
-    [_tabBarController.view addSubview: _myNavView];
-    [_tabBarController.view addSubview: _myNavLabel];
-    //[_bookVC.view addSubview: _myNavView];
-    
-    // Create Menu Button
-    _menuButton = [[UIButton alloc] init];
-    _menuButton.frame = CGRectMake(0, 0, _myNavView.frame.size.width/10, _myNavView.frame.size.height);
-    //[self makeButtonStates];
-    [_menuButton setTitle:@"☰" forState:UIControlStateNormal];
-//    UILabel *menuLabel = [[UILabel alloc]initWithFrame:_menuButton.frame];
-  //  menuLabel.text = @"☰";
-    // _menuButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:.2];
-
-     //setBackgroundImage:_menuClosedBI forState:UIControlStateNormal];
-    [_myNavView addSubview:_menuButton];
-    
-    
+    UIImage *selectedimage = [SMGGraphics imageForTab:count withColor:[SMGGraphics Blue22AADD]];
+    UIImage *unselectedimage = [SMGGraphics imageForTab:count withColor:[UIColor whiteColor]];
+    [item setFinishedSelectedImage:selectedimage withFinishedUnselectedImage:unselectedimage];
+    [item setUnselectedTitleAttributes:unselectedTextAttributes];
+    [item setSelectedTitleAttributes:selectedTextAttributes];
+    [item setTitlePositionAdjustment:UIOffsetMake(0, 3.5)];
+    count++;
+  }
+  
+  //
+  // Make TabBar Line
+  // ----------------
+  UIView *lineAboveTab = [[UIView alloc] initWithFrame:CGRectMake(0, -1, BOUNDS.size.width, 1)];
+  lineAboveTab.backgroundColor = [SMGGraphics Gray66];
+  [tabBar.backgroundView addSubview:lineAboveTab];
   
 }
 
-- (void) customizeTabBar {
+- (void) getAppSettings {
+  // Reset defaults -- debugging
+   NSString *domainName = [[NSBundle mainBundle] bundleIdentifier];
+   [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:domainName];
+  
+  
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  
+  // Check if first run by checking for existance of quoteTime
+  if ([defaults integerForKey:@"quoteTime"]) {
+    NSLog(@"App has been run before and quote time set to %ld.", (long)[defaults integerForKey:@"quoteTime"]);
+    // If not, load existing settings
+    [self loadSettings];
     
-    UITabBar* tabBar = _tabBarController.tabBar;
-    
-    //tabBar.frame = CGRectMake(0,_mainViewFrame.size.height-35.0, _mainViewFrame.size.width,35.0);
-    
-    UIColor * selectedColor =  [UIColor whiteColor];
-    UIColor * unselectedColor =  [self colorWithHexString:@"#22aadd"]; //colorWithAlphaComponent:.2];
-    
-    UIColor * selectedBGColor =  [self colorWithHexString:@"#22aadd"]; // colorWithAlphaComponent:.2];
+  } else { // Else ** first run **, so set default settings
+  NSLog(@"First run.");
+  _statusBarShown = YES;
+  _dailyQuoteOn = NO;
+  _quoteTime = 800;
+  _book = 1;
+  _verse = 1;
+  [self saveAllSettings];
+  }
 
-    
-    // Background color of the Tab Bar Views
-    _tabBarController.view.backgroundColor = [self colorWithHexString:@"191919"];
-    
-    // Background color of the Tab Bar
-    tabBar.barTintColor = [UIColor blackColor];
-    
-    // Translucent Tab Bar
-    /*tabBar.barStyle = UIBarStyleBlack;
-    tabBar.translucent = YES;*/
-    
-    // Image of tab bar icon when selected
-    [tabBar.items objectAtIndex:0].selectedImage = [Graphics imageOfBook];
-    [tabBar.items objectAtIndex:1].selectedImage = [Graphics imageOfQuote];
-    [tabBar.items objectAtIndex:2].selectedImage = [Graphics imageOfSettings];
-    
-    // Color of the tab bar icons when selected
-    tabBar.tintColor = selectedColor;
-    
-    // Image and color of the tab bar icons when unselected
-    [tabBar.items objectAtIndex:0].image = [[Graphics imageOfBookWithColor:unselectedColor] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    [tabBar.items objectAtIndex:1].image = [[Graphics imageOfQuoteWithColor:unselectedColor] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    [tabBar.items objectAtIndex:2].image = [[Graphics imageOfSettingsWithColor:unselectedColor] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    
-    // Tab Bar Fonts, Selected & Unselected Colors
-    [[UITabBarItem appearance] setTitleTextAttributes:@{NSFontAttributeName : [UIFont fontWithName:@"HelveticaNeue-Bold" size:10.0f], NSForegroundColorAttributeName : unselectedColor }
-                                             forState:UIControlStateNormal];
-    [[UITabBarItem appearance] setTitleTextAttributes:@{ NSForegroundColorAttributeName : selectedColor }
-                                             forState:UIControlStateSelected];
-    
-    
-    
-    // Renders selection indicator background
-    NSInteger numTabs = tabBar.items.count;
-    CGSize tabBarItemSize = CGSizeMake(tabBar.frame.size.width / numTabs, tabBar.frame.size.height);
-    UIGraphicsBeginImageContext(tabBarItemSize);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    
-    // This renders a solid background
-    UIColor *bgColor = selectedBGColor;
-    CGContextSetFillColorWithColor(context, bgColor.CGColor);
-    CGContextFillRect(context, (CGRect){.size = tabBarItemSize});
-    
-    // This renders a gradient overlay
-    CGGradientRef myGradient;
-    CGColorSpaceRef myColorspace;
-    size_t num_locations = 2;
-    CGFloat locations[2] = { 0.0, 1.0 };
-    CGFloat components[8] = { 0, 0, 0, .2,  // Start color
-        0.9, 0.9, 1.0, .2}; // End color
-    myColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    myGradient = CGGradientCreateWithColorComponents (myColorspace, components,
-                                                      locations, num_locations);
-    CGContextDrawLinearGradient (context, myGradient, CGPointZero, CGPointMake(0, tabBarItemSize.height), 0);
-    
-    // Set selection indicator background
-    _bgSelected = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    tabBar.selectionIndicatorImage = _bgSelected;
 }
 
+- (void) loadSettings {
 
--(UIColor*) colorWithHexString:(NSString*)hex {
-    
-    NSString *cString = [[hex stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
-    
-    // String should be 6 or 8 characters
-    if ([cString length] < 6) return [UIColor grayColor];
-    // strip 0X, # if it appears
-    if ([cString hasPrefix:@"0X"]) cString = [cString substringFromIndex:2];
-    if ([cString hasPrefix:@"#"]) cString = [cString substringFromIndex:1];
-    if ([cString length] != 6) return  [UIColor grayColor];
-    
-    // Separate into r, g, b substrings
-    NSRange range;
-    range.location = 0;
-    range.length = 2;
-    NSString *rString = [cString substringWithRange:range];
-    range.location = 2;
-    NSString *gString = [cString substringWithRange:range];
-    range.location = 4;
-    NSString *bString = [cString substringWithRange:range];
-    
-    // Scan values
-    unsigned int r, g, b;
-    [[NSScanner scannerWithString:rString] scanHexInt:&r];
-    [[NSScanner scannerWithString:gString] scanHexInt:&g];
-    [[NSScanner scannerWithString:bString] scanHexInt:&b];
-    
-    return [UIColor colorWithRed:((float) r / 255.0f)
-                           green:((float) g / 255.0f)
-                            blue:((float) b / 255.0f)
-                           alpha:1.0f];
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  _book = [defaults integerForKey:@"chapter"];
+  _verse = [defaults integerForKey:@"verse"];
+  _dailyQuoteOn = (BOOL)[defaults integerForKey:@"dailyQuoteOn"];
+  _quoteTime = [defaults integerForKey:@"quoteTime"];
+  _statusBarShown = (BOOL)[defaults integerForKey:@"statusBarShown"];
+  NSLog(@"Data loaded");
+  
+  // If allowed reschedule 64 local notifications (not using push notifications for now)
+  if (_dailyQuoteOn == YES) {
+    NSLog(@"**Attempting to reschedule notifications**");
+    [self scheduleDailyNotificationAtTime:_quoteTime];
+  } else  { }
+  
 }
 
-- (UIImage*)imageWithShadowForImage:(UIImage *)initialImage {
-    
-    CGColorSpaceRef colourSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef shadowContext = CGBitmapContextCreate(NULL, initialImage.size.width, initialImage.size.height + 10, CGImageGetBitsPerComponent(initialImage.CGImage), 0, colourSpace, kCGImageAlphaPremultipliedLast);
-    CGColorSpaceRelease(colourSpace);
-    
-    CGContextSetShadowWithColor(shadowContext, CGSizeMake(0,0), 5, [UIColor yellowColor].CGColor);
-    CGContextDrawImage(shadowContext, CGRectMake(5, 5, initialImage.size.width, initialImage.size.height), initialImage.CGImage);
-    
-    CGImageRef shadowedCGImage = CGBitmapContextCreateImage(shadowContext);
-    CGContextRelease(shadowContext);
-    
-    UIImage * shadowedImage = [UIImage imageWithCGImage:shadowedCGImage];
-    CGImageRelease(shadowedCGImage);
-    
-    return shadowedImage;
+- (void) saveSetting:(NSInteger)setting forKey:(NSString*)key {
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+  // Don't save a setting that isn't new
+  if (setting == [defaults integerForKey:key]) {
+    NSLog(@"Setting unchanged %@: %li",key,(long)setting);
+    return;
+  } else {
+    // Update settings
+    [defaults setInteger:setting forKey:key];
+    [defaults synchronize];
+    NSLog(@"Saved %@: %li",key,(long)setting);
+  };
+
+  // Handle notifications for new daily quote time OR turning on daily notifications
+  if (
+      ([key isEqual: @"quoteTime"] && _dailyQuoteOn == YES) || // new quote time and turned on?
+      ([key isEqual: @"dailyQuoteOn"] && _dailyQuoteOn == YES) // notifications switched to on?
+     ) {
+      // Schedule/Reschedule notifications
+    [self scheduleDailyNotificationAtTime:_quoteTime];
+     NSLog(@"**Attempting to schedule notifications**");
+  }
+  
 }
 
-
-
-- (BOOL)webView: (UIWebView*)webView shouldStartLoadWithRequest: (NSURLRequest*)request navigationType: (UIWebViewNavigationType)navigationType {
-    
-    //
-    // Map links starting with "file://" ending with #action with the
-    // action of the controller if it exists. Open other links in Safari.
-    // ------------------------------------------------------------------
-    
-#ifdef DEBUG
-    NSLog(@"Action from UIWebView!");
-#endif
-    
-    NSString *fragment, *scheme;
-    if (navigationType == UIWebViewNavigationTypeLinkClicked) {
-        [webView stopLoading];
-        fragment = [[request URL] fragment];
-        scheme = [[request URL] scheme];
-        
-        // Call a custom selector!! ;-)
-        if ([scheme isEqualToString: @"file"] && [self respondsToSelector: NSSelectorFromString(fragment)]) {
-            [self performSelector: NSSelectorFromString(fragment)];
-            return NO;
-        }
-        
-        // Open other links in Safari!!
-        [[UIApplication sharedApplication] openURL: [request URL]];
-    }
-    return YES;
+- (NSInteger) getSettingforKey:(NSString*)key {
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  NSLog(@"Returning %@: %li",key,(long)[defaults integerForKey:key]);
+  return [defaults integerForKey:key];
 }
 
-
-
-
-
-// Table View Delegate & Data Source Methods
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
+- (void) saveAllSettings {
+  [self saveSetting:(NSInteger)_statusBarShown forKey:@"statusBarShown"];
+  [self saveSetting:(NSInteger)_dailyQuoteOn forKey:@"dailyQuoteOn"];
+  [self saveSetting: _quoteTime forKey:@"quoteTime"];
+  [self saveSetting: _book forKey:@"book"];
+  [self saveSetting: _verse forKey:@"verse"];
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    // Number of rows
-    if (section == 0) { return 1; }
-    return 12;
+- (void)cancelDailyNotifications {
+  // Cancel this app's local notifications
+  [[UIApplication sharedApplication] cancelAllLocalNotifications];
 }
 
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    // The header for the section
-    if (section == 0) { return @"Set Bookmark"; }
-    return @"Select section";//nil;
+- (void)scheduleDailyNotificationAtTime:(NSInteger)time24 {
     
+  // Register local notifications (iOS 8+)
+  if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)]){
+    [ [UIApplication sharedApplication] registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil]];
+  }
+  
+  // Cancel app's existing local notifications
+  [[UIApplication sharedApplication] cancelAllLocalNotifications];
+  
+  // Set date
+  NSCalendar *calendar = [NSCalendar currentCalendar];
+  NSDateComponents *dateComponents = [calendar components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay fromDate: [NSDate date]];
+  dateComponents.hour = time24 / 100;
+  dateComponents.minute = time24 % 100;
+  
+  NSDate *nextNotification = [calendar dateFromComponents:dateComponents];
+  if ([nextNotification timeIntervalSinceNow] < 0) {
+    nextNotification = [nextNotification dateByAddingTimeInterval:60*60*24];
+  }
+  
+  //
+  // Get Quotes
+  // ----------
+  NSString* path  = [[NSBundle mainBundle] pathForResource:@"meditations-quotes" ofType:@"json"];
+  NSString* jsonString = [[NSString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+  NSData* jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+  NSError *jsonError;
+  id quotes = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:&jsonError];
+  
+  NSLog(@"%i",  (int) ceil( [[NSDate date] timeIntervalSince1970]/(3600 * 24) )   );
+  
+  // Rotates through all quotes by day
+  NSUInteger quoteIndex = (int) ceil( [[NSDate date] timeIntervalSince1970]/(3600 * 24) ) % [quotes count];
+  NSLog(@"%lu %lu", (unsigned long)[quotes count], (unsigned long)quoteIndex);
+  
+  // Schedule 64 Quotes (Max local notifications allowed by iOS as of 2.1.2016)
+  
+  for (NSUInteger x = 0; x < 64; x++){
+    // Create and schedule notification
+    UILocalNotification *dailyNote = [[UILocalNotification alloc] init];
+    dailyNote.alertBody = [[quotes objectAtIndex:quoteIndex] objectForKey:@"quote"];
+    NSLog(@"%lu %lu %@",(unsigned long)x,(unsigned long)quoteIndex, dailyNote.alertBody);
+    dailyNote.repeatInterval =  0; // NSCalendarUnitDay;
+    dailyNote.timeZone = [NSTimeZone localTimeZone];
+    dailyNote.soundName = UILocalNotificationDefaultSoundName;
+    dailyNote.fireDate = nextNotification;
+    
+    [[UIApplication sharedApplication] scheduleLocalNotification:dailyNote];
+    
+    nextNotification = [nextNotification dateByAddingTimeInterval:10];
+    quoteIndex ++;
+    if (quoteIndex >= [quotes count]) {quoteIndex = 0;}
+  } // end for loop
+  
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString *MyIdentifier = @"MyReuseIdentifier";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:MyIdentifier];
-    if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault  reuseIdentifier:MyIdentifier];
-    }
-    
-    
-    cell.textLabel.text = [NSString stringWithFormat:@"Book %ld", (long)indexPath.item + 1];
-    
-    return cell;
-    
+- (NSMutableDictionary*)loadJSONfile:(NSString*)filename {
+  NSString* url = [filename stringByDeletingPathExtension];
+  NSString* path  = [[NSBundle mainBundle] pathForResource:url ofType:@"json"];
+  NSString* jsonString = [[NSString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+  NSData* jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+  NSError *jsonError;
+  NSMutableDictionary *json = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:&jsonError];
+  return json;
 }
-
-
-
-
-
 
 - (void)applicationWillResignActive:(UIApplication *)application {
-    
-    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-    // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
+  
+  // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+  // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+  // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+  // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+  [self saveAllSettings];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+  // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+  // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
-    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+  // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+  [self saveAllSettings];
 }
 
 @end

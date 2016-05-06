@@ -1,0 +1,97 @@
+//
+//  SMGViewHeader.m
+//  Marcus
+//
+//  Created by Marcus Skye Lewis on 4/19/16.
+//  Copyright © 2016 SMGMobile. All rights reserved.
+//
+
+#import "SMGViewHeader.h"
+#import "SMGAppDelegate.h"
+#import "SMGGraphics.h"
+
+
+@implementation SMGViewHeader
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+- (id)initWithTitle:(NSString*) title {
+  
+  self = [super init];
+  if (self) {
+    _title = title;
+ 
+    //
+    // Compute Status Bar Adjustment
+    // -----------------------------
+    SMGAppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
+    NSLog(@"Status Bar %i", appDelegate.statusBarShown);
+    _statusBarAdjust = (appDelegate.statusBarShown)? [UIApplication sharedApplication].statusBarFrame.size.height : 0;
+    
+    //
+    // Make ViewHeader & Buttons
+    // -------------------------
+    [self makeViewHeader];
+    [self makeViewHeaderButtons];
+    
+    }
+    return self;
+}
+
+
+- (void)makeViewHeader {
+  
+  //
+  // Make ViewHeader
+  // ---------------
+  self.frame = CGRectMake(0, 0, BOUNDS.size.width, BOUNDS.size.height/18.0 + _statusBarAdjust);
+  self.backgroundColor = [SMGGraphics Gray33];
+  
+  //
+  // Make ViewHeader Label
+  // ---------------------
+  _label = [[UILabel alloc] initWithFrame: CGRectMake(0, _statusBarAdjust, self.frame.size.width,  self.frame.size.height - _statusBarAdjust)];
+  _label.textColor = [UIColor whiteColor];
+  _label.text = _title;
+  _label.textAlignment = NSTextAlignmentCenter;
+  _label.font = [UIFont systemFontOfSize:14];
+  // _viewHeaderLabel.backgroundColor = [UIColor greenColor]; // debugging
+  
+  //
+  // Make ViewHeader Line
+  // --------------------
+  UIView *lineView1 = [[UIView alloc] initWithFrame:CGRectMake(0, self.frame.size.height, BOUNDS.size.width, 1)];
+  lineView1.backgroundColor = [SMGGraphics Gray66];
+  
+  
+  [self addSubview: lineView1];
+  [self addSubview: _label];
+  
+  NSLog(@"Made %@ Header",_title);
+  
+}
+
+- (void)makeViewHeaderButtons {
+  
+  float buttonWidth = self.frame.size.width/5;
+  float buttonHeight = self.frame.size.height - _statusBarAdjust;
+  CGRect leftButtonFrame = CGRectMake(0, _statusBarAdjust, buttonWidth, buttonHeight);
+  CGRect rightButtonFrame = CGRectMake(buttonWidth*4, _statusBarAdjust, buttonWidth, buttonHeight);
+  
+  _leftButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+  [_leftButton setFrame:leftButtonFrame];
+  _rightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+  [_rightButton setFrame:rightButtonFrame];
+
+    [self addSubview: _leftButton];
+    [self addSubview: _rightButton];
+  
+}
+
+@end

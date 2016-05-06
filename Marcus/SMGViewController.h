@@ -1,15 +1,25 @@
 //
 //  SMGViewController.h
-//  NYC Subway Map
+//  Marcus
 //
-//  Created by Marcus Lewis on 12/17/13.
-//  Copyright (c) 2013 Marcus Lewis. All rights reserved.
+//  Created by Marcus Skye Lewis on 11/7/15.
+//  Copyright © 2015 SMGMobile. All rights reserved.
+//
 //
 
 #import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
+#import "SMGViewHeader.h"
+#import "SMGGraphics.h"
 
 @interface SMGViewController : UIViewController
 
-- (id) initwithTitle:(NSString*)title;
+@property (nonatomic, strong)     SMGViewHeader*     viewHeader;
+
+
+// RDV TabBar Controller uses Title to set TabBar Titles.
+// THerefore create viewHeaderTitle attribute so NavBar title can be different value
+
+- (id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle;
 
 @end

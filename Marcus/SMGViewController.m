@@ -1,39 +1,51 @@
 //
 //  SMGViewController.m
-//  NYC Subway Map
+//  Marcus
 //
-//  Created by Marcus Lewis on 12/17/13.
-//  Copyright (c) 2013 Marcus Lewis. All rights reserved.
+//  Created by Marcus Skye Lewis on 11/7/15.
+//  Copyright © 2015 SMGMobile. All rights reserved.
+//
 //
 
 #import "SMGViewController.h"
-#import "Graphics.h"
+
+@interface SMGViewController ()
+
+@end
+
 
 @implementation SMGViewController
 
-- (id) initwithTitle:(NSString*)title {
+
+- (id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle {
     
-    if (self == [super init]) {
-        self.title = title;        
-    }
+    if (self = [super init]) {
+        self.title = tabTitle;
+        _viewHeader = [[SMGViewHeader alloc] initWithTitle: headerTitle];
+        [self.view addSubview:_viewHeader];
+      
+    } else NSLog(@"SMGVC Init Fail");
     return self;
 }
 
--(BOOL)prefersStatusBarHidden{
-    return YES;
-}
 
-- (BOOL) shouldAutorotate {
-    
-    return NO;
-}
 
 - (void)viewDidLoad {
-    
+  [self setNeedsStatusBarAppearanceUpdate];
+ //
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+ //
+}
 
+- (BOOL) shouldAutorotate {
+  return NO;
+}
+
+
+-(UIStatusBarStyle)preferredStatusBarStyle{
+  return UIStatusBarStyleLightContent;
 }
 
 - (void)didReceiveMemoryWarning

@@ -6,5 +6,4 @@ target 'Marcus' do
   pod 'SWRevealViewController'
   pod 'WebViewJavascriptBridge', '~> 5.0'
   pod 'SCPageViewController', '~> 2.0'
-  pod "PIDatePicker", '~> 0.1.0'
 end

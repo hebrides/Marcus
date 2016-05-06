@@ -23,7 +23,13 @@
 		6151184B1BEF034700F2B485 /* app-info.html in Resources */ = {isa = PBXBuildFile; fileRef = 6151184A1BEF034700F2B485 /* app-info.html */; };
 		6151184D1BEF042700F2B485 /* app-info.css in Resources */ = {isa = PBXBuildFile; fileRef = 6151184C1BEF042700F2B485 /* app-info.css */; };
 		615118571BEF978300F2B485 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 615118561BEF978300F2B485 /* Default-568h@2x.png */; };
-		61518B101C65F33200266581 /* SMGAppDelegateCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = 61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */; };
+		61518B101C65F33200266581 /* SMGAppDelegateJan2016.m in Sources */ = {isa = PBXBuildFile; fileRef = 61518B0F1C65F33200266581 /* SMGAppDelegateJan2016.m */; };
+		616CBC981CC6AF3D0022C64D /* SMGViewHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */; };
+		61920FEF1CDA899600BF55A9 /* SMGModelSingleton.m in Sources */ = {isa = PBXBuildFile; fileRef = 61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */; };
+		619DF4271CB20AD700C9D980 /* SMGButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF4261CB20AD700C9D980 /* SMGButton.m */; };
+		619DF42A1CB2DB3B00C9D980 /* BookVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF4291CB2DB3B00C9D980 /* BookVC.m */; };
+		619DF42D1CB2DC2600C9D980 /* SettingsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF42C1CB2DC2600C9D980 /* SettingsVC.m */; };
+		619DF4301CB2DC5000C9D980 /* QuoteVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF42F1CB2DC5000C9D980 /* QuoteVC.m */; };
 		61BC81351C659D6000BB26BA /* meditations-manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81321C659D6000BB26BA /* meditations-manifest.json */; };
 		61BC81361C659D6000BB26BA /* meditations-quotes.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81331C659D6000BB26BA /* meditations-quotes.json */; };
 		61BC81371C659D6000BB26BA /* meditations-verses-english-classic.json in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81341C659D6000BB26BA /* meditations-verses-english-classic.json */; };
@@ -39,10 +45,11 @@
 		61BC81561C65A80700BB26BA /* meditations.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC814B1C65A80700BB26BA /* meditations.js */; };
 		61BC81571C65A80700BB26BA /* quote.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BC814C1C65A80700BB26BA /* quote.js */; };
 		61BC81591C65AA7C00BB26BA /* quote.html in Resources */ = {isa = PBXBuildFile; fileRef = 61BC81581C65AA7C00BB26BA /* quote.html */; };
-		61C1C44B1C64EEB30077BC35 /* graphics.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C1C44A1C64EEB30077BC35 /* graphics.m */; };
+		61C1C44B1C64EEB30077BC35 /* SMGGraphics.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C1C44A1C64EEB30077BC35 /* SMGGraphics.m */; };
 		61C1C44E1C6507510077BC35 /* UITabbar-Appearance.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */; };
 		61E24DA21BF755F80054D375 /* stone.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61E24DA11BF755F80054D375 /* stone.jpg */; };
 		61E24DA41BF79E7C0054D375 /* concrete.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 61E24DA31BF79E7C0054D375 /* concrete.jpg */; };
+		61EEB6B81CABAE7A000BCC67 /* SMGAppDelegateBeforePodsMar2016.h.m in Sources */ = {isa = PBXBuildFile; fileRef = 61EEB6B71CABAE7A000BCC67 /* SMGAppDelegateBeforePodsMar2016.h.m */; };
 		764C17A6AD89E47DA98C4500 /* Pods_Marcus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08BF1C1EAA454DA97CC6AD6F /* Pods_Marcus.framework */; };
 /* End PBXBuildFile section */
 
@@ -69,7 +76,19 @@
 		6151184A1BEF034700F2B485 /* app-info.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "app-info.html"; path = "Marcus/app-info.html"; sourceTree = "<group>"; };
 		6151184C1BEF042700F2B485 /* app-info.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = "app-info.css"; path = "Marcus/app-info.css"; sourceTree = "<group>"; };
 		615118561BEF978300F2B485 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGAppDelegateCopy.m; sourceTree = "<group>"; };
+		61518B0F1C65F33200266581 /* SMGAppDelegateJan2016.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGAppDelegateJan2016.m; sourceTree = "<group>"; };
+		616CBC961CC6AF3D0022C64D /* SMGViewHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGViewHeader.h; sourceTree = "<group>"; };
+		616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGViewHeader.m; sourceTree = "<group>"; };
+		61920FED1CDA899600BF55A9 /* SMGModelSingleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGModelSingleton.h; sourceTree = "<group>"; };
+		61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGModelSingleton.m; sourceTree = "<group>"; };
+		619DF4251CB20AD700C9D980 /* SMGButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGButton.h; sourceTree = "<group>"; };
+		619DF4261CB20AD700C9D980 /* SMGButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGButton.m; sourceTree = "<group>"; };
+		619DF4281CB2DB3B00C9D980 /* BookVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookVC.h; sourceTree = "<group>"; };
+		619DF4291CB2DB3B00C9D980 /* BookVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookVC.m; sourceTree = "<group>"; };
+		619DF42B1CB2DC2600C9D980 /* SettingsVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsVC.h; sourceTree = "<group>"; };
+		619DF42C1CB2DC2600C9D980 /* SettingsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsVC.m; sourceTree = "<group>"; };
+		619DF42E1CB2DC5000C9D980 /* QuoteVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuoteVC.h; sourceTree = "<group>"; };
+		619DF42F1CB2DC5000C9D980 /* QuoteVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QuoteVC.m; sourceTree = "<group>"; };
 		61BC81321C659D6000BB26BA /* meditations-manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-manifest.json"; sourceTree = "<group>"; };
 		61BC81331C659D6000BB26BA /* meditations-quotes.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-quotes.json"; sourceTree = "<group>"; };
 		61BC81341C659D6000BB26BA /* meditations-verses-english-classic.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "meditations-verses-english-classic.json"; sourceTree = "<group>"; };
@@ -85,11 +104,12 @@
 		61BC814B1C65A80700BB26BA /* meditations.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = meditations.js; path = Marcus/meditations.js; sourceTree = "<group>"; };
 		61BC814C1C65A80700BB26BA /* quote.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = quote.js; path = Marcus/quote.js; sourceTree = "<group>"; };
 		61BC81581C65AA7C00BB26BA /* quote.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = quote.html; path = Marcus/quote.html; sourceTree = "<group>"; };
-		61C1C44A1C64EEB30077BC35 /* graphics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = graphics.m; sourceTree = "<group>"; };
-		61C1C44C1C64EED90077BC35 /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graphics.h; sourceTree = "<group>"; };
+		61C1C44A1C64EEB30077BC35 /* SMGGraphics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGGraphics.m; sourceTree = "<group>"; };
+		61C1C44C1C64EED90077BC35 /* SMGGraphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGGraphics.h; sourceTree = "<group>"; };
 		61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = "UITabbar-Appearance.jpg"; path = "Marcus/UITabbar-Appearance.jpg"; sourceTree = "<group>"; };
 		61E24DA11BF755F80054D375 /* stone.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = stone.jpg; sourceTree = "<group>"; };
 		61E24DA31BF79E7C0054D375 /* concrete.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = concrete.jpg; sourceTree = "<group>"; };
+		61EEB6B71CABAE7A000BCC67 /* SMGAppDelegateBeforePodsMar2016.h.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGAppDelegateBeforePodsMar2016.h.m; sourceTree = "<group>"; };
 		9EB5D67883DA48182DF2D762 /* Pods-Marcus.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Marcus.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Marcus/Pods-Marcus.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -119,7 +139,6 @@
 			children = (
 				61C1C44D1C6507510077BC35 /* UITabbar-Appearance.jpg */,
 				615118411BEEFE3300F2B485 /* Images & App Icons */,
-				615118121BEEDEA100F2B485 /* Supporting Files */,
 				615118111BEEDEA100F2B485 /* Classes */,
 				619C0E561C658D1600BAA27A /* html */,
 				615118101BEEDEA100F2B485 /* Products */,
@@ -139,14 +158,28 @@
 		615118111BEEDEA100F2B485 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				615118121BEEDEA100F2B485 /* Supporting Files */,
 				615118151BEEDEA100F2B485 /* SMGAppDelegate.h */,
 				615118161BEEDEA100F2B485 /* SMGAppDelegate.m */,
+				61920FED1CDA899600BF55A9 /* SMGModelSingleton.h */,
+				61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */,
+				619DF42B1CB2DC2600C9D980 /* SettingsVC.h */,
+				619DF42C1CB2DC2600C9D980 /* SettingsVC.m */,
+				619DF42E1CB2DC5000C9D980 /* QuoteVC.h */,
+				619DF42F1CB2DC5000C9D980 /* QuoteVC.m */,
+				619DF4281CB2DB3B00C9D980 /* BookVC.h */,
+				619DF4291CB2DB3B00C9D980 /* BookVC.m */,
 				615118321BEEF44100F2B485 /* SMGViewController.h */,
 				615118331BEEF44100F2B485 /* SMGViewController.m */,
-				61C1C44A1C64EEB30077BC35 /* graphics.m */,
-				61C1C44C1C64EED90077BC35 /* graphics.h */,
+				616CBC961CC6AF3D0022C64D /* SMGViewHeader.h */,
+				616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */,
+				619DF4251CB20AD700C9D980 /* SMGButton.h */,
+				619DF4261CB20AD700C9D980 /* SMGButton.m */,
+				61C1C44C1C64EED90077BC35 /* SMGGraphics.h */,
+				61C1C44A1C64EEB30077BC35 /* SMGGraphics.m */,
 				612AF3D21C65C01C003B3ABD /* scratchpad */,
-				61518B0F1C65F33200266581 /* SMGAppDelegateCopy.m */,
+				61518B0F1C65F33200266581 /* SMGAppDelegateJan2016.m */,
+				61EEB6B71CABAE7A000BCC67 /* SMGAppDelegateBeforePodsMar2016.h.m */,
 			);
 			name = Classes;
 			path = Marcus;
@@ -162,7 +195,6 @@
 				615118131BEEDEA100F2B485 /* main.m */,
 			);
 			name = "Supporting Files";
-			path = Marcus;
 			sourceTree = "<group>";
 		};
 		615118411BEEFE3300F2B485 /* Images & App Icons */ = {
@@ -365,10 +397,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				615118341BEEF44100F2B485 /* SMGViewController.m in Sources */,
+				61920FEF1CDA899600BF55A9 /* SMGModelSingleton.m in Sources */,
 				615118171BEEDEA100F2B485 /* SMGAppDelegate.m in Sources */,
-				61518B101C65F33200266581 /* SMGAppDelegateCopy.m in Sources */,
-				61C1C44B1C64EEB30077BC35 /* graphics.m in Sources */,
+				61518B101C65F33200266581 /* SMGAppDelegateJan2016.m in Sources */,
+				616CBC981CC6AF3D0022C64D /* SMGViewHeader.m in Sources */,
+				61C1C44B1C64EEB30077BC35 /* SMGGraphics.m in Sources */,
 				615118141BEEDEA100F2B485 /* main.m in Sources */,
+				619DF42D1CB2DC2600C9D980 /* SettingsVC.m in Sources */,
+				61EEB6B81CABAE7A000BCC67 /* SMGAppDelegateBeforePodsMar2016.h.m in Sources */,
+				619DF4271CB20AD700C9D980 /* SMGButton.m in Sources */,
+				619DF42A1CB2DB3B00C9D980 /* BookVC.m in Sources */,
+				619DF4301CB2DC5000C9D980 /* QuoteVC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,6 +434,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -438,6 +478,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;

@@ -6,24 +6,28 @@
 //  Copyright © 2015 SMGMobile. All rights reserved.
 //
 
+
 #import <UIKit/UIKit.h>
-#import <QuartzCore/QuartzCore.h>
-#import "RDVTabBarController.h"
+#define APPDELEGATE ((SMGAppDelegate*) [[UIApplication sharedApplication] delegate])
 
 
 @interface SMGAppDelegate : UIResponder <UIApplicationDelegate>
 
 
+@property (nonatomic, strong) UIWindow *window;
+
 //
 // Properties here can be accessed by importing SMGAppDelegate.h
-// and creating a pointer to the shared delegate
-// -------------------------------------------------------------
+// and creating a pointer to the shared delegate (in lieu of a model class)
+// ------------------------------------------------------------------------
 
-@property (strong, nonatomic)          UIWindow *window;
-@property (nonatomic, strong)          UITabBarController * tabBarController;
+// That is, app settings are here for now ;-)
+@property (nonatomic) BOOL statusBarShown;
+@property (nonatomic) BOOL dailyQuoteOn;
+@property (nonatomic) NSInteger quoteTime;
+@property (nonatomic) NSUInteger book;
+@property (nonatomic) NSUInteger verse;
 
-
-
-
+- (void) saveSetting:(NSInteger)setting forKey:(NSString*)key;
 
 @end
