@@ -26,6 +26,7 @@
 		61518B101C65F33200266581 /* SMGAppDelegateJan2016.m in Sources */ = {isa = PBXBuildFile; fileRef = 61518B0F1C65F33200266581 /* SMGAppDelegateJan2016.m */; };
 		616CBC981CC6AF3D0022C64D /* SMGViewHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */; };
 		61920FEF1CDA899600BF55A9 /* SMGModelSingleton.m in Sources */ = {isa = PBXBuildFile; fileRef = 61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */; };
+		61920FF21CDC2A1B00BF55A9 /* SMGModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 61920FF11CDC2A1B00BF55A9 /* SMGModel.m */; };
 		619DF4271CB20AD700C9D980 /* SMGButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF4261CB20AD700C9D980 /* SMGButton.m */; };
 		619DF42A1CB2DB3B00C9D980 /* BookVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF4291CB2DB3B00C9D980 /* BookVC.m */; };
 		619DF42D1CB2DC2600C9D980 /* SettingsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 619DF42C1CB2DC2600C9D980 /* SettingsVC.m */; };
@@ -81,6 +82,8 @@
 		616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGViewHeader.m; sourceTree = "<group>"; };
 		61920FED1CDA899600BF55A9 /* SMGModelSingleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGModelSingleton.h; sourceTree = "<group>"; };
 		61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGModelSingleton.m; sourceTree = "<group>"; };
+		61920FF01CDC2A1B00BF55A9 /* SMGModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGModel.h; sourceTree = "<group>"; };
+		61920FF11CDC2A1B00BF55A9 /* SMGModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGModel.m; sourceTree = "<group>"; };
 		619DF4251CB20AD700C9D980 /* SMGButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGButton.h; sourceTree = "<group>"; };
 		619DF4261CB20AD700C9D980 /* SMGButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGButton.m; sourceTree = "<group>"; };
 		619DF4281CB2DB3B00C9D980 /* BookVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookVC.h; sourceTree = "<group>"; };
@@ -161,8 +164,6 @@
 				615118121BEEDEA100F2B485 /* Supporting Files */,
 				615118151BEEDEA100F2B485 /* SMGAppDelegate.h */,
 				615118161BEEDEA100F2B485 /* SMGAppDelegate.m */,
-				61920FED1CDA899600BF55A9 /* SMGModelSingleton.h */,
-				61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */,
 				619DF42B1CB2DC2600C9D980 /* SettingsVC.h */,
 				619DF42C1CB2DC2600C9D980 /* SettingsVC.m */,
 				619DF42E1CB2DC5000C9D980 /* QuoteVC.h */,
@@ -175,6 +176,10 @@
 				616CBC971CC6AF3D0022C64D /* SMGViewHeader.m */,
 				619DF4251CB20AD700C9D980 /* SMGButton.h */,
 				619DF4261CB20AD700C9D980 /* SMGButton.m */,
+				61920FED1CDA899600BF55A9 /* SMGModelSingleton.h */,
+				61920FEE1CDA899600BF55A9 /* SMGModelSingleton.m */,
+				61920FF01CDC2A1B00BF55A9 /* SMGModel.h */,
+				61920FF11CDC2A1B00BF55A9 /* SMGModel.m */,
 				61C1C44C1C64EED90077BC35 /* SMGGraphics.h */,
 				61C1C44A1C64EEB30077BC35 /* SMGGraphics.m */,
 				612AF3D21C65C01C003B3ABD /* scratchpad */,
@@ -401,6 +406,7 @@
 				615118171BEEDEA100F2B485 /* SMGAppDelegate.m in Sources */,
 				61518B101C65F33200266581 /* SMGAppDelegateJan2016.m in Sources */,
 				616CBC981CC6AF3D0022C64D /* SMGViewHeader.m in Sources */,
+				61920FF21CDC2A1B00BF55A9 /* SMGModel.m in Sources */,
 				61C1C44B1C64EEB30077BC35 /* SMGGraphics.m in Sources */,
 				615118141BEEDEA100F2B485 /* main.m in Sources */,
 				619DF42D1CB2DC2600C9D980 /* SettingsVC.m in Sources */,
@@ -418,10 +424,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -462,10 +470,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;

@@ -1,25 +1,42 @@
 PODS:
-  - PIDatePicker (0.1.2)
+  - DTCoreText (1.6.17):
+    - DTFoundation/Core (~> 1.7.5)
+    - DTFoundation/DTAnimatedGIF (~> 1.7.5)
+    - DTFoundation/DTHTMLParser (~> 1.7.5)
+    - DTFoundation/UIKit (~> 1.7.5)
+  - DTFoundation/Core (1.7.10)
+  - DTFoundation/DTAnimatedGIF (1.7.10)
+  - DTFoundation/DTHTMLParser (1.7.10):
+    - DTFoundation/Core
+  - DTFoundation/UIKit (1.7.10):
+    - DTFoundation/Core
+  - DTLoupe (1.5.8)
+  - DTRichTextEditor (1.6.12):
+    - DTCoreText (~> 1.6.16)
+    - DTFoundation/Core (~> 1.7.8)
+    - DTLoupe (~> 1.5.8)
+    - DTWebArchive (~> 0.0.2)
+  - DTWebArchive (0.0.3):
+    - DTWebArchive/Core (= 0.0.3)
+    - DTWebArchive/iOS (= 0.0.3)
+  - DTWebArchive/Core (0.0.3)
+  - DTWebArchive/iOS (0.0.3):
+    - DTWebArchive/Core
   - RDVTabBarController (1.1.9)
-  - SCPageViewController (2.0.5):
-    - SCScrollView (~> 1.1)
-  - SCScrollView (1.1.7)
-  - SWRevealViewController (2.3.0)
-  - WebViewJavascriptBridge (5.0.5)
+  - V8HorizontalPickerView (1.0.0)
 
 DEPENDENCIES:
-  - PIDatePicker (~> 0.1.0)
+  - DTRichTextEditor (~> 1.6)
   - RDVTabBarController
-  - SCPageViewController (~> 2.0)
-  - SWRevealViewController
-  - WebViewJavascriptBridge (~> 5.0)
+  - V8HorizontalPickerView (~> 1.0)
 
 SPEC CHECKSUMS:
-  PIDatePicker: 36548c3466dec16e7918e533486ffe86687f65e3
+  DTCoreText: 3ea8bba23dd2141ba18adb227a7dd33a822df1c4
+  DTFoundation: 3b6b1b817d2a7fb02e7eaf2596c922a68145bd43
+  DTLoupe: 87d8448ec220dddbcce53df82d2cbf3e1fcce320
+  DTRichTextEditor: 255827297ff7fb173fea47945cb97a4890eff74d
+  DTWebArchive: 2029610e2e2fda5b6d51a386b13b1484b7b197ba
   RDVTabBarController: 67794f7a7a37f8e32f046f85ac67d06ab92d624a
-  SCPageViewController: e6223bb96f535cbe71c5b7204e130ca132ff90fa
-  SCScrollView: 59e93b7f230e7ee3c963f06dd0c67b57b8b9e237
-  SWRevealViewController: 6d3fd97f70112fd7cef9de14df4260eacce4c63a
-  WebViewJavascriptBridge: a4d502315f1b8d9a51cd6a9174147ed567ec3bc5
+  V8HorizontalPickerView: 6451e226ea7939c3499cefbbc0dcab85c941c28c
 
 COCOAPODS: 0.39.0

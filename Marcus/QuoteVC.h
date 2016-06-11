@@ -7,6 +7,8 @@
 //
 
 #import "SMGViewController.h"
+#import "SMGAppDelegate.h"
+// #import "SHK.h"
 
 @interface QuoteVC : SMGViewController
 

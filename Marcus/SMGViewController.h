@@ -20,6 +20,6 @@
 // RDV TabBar Controller uses Title to set TabBar Titles.
 // THerefore create viewHeaderTitle attribute so NavBar title can be different value
 
-- (id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle;
-
+-(id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle;
+//-(void) setModel: (SMGModel*) modelObject;
 @end

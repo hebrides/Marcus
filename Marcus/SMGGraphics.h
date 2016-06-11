@@ -51,13 +51,18 @@ otherButtonTitles:nil] show]
 + (UIImage*)imageForTab: (NSInteger)tab withColor: (UIColor*)color;
 + (UIImage*)imageOfBook;
 + (UIImage*)imageOfBookWithColor: (UIColor*) color;
++ (UIImage*)imageOfBigBookWithColor: (UIColor*) color;
 + (UIImage*)imageOfQuote;
 + (UIImage*)imageOfQuoteWithColor: (UIColor*) color;
++ (UIImage*)imageOfBigQuoteWithColor: (UIColor*) color;
 + (UIImage*)imageOfSettings;
 + (UIImage*)imageOfSettingsWithColor: (UIColor*) color;
++ (UIImage*)imageOfBigSettingsWithColor: (UIColor*) color;
 + (UIImage*)imageOfShare;
 + (UIImage*)imageOfShareWithColor: (UIColor*) color;
 + (UIImage*)imageOfChapters;
 + (UIImage*)imageOfChaptersWithColor: (UIColor*) color;
++ (UIImage*)imageOfCloseChapters;
++ (UIImage*)imageOfCloseChaptersWithColor: (UIColor*) color;
 
 @end

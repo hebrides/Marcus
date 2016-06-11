@@ -50,7 +50,10 @@
   //
   // Make ViewHeader
   // ---------------
-  self.frame = CGRectMake(0, 0, BOUNDS.size.width, BOUNDS.size.height/18.0 + _statusBarAdjust);
+  if(!_headerHeightFactor) {
+    _headerHeightFactor = 18.0; // default height of view header is 1/18th the  height of device
+  }
+  self.frame = CGRectMake(0, 0, BOUNDS.size.width, BOUNDS.size.height/_headerHeightFactor + _statusBarAdjust);
   self.backgroundColor = [SMGGraphics Gray33];
   
   //
@@ -78,16 +81,20 @@
 }
 
 - (void)makeViewHeaderButtons {
-  
-  float buttonWidth = self.frame.size.width/5;
-  float buttonHeight = self.frame.size.height - _statusBarAdjust;
+  if (!_buttonWidthFactor) { //button width depends on width of device, default is 1/5 device width
+    _buttonWidthFactor = 5;
+  }
+  CGFloat buttonWidth = self.frame.size.width/_buttonWidthFactor;
+  CGFloat buttonHeight = self.frame.size.height - _statusBarAdjust;
   CGRect leftButtonFrame = CGRectMake(0, _statusBarAdjust, buttonWidth, buttonHeight);
-  CGRect rightButtonFrame = CGRectMake(buttonWidth*4, _statusBarAdjust, buttonWidth, buttonHeight);
+  CGRect rightButtonFrame = CGRectMake(buttonWidth*(_buttonWidthFactor - 1), _statusBarAdjust, buttonWidth, buttonHeight);
   
   _leftButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
   [_leftButton setFrame:leftButtonFrame];
   _rightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
   [_rightButton setFrame:rightButtonFrame];
+  
+  // _rightButton.backgroundColor = [UIColor redColor]; // debugging
 
     [self addSubview: _leftButton];
     [self addSubview: _rightButton];

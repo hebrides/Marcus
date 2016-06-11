@@ -8,10 +8,17 @@
 
 #import "QuoteVC.h"
 #import "SMGGraphics.h"
+// #import "SHK.h"
+// #import "SHKItem.h"
+// #import "SHKAlertController.h"
+// #import "TTTAttributedLabel.h"
 
 @interface QuoteVC () <UIWebViewDelegate>
 
-@property (nonatomic, strong) UIWebView* quoteWV;
+@property (nonatomic, strong) UIView* quoteView;
+@property (nonatomic, strong) UILabel* quoteLabel;
+@property (nonatomic, strong) NSString* attributionLabel;
+
 
 @end
 
@@ -29,54 +36,142 @@
 }
 
 - (void) setUpQuoteView {
-  
-  
-  [self.viewHeader.rightButton setImage:[SMGGraphics imageOfShare] forState:UIControlStateNormal];
-  
 
   //
-  // Make Quote WebView
-  // ------------------
-  _quoteWV = [[UIWebView alloc] initWithFrame: BOUNDS];
-  NSURL *quoteURL = [[NSBundle mainBundle] URLForResource:@"quote" withExtension:@"html"];
-  [_quoteWV loadRequest:[NSURLRequest requestWithURL:quoteURL]];
-  _quoteWV.delegate = self;
-  _quoteWV.scrollView.bounces = NO;
+  // Make Share Button
+  // -----------------
+  [self.viewHeader.rightButton setImage:[SMGGraphics imageOfShareWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
+    [self.viewHeader.rightButton setImage:[SMGGraphics imageOfShareWithColor:[UIColor whiteColor]] forState:UIControlStateSelected];
+  [self.viewHeader.rightButton setTintColor:[UIColor whiteColor]];
+  
+  // Intended to make the right edge of the button spaced from the right edge of the device window exactly the height inset (Paint Code icons are 25.0 canvas size)
+  [self.viewHeader.rightButton setImageEdgeInsets: UIEdgeInsetsMake(0, 0, 0, (25.0 - self.viewHeader.frame.size.height))];
+  // Share Action
+  [self.viewHeader.rightButton addTarget:self action:@selector(shareQuote) forControlEvents:UIControlEventTouchUpInside];
+
+  //
+  // Make Quote Label
+  // ----------------
+
+  CGRect quoteTextFrame = CGRectMake(BOUNDS.size.width/8.0, self.viewHeader.frame.size.height + (self.viewHeader.frame.size.height/3.0), BOUNDS.size.width - ( (BOUNDS.size.width/8.0)*2 ), BOUNDS.size.height - BOUNDS.size.height/3.0);
+  
+
+  // Method 1: UILabel, text centered vertically in frame & shrinks to fit frame for larger quotes
+
+  _quoteLabel = [[UILabel alloc] initWithFrame:quoteTextFrame];
+  _quoteLabel.textColor = [UIColor whiteColor];
+  _quoteLabel.backgroundColor = [UIColor clearColor];
+  _quoteLabel.numberOfLines = 0;
+  _quoteLabel.adjustsFontSizeToFitWidth = YES;
+  _quoteLabel.minimumScaleFactor = .5;
+  _quoteLabel.userInteractionEnabled = YES;
+
+  
+//  // Created attributed string for coloring/underlining citation
+//  NSMutableAttributedString* quoteOfTheDayAttributedText = [[NSMutableAttributedString alloc] initWithString:quoteOfTheDay];
+//  [quoteOfTheDayAttributedText addAttribute:NSUnderlineStyleAttributeName
+//                        value: [NSNumber numberWithInt:NSUnderlineStyleSingle]
+//                        range:[quoteOfTheDay rangeOfString:citation]];
+//
+//  _quoteLabel.attributedText = quoteOfTheDayAttributedText;
+
+  _quoteLabel.text = [self setQuoteOfTheDay];
+
+  // React to tap on label
+  UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoBook)];
+  // tapGesture.delegate=self;
+  [_quoteLabel addGestureRecognizer:tapGesture];
+
+//  // Method 2: TextView, text aligns to top of frame, scrolls for larger quotes
+//  UITextView* quoteTextView = [[UITextView alloc] initWithFrame:quoteTextFrame];
+//  quoteTextView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];
+//  quoteTextView.textColor = [UIColor whiteColor];
+//  quoteTextView.text = quoteOfTheDay;
+//  quoteTextView.font = [UIFont systemFontOfSize:15.5];
+//  quoteTextView.userInteractionEnabled = YES;
+//  quoteTextView.editable = NO;
+
   
   //
-  // Add WebView to VC
-  // -----------------
-  [self.view insertSubview:_quoteWV atIndex:0];
+  // Make BG Image
+  // -------------
+  UIImage* quoteImage = [SMGGraphics imageOfBigQuoteWithColor: [SMGGraphics Gray31]];
+  CGRect quoteImageFrame = CGRectMake( (BOUNDS.size.width-175)/2, ((BOUNDS.size.height-132)/2)-(BOUNDS.size.height/18) , 175, 132);
+  UIImageView* quoteImageView = [[UIImageView alloc] initWithFrame:quoteImageFrame];
+  quoteImageView.image = quoteImage;
+
+  
+  //
+  // Add quote label and background image to VC View
+  // -----------------------------------------------
+  [self.view insertSubview: quoteImageView atIndex:0];
+  [self.view insertSubview: _quoteLabel atIndex:1];
+  //[self.view insertSubview: quoteTextView atIndex:1];
 }
 
-
-- (BOOL)webView: (UIWebView*)webView shouldStartLoadWithRequest: (NSURLRequest*)request navigationType: (UIWebViewNavigationType)navigationType {
+- (NSString*) setQuoteOfTheDay {
   
   //
-  // Map links starting with "file://" ending with #action with the
-  // action of the controller if it exists. Open other links in Safari.
-  // ------------------------------------------------------------------
+  // Make Quote Text
+  // ---------------
   
-#ifdef DEBUG
-  NSLog(@"Action from UIWebView!");
-#endif
+  //NSString* quoteOfTheDay = @"\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ullamcorper, tellus eget vestibulum laoreet, leo ex semper mauris, sit amet placerat lacus orci vel enim. Nunc malesuada non odio in efficitur. Curabitur faucibus finibus dui, non laoreet metus lobortis at. Sed ante eros, ultrices eget sapien eu, pharetra lobortis enim. Sed luctus congue pulvinar. Duis lacus neque, viverra vel pellentesque.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ullamcorper, tellus eget vestibulum laoreet, leo ex semper mauris, sit amet placerat lacus orci vel enim. Nunc malesuada non odio in efficitur. Curabitur faucibus finibus dui, non laoreet metus lobortis at. Sed ante eros, ultrices eget sapien eu, pharetra lobortis enim. Sed luctus congue pulvinar. Duis lacus neque, viverra vel pellentesque.\" \n\n     -- Book I, Verse III"; // debugging
   
-  NSString *fragment, *scheme;
-  if (navigationType == UIWebViewNavigationTypeLinkClicked) {
-    [webView stopLoading];
-    fragment = [[request URL] fragment];
-    scheme = [[request URL] scheme];
-    
-    // Call a custom selector!! ;-)
-    if ([scheme isEqualToString: @"file"] && [self respondsToSelector: NSSelectorFromString(fragment)]) {
-      [self performSelector: NSSelectorFromString(fragment)];
-      return NO;
-    }
-    
-    // Open other links in Safari!!
-    [[UIApplication sharedApplication] openURL: [request URL]];
-  }
-  return YES;
+  // NSString* quoteOfTheDay = @"\"Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial. All these things happen to them by reason of their ignorance of what is good and evil.\" \n\n         — Book I, Verse III"; // debugging
+  
+  
+  NSArray* quoteOfTheDayElements = [APPDELEGATE getQuoteOfTheDay];
+  NSString* quote = [NSString stringWithFormat:@"\"%@\"", quoteOfTheDayElements[0]];
+  NSString* spacer = @"\n\n        - ";
+  NSString* citation = [NSString stringWithFormat:@"Book %@, Verse %@", quoteOfTheDayElements[1], quoteOfTheDayElements[2]];
+  NSLog(@"%@\n %@", quote, citation);
+  
+  return [NSString stringWithFormat:@"%@%@%@", quote, spacer, citation];
+
+}
+
+- (void) gotoBook {
+  NSLog(@"Touched");
+  //[self turnQuoteBlue];
+}
+
+-(void)turnQuoteBlue {
+  
+  [UIView transitionWithView:_quoteLabel duration:.25 options:UIViewAnimationOptionTransitionCrossDissolve animations:^{
+    _quoteLabel.textColor = [SMGGraphics Blue22AADD];
+  } completion:^(BOOL finished) {
+  }];
+}
+
+- (void) shareQuote {
+//
+//  // Create the item to share (in this example, a url)
+//   NSURL *url = [NSURL URLWithString:@"http://getsharekit.com"];
+//   SHKItem *item = [SHKItem URL:url title:@"ShareKit is Awesome!"];
+//  
+//  // ShareKit detects top view controller (the one intended to present ShareKit UI) automatically,
+//  // but sometimes it may not find one. To be safe, set it explicitly
+//  [SHK setRootViewController:self];
+//  
+//  
+//  //iOS 8+
+//  SHKAlertController *alertController = [SHKAlertController actionSheetForItem:item];
+//  [alertController setModalPresentationStyle:UIModalPresentationPopover];
+//  UIPopoverPresentationController *popPresenter = [alertController popoverPresentationController];
+//  popPresenter.barButtonItem = self.toolbarItems[1];
+//  [self presentViewController:alertController animated:YES completion:nil];
+
+//  Sharekit pod (above) removed for 1.0 release -- needs to be configured
+  
+  NSLog(@"ShareButton pressed");
+  NSString *stringtoshare= _quoteLabel.text;
+  UIImage *imagetoshare = [SMGGraphics imageOfQuoteWithColor:[SMGGraphics Blue22AADD]]; //This is an image to share.
+  
+  NSArray *activityItems = @[stringtoshare, imagetoshare];
+  UIActivityViewController *activityVC = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+  activityVC.excludedActivityTypes = @[UIActivityTypeAssignToContact];
+  [self presentViewController:activityVC animated:TRUE completion:nil];
+
 }
 
 - (void)viewDidLoad {
@@ -84,10 +179,18 @@
   // Do any additional setup after loading the view.
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+  //
+    NSLog(@"Quoteview appeared");
+  _quoteLabel.text = [self setQuoteOfTheDay];
+}
+
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
 
 /*
 #pragma mark - Navigation

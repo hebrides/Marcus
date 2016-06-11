@@ -16,8 +16,10 @@
 @property (nonatomic, strong)         UIView*               view;
 @property (nonatomic, strong)         UIButton*             leftButton;
 @property (nonatomic, strong)         UIButton*             rightButton;
-@property (nonatomic)                 float                 statusBarAdjust;
+@property (nonatomic)                 CGFloat               statusBarAdjust;
 @property (nonatomic)                 CGRect                mainFrame;
+@property (nonatomic)                 CGFloat               buttonWidthFactor;
+@property (nonatomic)                 CGFloat               headerHeightFactor;
 
 - (id)initWithTitle:(NSString*) title;
 
