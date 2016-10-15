@@ -8,22 +8,18 @@
 //
 
 #import "SMGAppDelegate.h"
-#import "SettingsVC.h"
-#import "BookVC.h"
-#import "QuoteVC.h"
-#import "SMGGraphics.h"
-#import "RDVTabBarController.h"
-#import "RDVTabBar.h"
-#import "RDVTabBarItem.h"
+
+
 
 
 
 @interface SMGAppDelegate () <RDVTabBarControllerDelegate>
 
-@property (nonatomic, strong)          RDVTabBarController* tabBarController;
+
 @property (nonatomic, strong)          BookVC*              bookVC;
 @property (nonatomic, strong)          QuoteVC*             quoteVC;
 @property (nonatomic, strong)          SettingsVC*          settingsVC;
+@property (nonatomic, strong)          SMGModel*            appModel;
 
 @end
 
@@ -36,22 +32,23 @@
 #ifdef DEBUG
   NSLog(@"Debug Mode!");
 #endif
+
   
   //
-  // Initialize Tab Bar, Views & View Controllers
+  // Initialize tab bar, views & view controllers
   // --------------------------------------------
   [self setUpApp];
   
   //
-  // Opening when User Touching Notification
-  // ---------------------------------------
+  // Open app in quote view if user touches notification
+  // ---------------------------------------------------
   UILocalNotification *localNotif = [launchOptions objectForKey:UIApplicationLaunchOptionsLocalNotificationKey];
   if (localNotif) {
     _tabBarController.selectedIndex = 1; // Open in quote view
   }
   
   //
-  // Initialize Main Window
+  // Initialize main window
   // ----------------------
   _window = [[UIWindow alloc] initWithFrame: BOUNDS];
   
@@ -76,7 +73,7 @@
   //
   // Initialize Main VCs
   // -------------------
-  _bookVC = [[BookVC alloc] initWithTabTitle:@"BOOK" headerTitle:@"M E D I T A T I O N S"];
+  _bookVC = [[BookVC alloc] initWithTabTitle:@"BOOK" headerTitle:@"B O O K"];
   _quoteVC = [[QuoteVC alloc] initWithTabTitle:@"Q.O.D." headerTitle:@"Q U O T E  O F  T H E  D A Y"];
   _settingsVC = [[SettingsVC alloc] initWithTabTitle:@"SETTINGS" headerTitle:@"S E T T I N G S"];
   
@@ -452,22 +449,40 @@
   //
   // Reschedule notifications if possible/ necessary
   // -----------------------------------------------
-
-  // Note about _timesActive below: This check is meant to prevent incorrect results from notificationsNewlyEnabled. iOS will call applicationDidBecomeActive (where we are now) AFTER presenting the permission alert view BUT BEFORE calling didRegisterUserNotificationSettings. This means that the call below to notificationsNewlyEnabled will give incorrect results right after the first time the user enables notifications. Since iOS calls applicationDidBecomeActive function at least twice (once when app first run, one during alert) we'll ignore these two times -- this is not a fullproof check, at all, and should be reworked as soon as feasible.
   
-  // One workaround would be to check if notificationsCurrentlyEnabledInDeviceSettings and set the Send Daily Quote button to OFF in settingsVC, which forces the user to reschedule. The current logic "silently" reschedules the notifications after the user changes permissions to YES for the app upon running the app
+  /* Notes about the _timesActive variable below:
+   
+    This check is meant to prevent incorrect actions from notificationsNewlyEnabled.
+   
+    iOS calls applicationDidBecomeActive (where we are now) ***AFTER*** presenting a
+   notifications permission alert view ***BUT BEFORE*** calling
+   didRegisterUserNotificationSettings.
+   
+    This means that the call below to notificationsNewlyEnabled will give incorrect results
+   immediately after the first time the user enables notifications.
+   
+    Since iOS calls applicationDidBecomeActive function at least twice (once when app first run,
+   one during alert) we'll ignore these two times -- this is not a fullproof check, at all, and
+   should be rethought in future updates.
+  
+    One workaround would be to check if notificationsCurrentlyEnabledInDeviceSettings and set the 
+   Send Daily Quote button to OFF in settingsVC, which forces the user to reschedule.
+   
+    The current logic "silently" reschedules  notifications after the user changes permissions to
+   YES when app next becomes active.
+   
+   */
   
   if(_timesActive > 2) {
   
   
     // This will reschedule notifications every two weeks, or if newly enabled in device settings
   if ( ([self notificationsNewlyEnabled] || _daysSinceNotificationsLastScheduled >= 14) && _dailyQuoteOn) {
-    NSLog(@"It's time to reschedule notifications or notifications recently enabled, so let's reschedule!");
+    NSLog(@"It's time to reschedule notifications OR notifications have been recently enabled... reschedule!");
     [self scheduleDailyNotificationAtTime:_quoteTime];
   } else {
     NSLog(@"No reason to reschedule notifications.");
   }
-    
     
     
     

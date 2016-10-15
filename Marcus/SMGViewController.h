@@ -11,10 +11,12 @@
 #import <QuartzCore/QuartzCore.h>
 #import "SMGViewHeader.h"
 #import "SMGGraphics.h"
+#import "SMGModel.h"
 
 @interface SMGViewController : UIViewController
 
-@property (nonatomic, strong)     SMGViewHeader*     viewHeader;
+@property (nonatomic, strong)       SMGViewHeader*      viewHeader;
+@property (nonatomic, strong)       SMGModel*           appModel;
 
 
 // RDV TabBar Controller uses Title to set TabBar Titles.

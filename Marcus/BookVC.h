@@ -7,6 +7,7 @@
 //
 
 #import "SMGViewController.h"
+#import "SMGAppDelegate.h"
 
 @interface BookVC : SMGViewController
 

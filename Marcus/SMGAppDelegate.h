@@ -8,7 +8,15 @@
 
 
 #import <UIKit/UIKit.h>
-#define APPDELEGATE ((SMGAppDelegate*) [[UIApplication sharedApplication] delegate])
+#import "SMGTools.h"
+#import "SettingsVC.h"
+#import "BookVC.h"
+#import "QuoteVC.h"
+#import "SMGGraphics.h"
+#import "RDVTabBarController.h"
+#import "RDVTabBar.h"
+#import "RDVTabBarItem.h"
+#import "SMGModel.h"
 
 
 @interface SMGAppDelegate : UIResponder <UIApplicationDelegate>
@@ -17,11 +25,11 @@
 @property (nonatomic, strong) UIWindow *window;
 
 //
-// Note: Properties here can be accessed by importing SMGAppDelegate.h
-// and creating a pointer to the shared delegate (in lieu of a model class)
+// Note: Properties in app delegate can be accessed by importing
+// SMGAppDelegate.h and creating a pointer to the shared delegate:
+// ((SMGAppDelegate*) [[UIApplication sharedApplication] delegate])
 // ------------------------------------------------------------------------
 
-// App settings are just a few so are here for now
 @property (nonatomic) BOOL statusBarShown;
 @property (nonatomic) BOOL dailyQuoteOn;
 @property (nonatomic) BOOL savedDeviceNotificationsEnabledState;
@@ -32,6 +40,7 @@
 @property (nonatomic) NSInteger quoteTime;
 @property (nonatomic) NSInteger book;
 @property (nonatomic) NSInteger verse;
+@property (nonatomic, strong) RDVTabBarController* tabBarController;
 
 
 - (void) saveSetting:(NSInteger)setting forKey:(NSString*)key;

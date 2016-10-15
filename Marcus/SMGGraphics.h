@@ -11,31 +11,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#define DEBUG_MODE
-
-#ifdef DEBUG_MODE
-#define DebugLog( s, ... ) NSLog( @"<%p %@:(%d)> %@", self, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
-#else
-#define DebugLog( s, ... )
-#endif
-
-#define URLIFY(urlString) [NSURL URLWithString:urlString]
-#define FSTRING(string, args...) [NSString stringWithFormat:string, args]
-#define ALERT(title, msg) [[[UIAlertView alloc]     initWithTitle:title\
-message:msg\
-delegate:nil\
-cancelButtonTitle:@"OK"\
-otherButtonTitles:nil] show]
-
-// For screen size, screen size after orientation change
-#define BOUNDS UIScreen.mainScreen.bounds
-#define SCREEN_WIDTH ((([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) || ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortraitUpsideDown)) ? [[UIScreen mainScreen] bounds].size.width : [[UIScreen mainScreen] bounds].size.height)
-#define SCREEN_HEIGHT ((([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) || ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortraitUpsideDown)) ? [[UIScreen mainScreen] bounds].size.height : [[UIScreen mainScreen] bounds].size.width)
-
-
 @interface SMGGraphics : NSObject
-
-
 
 // Generate Colors, Solids
 + (UIColor*)Gray31;

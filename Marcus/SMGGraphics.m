@@ -46,7 +46,6 @@ static UIColor* _Blue22AADD = nil;
 + (UIColor*)Gray4C { return _Gray4C; }
 + (UIColor*)Gray66 { return _Gray66; }
 + (UIColor*)Blue22AADD { return _Blue22AADD; }
-
 + (UIColor*)colorWithHexString:(NSString*)hex {
   
   NSString *cString = [[hex stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];

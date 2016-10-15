@@ -10,7 +10,9 @@
 			"wikipedia" : "https://en.wikipedia.org/wiki/Meditations",
 			"book-file" : "meditations-book-lang-english-classic.html",
 			"verses-file" : "mediations-verses-english-classic.json",
-			"quotes-file" : "meditations-quotes.json"
+			"quotes-file" : "meditations-quotes.json",
+      "chapters" : "12",
+      "chapter-verses": [18,18,16,51,36,59,75,61,42,38,39,36]
 		}
 ]
 

@@ -52,44 +52,44 @@
   //
   // Make Quote Label
   // ----------------
-
   CGRect quoteTextFrame = CGRectMake(BOUNDS.size.width/8.0, self.viewHeader.frame.size.height + (self.viewHeader.frame.size.height/3.0), BOUNDS.size.width - ( (BOUNDS.size.width/8.0)*2 ), BOUNDS.size.height - BOUNDS.size.height/3.0);
   
 
-  // Method 1: UILabel, text centered vertically in frame & shrinks to fit frame for larger quotes
-
-  _quoteLabel = [[UILabel alloc] initWithFrame:quoteTextFrame];
-  _quoteLabel.textColor = [UIColor whiteColor];
-  _quoteLabel.backgroundColor = [UIColor clearColor];
-  _quoteLabel.numberOfLines = 0;
-  _quoteLabel.adjustsFontSizeToFitWidth = YES;
-  _quoteLabel.minimumScaleFactor = .5;
-  _quoteLabel.userInteractionEnabled = YES;
+      // Method 1: UILabel, text centered vertically in frame & shrinks to fit frame for larger quotes
+      _quoteLabel = [[UILabel alloc] initWithFrame:quoteTextFrame];
+      _quoteLabel.textColor = [UIColor whiteColor];
+      _quoteLabel.backgroundColor = [UIColor clearColor];
+      _quoteLabel.numberOfLines = 0;
+      _quoteLabel.adjustsFontSizeToFitWidth = YES; // or NO and uncomment out below line
+      //[_quoteLabel setFont: [UIFont fontWithName:@"Helvetica Neue" size:14]];
+      _quoteLabel.minimumScaleFactor = .5;
+      _quoteLabel.userInteractionEnabled = YES;
 
   
-//  // Created attributed string for coloring/underlining citation
-//  NSMutableAttributedString* quoteOfTheDayAttributedText = [[NSMutableAttributedString alloc] initWithString:quoteOfTheDay];
-//  [quoteOfTheDayAttributedText addAttribute:NSUnderlineStyleAttributeName
-//                        value: [NSNumber numberWithInt:NSUnderlineStyleSingle]
-//                        range:[quoteOfTheDay rangeOfString:citation]];
-//
-//  _quoteLabel.attributedText = quoteOfTheDayAttributedText;
+      //  // Attributed string for coloring/underlining citation
+      //  NSMutableAttributedString* quoteOfTheDayAttributedText = [[NSMutableAttributedString alloc] initWithString:quoteOfTheDay];
+      //  [quoteOfTheDayAttributedText addAttribute:NSUnderlineStyleAttributeName
+      //                        value: [NSNumber numberWithInt:NSUnderlineStyleSingle]
+      //                        range:[quoteOfTheDay rangeOfString:citation]];
+      //
+      //  _quoteLabel.attributedText = quoteOfTheDayAttributedText;
 
-  _quoteLabel.text = [self setQuoteOfTheDay];
+        _quoteLabel.text = [self setQuoteOfTheDay];
 
-  // React to tap on label
-  UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoBook)];
-  // tapGesture.delegate=self;
-  [_quoteLabel addGestureRecognizer:tapGesture];
+        // React to tap on label
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoBook)];
+        // tapGesture.delegate=self;
+        [_quoteLabel addGestureRecognizer:tapGesture];
 
-//  // Method 2: TextView, text aligns to top of frame, scrolls for larger quotes
-//  UITextView* quoteTextView = [[UITextView alloc] initWithFrame:quoteTextFrame];
-//  quoteTextView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];
-//  quoteTextView.textColor = [UIColor whiteColor];
-//  quoteTextView.text = quoteOfTheDay;
-//  quoteTextView.font = [UIFont systemFontOfSize:15.5];
-//  quoteTextView.userInteractionEnabled = YES;
-//  quoteTextView.editable = NO;
+
+      //  // Method 2: TextView, text aligns to top of frame, scrolls for larger quotes
+      //  UITextView* quoteTextView = [[UITextView alloc] initWithFrame:quoteTextFrame];
+      //  quoteTextView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];
+      //  quoteTextView.textColor = [UIColor whiteColor];
+      //  quoteTextView.text = quoteOfTheDay;
+      //  quoteTextView.font = [UIFont systemFontOfSize:15.5];
+      //  quoteTextView.userInteractionEnabled = YES;
+      //  quoteTextView.editable = NO;
 
   
   //
@@ -110,15 +110,6 @@
 }
 
 - (NSString*) setQuoteOfTheDay {
-  
-  //
-  // Make Quote Text
-  // ---------------
-  
-  //NSString* quoteOfTheDay = @"\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ullamcorper, tellus eget vestibulum laoreet, leo ex semper mauris, sit amet placerat lacus orci vel enim. Nunc malesuada non odio in efficitur. Curabitur faucibus finibus dui, non laoreet metus lobortis at. Sed ante eros, ultrices eget sapien eu, pharetra lobortis enim. Sed luctus congue pulvinar. Duis lacus neque, viverra vel pellentesque.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ullamcorper, tellus eget vestibulum laoreet, leo ex semper mauris, sit amet placerat lacus orci vel enim. Nunc malesuada non odio in efficitur. Curabitur faucibus finibus dui, non laoreet metus lobortis at. Sed ante eros, ultrices eget sapien eu, pharetra lobortis enim. Sed luctus congue pulvinar. Duis lacus neque, viverra vel pellentesque.\" \n\n     -- Book I, Verse III"; // debugging
-  
-  // NSString* quoteOfTheDay = @"\"Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial. All these things happen to them by reason of their ignorance of what is good and evil.\" \n\n         — Book I, Verse III"; // debugging
-  
   
   NSArray* quoteOfTheDayElements = [APPDELEGATE getQuoteOfTheDay];
   NSString* quote = [NSString stringWithFormat:@"\"%@\"", quoteOfTheDayElements[0]];

@@ -8,7 +8,8 @@
 //
 
 #import "SMGViewController.h"
-#import "SMGGraphics.h"
+
+
 
 @interface SMGViewController ()
 
@@ -28,7 +29,9 @@
         [self.view insertSubview: _viewHeader atIndex:5]; // Room for menus
         self.view.backgroundColor = [SMGGraphics Gray33];
       
-    } else NSLog(@"SMGVC Init Fail");
+    } else {
+      NSLog(@"SMGVC Init Fail");
+    }
     return self;
 }
 
