@@ -1,0 +1,20 @@
+
+16.10.14	* Open	Fix Chapter Select animation
+16.10.14	* Open	Make Chapter Number Type Variable (1,2,3… or I,II,III)
+16.10.14	* Open  Make Navbar dynamic - Rename SMGVCHeader - consists of an array of titles, a 6 x 2 array of SMGButtons, it is a tabBar delegate, changes header based on which tabBar, it can animate off screen easily
+16.10.14	* Open  Choose Book
+16.10.14	* Open  Click on quote go to correct place in book
+16.10.14	* Open  Better share quote to FB, share to other Social Media
+16.10.14	* Open  Save Complete App State on exit
+16.10.14        * Open  Put boxer in background of quote, as icon, put mountains, background images —> olympus, gladiators
+16.10.14        * Open  Put About info in settings tab
+16.10.14        * Open  Populated Book, Verses from Data
+16.10.14        * Open  Audio Button, implementation: http://stackoverflow.com/questions/707512/what-is-a-typedef-enum-in-objective-c
+16.10.14        * Open  Select and Share Text from Book
+16.10.14        * Open  Reconfigure Model Object (Pull from App Delegate)
+16.10.14        * Open  Record Quotes Professionally
+16.10.14        * Open  Splash Screen -- The Boxer
+16.10.14        * Open  Improve Scrolling
+16.10.14        * Open  Blur image with respect to scroll speed delta
+16.10.14	* Open	Bookmark button, implementation
+16.10.14	* Open	1.0 Release
