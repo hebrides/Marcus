@@ -12,6 +12,7 @@
 #import "SMGViewHeader.h"
 #import "SMGGraphics.h"
 #import "SMGModel.h"
+#import "SMGTools.h"
 
 @interface SMGViewController : UIViewController
 
@@ -22,6 +23,5 @@
 // RDV TabBar Controller uses Title to set TabBar Titles.
 // THerefore create viewHeaderTitle attribute so NavBar title can be different value
 
--(id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle;
-//-(void) setModel: (SMGModel*) modelObject;
+-(id) initWithTabTitle:(NSString*)tabTitle headerTitle:(NSString*)headerTitle modelObject:(SMGModel*)modelObject;
 @end

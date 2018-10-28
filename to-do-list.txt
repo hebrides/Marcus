@@ -1,4 +1,9 @@
-
+17.01.04	* Open	Shorter tab bar, thin top line
+17.01.04	* Open	Thin bottom line of status
+17.01.04	* Open	Thin icons
+17.01.04	* Open	Shrink "book" on scroll up and chap title
+17.01.04	* Open	Extra tab
+17.01.04	* Open	aA text increaser button top right
 16.10.14	* Open	Fix Chapter Select animation
 16.10.14	* Open	Make Chapter Number Type Variable (1,2,3… or I,II,III)
 16.10.14	* Open  Make Navbar dynamic - Rename SMGVCHeader - consists of an array of titles, a 6 x 2 array of SMGButtons, it is a tabBar delegate, changes header based on which tabBar, it can animate off screen easily
@@ -8,7 +13,7 @@
 16.10.14	* Open  Save Complete App State on exit
 16.10.14        * Open  Put boxer in background of quote, as icon, put mountains, background images —> olympus, gladiators
 16.10.14        * Open  Put About info in settings tab
-16.10.14        * Open  Populated Book, Verses from Data
+16.10.14        * Open  Populate Book, Verses from Data
 16.10.14        * Open  Audio Button, implementation: http://stackoverflow.com/questions/707512/what-is-a-typedef-enum-in-objective-c
 16.10.14        * Open  Select and Share Text from Book
 16.10.14        * Open  Reconfigure Model Object (Pull from App Delegate)
@@ -18,3 +23,4 @@
 16.10.14        * Open  Blur image with respect to scroll speed delta
 16.10.14	* Open	Bookmark button, implementation
 16.10.14	* Open	1.0 Release
+

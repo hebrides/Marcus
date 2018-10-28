@@ -21,11 +21,14 @@
 //  SMGModel* appModel;
 //}
 
-- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle {
+- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle modelObject:(SMGModel *)modelObject {
     
     if (self = [super init]) {
         self.title = tabTitle;
-        _viewHeader = [[SMGViewHeader alloc] initWithTitle: headerTitle];
+        _appModel = modelObject;
+        _viewHeader = [[SMGViewHeader alloc]  initWithTitle: headerTitle modelObject:_appModel];
+
+      
         [self.view insertSubview: _viewHeader atIndex:5]; // Room for menus
         self.view.backgroundColor = [SMGGraphics Gray33];
       

@@ -15,14 +15,15 @@
 @property (nonatomic, strong) UISwitch *quoteSwitch;
 @property (nonatomic, strong) UIButton *pickerOpener;
 
+
 @end
 
 @implementation SettingsVC
 
 
-- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle {
+- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle modelObject:(SMGModel *)modelObject {
   
-  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle]) {
+  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle modelObject:modelObject]) {
     
     [self setUpSettingsView];
     [self setUpHeader];
@@ -50,7 +51,7 @@
   [_quoteSwitch setFrame: CGRectMake(xpos,ypos,_quoteSwitch.frame.size.width,_quoteSwitch.frame.size.height)];
 
   // Initialize and react to state changes
-  _quoteSwitch.on = APPDELEGATE.dailyQuoteOn;
+  _quoteSwitch.on = self.appModel.dailyQuoteOn;
   [_quoteSwitch addTarget:self action:@selector(switchValueChanged) forControlEvents:UIControlEventValueChanged];
 
   
@@ -91,7 +92,7 @@
   _timeIndicator.textColor = [SMGGraphics Blue22AADD];
   
   // Set Time Indicator Text
-  _timeIndicator.text = [NSDateFormatter localizedStringFromDate: [self dateFrom24HourTime:APPDELEGATE.quoteTime] dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterShortStyle];
+  _timeIndicator.text = [NSDateFormatter localizedStringFromDate: [self dateFrom24HourTime: self.appModel.quoteTime] dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterShortStyle];
   _timeIndicator.textAlignment = NSTextAlignmentRight;
   _timeIndicator.font = [UIFont systemFontOfSize:14];
   //  _timeIndicator.backgroundColor = [UIColor yellowColor]; // debugging
@@ -110,7 +111,7 @@
   // ------------------
   _timePicker = [[UIDatePicker alloc] init];
   _timePicker.datePickerMode = UIDatePickerModeTime;
-  _timePicker.date = [self dateFrom24HourTime:APPDELEGATE.quoteTime];
+  _timePicker.date = [self dateFrom24HourTime: self.appModel.quoteTime];
   _timePicker.backgroundColor = [UIColor clearColor];
   [_timePicker setValue:[UIColor whiteColor] forKey:@"textColor"];
   _timePicker.frame = CGRectMake(lineView2.frame.origin.x, lineView2.frame.origin.y+15, lineView2.frame.size.width, 200);
@@ -169,11 +170,11 @@
   BOOL newQuoteTimeSelected;
   BOOL newSwitchStateSelected;
   
-  if ([self pickerTimeAs24HourInt] == APPDELEGATE.quoteTime) {
+  if ([self pickerTimeAs24HourInt] == self.appModel.quoteTime) {
     newQuoteTimeSelected = NO;
   } else { newQuoteTimeSelected = YES; NSLog(@"New Daily Quote time selected.");}
 
-  if (_quoteSwitch.on == APPDELEGATE.dailyQuoteOn) {
+  if (_quoteSwitch.on == self.appModel.dailyQuoteOn) {
     newSwitchStateSelected = NO;
   } else { newSwitchStateSelected = YES; NSLog(@"New Daily Quote On/Off state selected.");}
 
@@ -250,10 +251,10 @@
 -(void)saveSettings {
   
   // Set and write settings
-  APPDELEGATE.quoteTime = [self pickerTimeAs24HourInt];
-  [APPDELEGATE saveSetting:APPDELEGATE.quoteTime forKey:@"quoteTime"];
-  APPDELEGATE.dailyQuoteOn = _quoteSwitch.on; // consolidate later
-  [APPDELEGATE saveSetting:APPDELEGATE.dailyQuoteOn forKey:@"dailyQuoteOn"];
+  self.appModel.quoteTime = [self pickerTimeAs24HourInt];
+  [self.appModel saveUserDefault:self.appModel.quoteTime forKey:@"quoteTime"];
+  self.appModel.dailyQuoteOn = _quoteSwitch.on; // consolidate later
+  [self.appModel saveUserDefault:self.appModel.dailyQuoteOn forKey:@"dailyQuoteOn"];
   
   // Schedule notifications if possible
   [self scheduleNotificationsCheck];
@@ -270,25 +271,25 @@
   NSLog(@"Attempting to schedule notifications... ");
   
   // Are notifications on?
-  if (APPDELEGATE.dailyQuoteOn == YES) {
+  if (self.appModel.dailyQuoteOn == YES) {
     NSLog(@"User has turned ON daily quote in app.");
     // Has the user allowed us to schedule notifications in device permissions?
-    if([APPDELEGATE notificationsCurrentlyEnabledInDeviceSettings]) {
+    if([self.appModel notificationsCurrentlyEnabledInDeviceSettings]) {
 
       
       // iOS requests user permission only after schedule code first executed.
       // i.e., there is no "undetermined" state
       // So, is this the app's first attempt to schedule notifications?
       
-      if (APPDELEGATE.notificationsAttemptedScheduled == NO) {
+      if (self.appModel.notificationsAttemptedScheduled == NO) {
         // Record and save first attempt to schedule
-        APPDELEGATE.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
-        [APPDELEGATE saveSetting:YES forKey:@"notificationsAttemptedScheduled"];
+        self.appModel.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
+        [self.appModel saveUserDefault:YES forKey:@"notificationsAttemptedScheduled"];
         NSLog(@"First attempt to schedule notifications.");
       }
       
       // Now we can schedule notifications
-      [APPDELEGATE scheduleDailyNotificationAtTime: APPDELEGATE.quoteTime];
+      [self.appModel scheduleDailyNotificationAtTime: self.appModel.quoteTime];
       
       
     } else { // The user has not enabled notifications in device permissions.
@@ -298,13 +299,13 @@
         // i.e., there is no "undetermined" state
         // So, is this the app's first attempt to schedule notifications?
 
-        if (APPDELEGATE.notificationsAttemptedScheduled == NO) {
+        if (self.appModel.notificationsAttemptedScheduled == NO) {
           // First attempt, so schedule notifications
-          [APPDELEGATE scheduleDailyNotificationAtTime: APPDELEGATE.quoteTime];
+          [self.appModel scheduleDailyNotificationAtTime: self.appModel.quoteTime];
           
           // Record and save first attempt to schedule
-          APPDELEGATE.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
-          [APPDELEGATE saveSetting:YES forKey:@"notificationsAttemptedScheduled"];
+          self.appModel.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
+          [self.appModel saveUserDefault:YES forKey:@"notificationsAttemptedScheduled"];
           NSLog(@"First attempt to schedule notifications.");
           
         } else { // This is not the app's first attempt to schedule notifications.
@@ -318,8 +319,8 @@
   } else { // dailyQuote is OFF
       // cancel notifications, but don't bother if not enabled in device settings
       NSLog(@"User has turned OFF daily quote in app.");
-      if ([APPDELEGATE notificationsCurrentlyEnabledInDeviceSettings]) {
-        [APPDELEGATE cancelDailyNotifications];
+      if ([self.appModel notificationsCurrentlyEnabledInDeviceSettings]) {
+        [self.appModel cancelDailyNotifications];
       }
   }
   
@@ -364,9 +365,9 @@
   NSLog(@"Undoing changes to settings.");
   
   // Restore settings
-  _quoteSwitch.on = APPDELEGATE.dailyQuoteOn;
-  _timePicker.date = [self dateFrom24HourTime:APPDELEGATE.quoteTime];
-  _timeIndicator.text = [NSDateFormatter localizedStringFromDate: [self dateFrom24HourTime:APPDELEGATE.quoteTime] dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterShortStyle];
+  _quoteSwitch.on = self.appModel.dailyQuoteOn;
+  _timePicker.date = [self dateFrom24HourTime:self.appModel.quoteTime];
+  _timeIndicator.text = [NSDateFormatter localizedStringFromDate: [self dateFrom24HourTime:self.appModel.quoteTime] dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterShortStyle];
 
   // Fade out buttons
   [self fadeOutSaveUndoButtons];

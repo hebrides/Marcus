@@ -30,23 +30,23 @@
 // ((SMGAppDelegate*) [[UIApplication sharedApplication] delegate])
 // ------------------------------------------------------------------------
 
-@property (nonatomic) BOOL statusBarShown;
-@property (nonatomic) BOOL dailyQuoteOn;
-@property (nonatomic) BOOL savedDeviceNotificationsEnabledState;
-@property (nonatomic) BOOL notificationsAttemptedScheduled;
-@property (nonatomic) NSInteger timesActive;
-@property (nonatomic) NSInteger daysSinceNotificationsLastScheduled;
-@property (nonatomic) NSInteger dayNotificationsLastScheduled;
-@property (nonatomic) NSInteger quoteTime;
-@property (nonatomic) NSInteger book;
-@property (nonatomic) NSInteger verse;
+//@property (nonatomic) BOOL statusBarShown;
+//@property (nonatomic) BOOL dailyQuoteOn;
+//@property (nonatomic) BOOL savedDeviceNotificationsEnabledState;
+//@property (nonatomic) BOOL notificationsAttemptedScheduled;
+//@property (nonatomic) NSInteger timesActive;
+//@property (nonatomic) NSInteger daysSinceNotificationsLastScheduled;
+//@property (nonatomic) NSInteger dayNotificationsLastScheduled;
+//@property (nonatomic) NSInteger quoteTime;
+//@property (nonatomic) NSInteger book;
+//@property (nonatomic) NSInteger verse;
 @property (nonatomic, strong) RDVTabBarController* tabBarController;
 
 
-- (void) saveSetting:(NSInteger)setting forKey:(NSString*)key;
-- (void) scheduleDailyNotificationAtTime:(NSInteger)time24;
-- (void) cancelDailyNotifications;
-- (BOOL) notificationsCurrentlyEnabledInDeviceSettings;
-- (NSArray*) getQuoteOfTheDay;
+//- (void) saveSetting:(NSInteger)setting forKey:(NSString*)key;
+//- (void) scheduleDailyNotificationAtTime:(NSInteger)time24;
+//- (void) cancelDailyNotifications;
+//- (BOOL) notificationsCurrentlyEnabledInDeviceSettings;
+//- (NSArray*) getQuoteOfTheDay;
 
 @end

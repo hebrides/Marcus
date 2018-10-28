@@ -7,7 +7,6 @@
 //
 
 #import "SMGViewController.h"
-#import "SMGAppDelegate.h"
 
 @interface SettingsVC : SMGViewController
 - (void) setUpSettingsView;

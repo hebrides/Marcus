@@ -30,9 +30,9 @@
 
 @implementation BookVC
 
-- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle {
+- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle modelObject:(SMGModel *)modelObject {
   
-  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle]) {
+  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle modelObject:modelObject]) {
     [self setUpBookView];
     
   } else NSLog(@"BookVC Init Fail");

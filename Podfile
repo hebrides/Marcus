@@ -1,24 +1,15 @@
-platform :ios, '8.0'
-use_frameworks!
+# Uncomment this line to define a global platform for your project
+# platform :ios, '9.0'
 
 target 'Marcus' do
-  pod 'RDVTabBarController'
-#  pod 'SWRevealViewController'
-#  pod 'SCPageViewController', '~> 2.0'
-#  pod 'FBSDKLoginKit'
-#  pod 'WebViewJavascriptBridge', '~> 5.0'
 
-#  pod 'TTTAttributedLabel'
+  # Uncomment this line if you're using Swift or would like to use dynamic frameworks
+  # use_frameworks!
+
+  # Pods for Marcus
 
  pod 'DTRichTextEditor', '~> 1.6'
  pod 'V8HorizontalPickerView', '~> 1.0'
-
-# don't add the pod below, use the three after for ShareKit
-# pod 'ShareKit', '~> 2.5'
-
-
-#  pod "ShareKit/Facebook"
-#  pod "ShareKit/Twitter"
-#  pod "ShareKit/Pinboard"
+ pod 'RDVTabBarController'
 
 end

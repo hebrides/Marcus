@@ -7,8 +7,8 @@
 //
 
 #import "SMGViewHeader.h"
-#import "SMGAppDelegate.h"
 #import "SMGGraphics.h"
+#import "SMGTools.h"
 
 
 @implementation SMGViewHeader
@@ -21,18 +21,18 @@
 }
 */
 
-- (id)initWithTitle:(NSString*) title {
+- (id)initWithTitle:(NSString*)title modelObject:(SMGModel *)modelObject {
   
   self = [super init];
   if (self) {
     _title = title;
- 
+    _appModel = modelObject;
     //
     // Compute Status Bar Adjustment
     // -----------------------------
-    SMGAppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
-    NSLog(@"Status Bar %i", appDelegate.statusBarShown);
-    _statusBarAdjust = (appDelegate.statusBarShown)? [UIApplication sharedApplication].statusBarFrame.size.height : 0;
+
+    NSLog(@"Status Bar %i", _appModel.statusBarShown);
+    _statusBarAdjust = (_appModel.statusBarShown)? [UIApplication sharedApplication].statusBarFrame.size.height : 0;
     
     //
     // Make ViewHeader & Buttons

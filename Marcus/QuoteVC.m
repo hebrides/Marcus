@@ -25,9 +25,9 @@
 @implementation QuoteVC
 
 
-- (id) initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle {
+- (id)initWithTabTitle:(NSString*)tabTitle headerTitle: (NSString*)headerTitle modelObject:(SMGModel *)modelObject {
   
-  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle]) {
+  if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle modelObject:modelObject]) {
     
     [self setUpQuoteView];
     
@@ -74,7 +74,7 @@
       //
       //  _quoteLabel.attributedText = quoteOfTheDayAttributedText;
 
-        _quoteLabel.text = [self setQuoteOfTheDay];
+        _quoteLabel.text = [self getQuoteOfTheDay];
 
         // React to tap on label
         UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoBook)];
@@ -109,9 +109,9 @@
   //[self.view insertSubview: quoteTextView atIndex:1];
 }
 
-- (NSString*) setQuoteOfTheDay {
+- (NSString*) getQuoteOfTheDay {
   
-  NSArray* quoteOfTheDayElements = [APPDELEGATE getQuoteOfTheDay];
+  NSArray* quoteOfTheDayElements = [self.appModel getQuoteOfTheDay];
   NSString* quote = [NSString stringWithFormat:@"\"%@\"", quoteOfTheDayElements[0]];
   NSString* spacer = @"\n\n        - ";
   NSString* citation = [NSString stringWithFormat:@"Book %@, Verse %@", quoteOfTheDayElements[1], quoteOfTheDayElements[2]];
@@ -173,7 +173,7 @@
 - (void)viewWillAppear:(BOOL)animated {
   //
     NSLog(@"Quoteview appeared");
-  _quoteLabel.text = [self setQuoteOfTheDay];
+  _quoteLabel.text = [self getQuoteOfTheDay];
 }
 
 

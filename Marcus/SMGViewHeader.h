@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "SMGButton.h"
+#import "SMGModel.h"
 
 @interface SMGViewHeader : UIView
 
@@ -20,7 +21,8 @@
 @property (nonatomic)                 CGRect                mainFrame;
 @property (nonatomic)                 CGFloat               buttonWidthFactor;
 @property (nonatomic)                 CGFloat               headerHeightFactor;
+@property (nonatomic, strong)         SMGModel*             appModel;
 
-- (id)initWithTitle:(NSString*) title;
+- (id)initWithTitle:(NSString*) title modelObject:(SMGModel*)modelObject;
 
 @end
