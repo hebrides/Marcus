@@ -3,7 +3,7 @@
 //  Marcus
 //
 //  Created by Marcus Skye Lewis on 11/7/15.
-//  Copyright © 2015 SMGMobile. All rights reserved.
+//  Copyright © 2019 SMGMobile. All rights reserved.
 //
 
 
@@ -30,23 +30,8 @@
 // ((SMGAppDelegate*) [[UIApplication sharedApplication] delegate])
 // ------------------------------------------------------------------------
 
-//@property (nonatomic) BOOL statusBarShown;
-//@property (nonatomic) BOOL dailyQuoteOn;
-//@property (nonatomic) BOOL savedDeviceNotificationsEnabledState;
-//@property (nonatomic) BOOL notificationsAttemptedScheduled;
-//@property (nonatomic) NSInteger timesActive;
-//@property (nonatomic) NSInteger daysSinceNotificationsLastScheduled;
-//@property (nonatomic) NSInteger dayNotificationsLastScheduled;
-//@property (nonatomic) NSInteger quoteTime;
-//@property (nonatomic) NSInteger book;
-//@property (nonatomic) NSInteger verse;
 @property (nonatomic, strong) RDVTabBarController* tabBarController;
 
-
-//- (void) saveSetting:(NSInteger)setting forKey:(NSString*)key;
-//- (void) scheduleDailyNotificationAtTime:(NSInteger)time24;
-//- (void) cancelDailyNotifications;
-//- (BOOL) notificationsCurrentlyEnabledInDeviceSettings;
-//- (NSArray*) getQuoteOfTheDay;
+- (BOOL)hasTopNotch;
 
 @end

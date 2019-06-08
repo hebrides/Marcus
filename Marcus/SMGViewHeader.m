@@ -31,7 +31,7 @@
     // Compute Status Bar Adjustment
     // -----------------------------
 
-    NSLog(@"Status Bar %i", _appModel.statusBarShown);
+    DLog(@"Status Bar %i", _appModel.statusBarShown);
     _statusBarAdjust = (_appModel.statusBarShown)? [UIApplication sharedApplication].statusBarFrame.size.height : 0;
     
     //
@@ -76,7 +76,7 @@
   [self addSubview: lineView1];
   [self addSubview: _label];
   
-  NSLog(@"Made %@ Header",_title);
+  DLog(@"Made %@ Header",_title);
   
 }
 

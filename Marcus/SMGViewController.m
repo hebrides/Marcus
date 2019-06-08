@@ -3,7 +3,7 @@
 //  Marcus
 //
 //  Created by Marcus Skye Lewis on 11/7/15.
-//  Copyright © 2015 SMGMobile. All rights reserved.
+//  Copyright © 2019 SMGMobile. All rights reserved.
 //
 //
 
@@ -33,7 +33,7 @@
         self.view.backgroundColor = [SMGGraphics Gray33];
       
     } else {
-      NSLog(@"SMGVC Init Fail");
+      DLog(@"SMGVC Init Fail");
     }
     return self;
 }

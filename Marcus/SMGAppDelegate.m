@@ -3,18 +3,13 @@
 //  Marcus
 //
 //  Created by Marcus Skye Lewis on 11/7/15.
-//  Copyright © 2015 SMGMobile. All rights reserved.
+//  Copyright © 2019 SMGMobile. All rights reserved.
 //
 //
 
 #import "SMGAppDelegate.h"
 
-
-
-
-
 @interface SMGAppDelegate () <RDVTabBarControllerDelegate>
-
 
 @property (nonatomic, strong)          BookVC*              bookVC;
 @property (nonatomic, strong)          QuoteVC*             quoteVC;
@@ -25,14 +20,14 @@
 
 @implementation SMGAppDelegate
 
-
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+  DLog(@"Debug Mode!");
+  //
+  // Initialize main window
+  // ----------------------
+  CGRect mainViewFrame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  _window = [[UIWindow alloc] initWithFrame: mainViewFrame];
   
-#ifdef DEBUG
-  NSLog(@"Debug Mode!");
-#endif
-
   
   //
   // Initialize tab bar, views & view controllers
@@ -46,11 +41,6 @@
   if (localNotif) {
     _tabBarController.selectedIndex = 1; // Open in quote view
   }
-  
-  //
-  // Initialize main window
-  // ----------------------
-  _window = [[UIWindow alloc] initWithFrame: BOUNDS];
   
   //
   // Configure Main Window
@@ -83,6 +73,12 @@
   // -------------
   _tabBarController = [[RDVTabBarController alloc] init];
   [_tabBarController setViewControllers: @[_bookVC, _quoteVC, _settingsVC]];
+  DLog(@"Has Notch, %i", [self hasTopNotch]);
+  if ([self hasTopNotch]) {
+    [self.tabBarController.tabBar setHeight: 70.0f];
+  } else  {
+    //    [self.tabBarController.tabBar setHeight: TABBARHEIGHT];
+  }
 
   //
   // Set Status Bar
@@ -103,6 +99,15 @@
                                              NSFontAttributeName: [UIFont systemFontOfSize:10.5],
                                              NSForegroundColorAttributeName: [SMGGraphics Blue22AADD],
                                              };
+  
+  UIOffset titlePositionAdjustment = UIOffsetMake(0.0f, 3.5f);
+  UIOffset imagePositionAdjustment = UIOffsetMake(0.0f, 0.0f);
+  if ([self hasTopNotch]) { // If iPhone X
+    // Nudge up tab bar items
+    titlePositionAdjustment = UIOffsetMake(0, -2.0f);
+    imagePositionAdjustment = UIOffsetMake(0, -8.0f);
+  }
+  
   NSInteger count = 1;
   for (RDVTabBarItem *item in tabBar.items) {
     
@@ -111,7 +116,8 @@
     [item setFinishedSelectedImage:selectedimage withFinishedUnselectedImage:unselectedimage];
     [item setUnselectedTitleAttributes:unselectedTextAttributes];
     [item setSelectedTitleAttributes:selectedTextAttributes];
-    [item setTitlePositionAdjustment:UIOffsetMake(0, 3.5)];
+    item.titlePositionAdjustment = titlePositionAdjustment;
+    item.imagePositionAdjustment = imagePositionAdjustment;
     count++;
   }
   
@@ -128,13 +134,20 @@
   
   if (application.applicationState == UIApplicationStateActive){
     // App already in foreground
-    NSLog(@"Local notification received while app in foreground: %@", notification.alertBody);
+    DLog(@"Local notification received while app in foreground: %@", notification.alertBody);
   } else {
     // App brought from background to foreground
     _tabBarController.selectedIndex = 1; // Open app in quote view
-    NSLog(@"User responded to notification while app in background or app paused for alert: %@", notification.alertBody);
+    DLog(@"User responded to notification while app in background or app paused for alert: %@", notification.alertBody);
   }
   
+}
+
+- (BOOL)hasTopNotch {
+  if (@available(iOS 11.0, *)) {
+    return [[[UIApplication sharedApplication] delegate] window].safeAreaInsets.top > 20.0;
+  }
+  return  NO;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -155,12 +168,15 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
   // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-  NSLog(@"App now active.");
+  DLog(@"App now active.");
   
   _appModel.timesActive ++;
-  NSLog(@"Times active: %li", (long)_appModel.timesActive);
+  
+  DLog(@"Times active: %li", (long)_appModel.timesActive);
   [_appModel saveUserDefault: _appModel.timesActive forKey:@"timesActive"];
+ 
 
+  
   //
   // Reschedule notifications if possible/ necessary
   // -----------------------------------------------
@@ -192,10 +208,10 @@
   
     // Reschedule notifications every two weeks OR if newly enabled in device settings
     if ( ([_appModel notificationsNewlyEnabled] || _appModel.daysSinceNotificationsLastScheduled >= 14) && _appModel.dailyQuoteOn) {
-      NSLog(@"It's time to reschedule notifications OR notifications have been recently enabled... reschedule!");
+      DLog(@"It's time to reschedule notifications OR notifications have been recently enabled... reschedule!");
       [_appModel scheduleDailyNotificationAtTime:_appModel.quoteTime];
     } else {
-      NSLog(@"No reason to reschedule notifications.");
+      DLog(@"No reason to reschedule notifications.");
     }
   }
   

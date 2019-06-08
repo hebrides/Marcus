@@ -28,7 +28,7 @@
     [self setUpSettingsView];
     [self setUpHeader];
 
-  } else NSLog(@"SettingsVC Init Fail");
+  } else DLog(@"SettingsVC Init Fail");
   return self;
 }
 
@@ -155,13 +155,13 @@
 }
 
 -(void)pickerValueChanged {
-  NSLog(@"TimePicker State Changed!!");
+  DLog(@"TimePicker State Changed!!");
   _timeIndicator.text = [self timeAsString];
   [self checkForSave];
 }
 
 -(void)switchValueChanged {
-    NSLog(@"Switch State Changed!!");
+    DLog(@"Switch State Changed!!");
   [self checkForSave];
 }
 
@@ -172,14 +172,14 @@
   
   if ([self pickerTimeAs24HourInt] == self.appModel.quoteTime) {
     newQuoteTimeSelected = NO;
-  } else { newQuoteTimeSelected = YES; NSLog(@"New Daily Quote time selected.");}
+  } else { newQuoteTimeSelected = YES; DLog(@"New Daily Quote time selected.");}
 
   if (_quoteSwitch.on == self.appModel.dailyQuoteOn) {
     newSwitchStateSelected = NO;
-  } else { newSwitchStateSelected = YES; NSLog(@"New Daily Quote On/Off state selected.");}
+  } else { newSwitchStateSelected = YES; DLog(@"New Daily Quote On/Off state selected.");}
 
   if (newQuoteTimeSelected || newSwitchStateSelected) {
-    NSLog(@"Save Possible!!");
+    DLog(@"Save Possible!!");
     [self fadeInSaveUndoButtons];
   } else { [self fadeOutSaveUndoButtons];}
   
@@ -232,7 +232,7 @@
 -(void)fadeInSaveUndoButtons {
 
   [UIView animateWithDuration:0.3 animations:^{
-      NSLog(@"Fading In buttons");
+      DLog(@"Fading In buttons");
     [self.viewHeader.leftButton setTintColor:[SMGGraphics Blue22AADD]];
     [self.viewHeader.rightButton setTintColor:[SMGGraphics Blue22AADD]];
   } completion:^(BOOL finished) {
@@ -241,7 +241,7 @@
 
 -(void)fadeOutSaveUndoButtons {
   [UIView animateWithDuration:0.3 animations:^{
-      NSLog(@"Fading Out buttons");
+      DLog(@"Fading Out buttons");
     [self.viewHeader.rightButton setTintColor:[UIColor darkGrayColor]];
     [self.viewHeader.leftButton setTintColor:[UIColor darkGrayColor]];
   } completion:^(BOOL finished) {
@@ -268,11 +268,11 @@
 
 -(void) scheduleNotificationsCheck {
 
-  NSLog(@"Attempting to schedule notifications... ");
+  DLog(@"Attempting to schedule notifications... ");
   
   // Are notifications on?
   if (self.appModel.dailyQuoteOn == YES) {
-    NSLog(@"User has turned ON daily quote in app.");
+    DLog(@"User has turned ON daily quote in app.");
     // Has the user allowed us to schedule notifications in device permissions?
     if([self.appModel notificationsCurrentlyEnabledInDeviceSettings]) {
 
@@ -285,7 +285,7 @@
         // Record and save first attempt to schedule
         self.appModel.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
         [self.appModel saveUserDefault:YES forKey:@"notificationsAttemptedScheduled"];
-        NSLog(@"First attempt to schedule notifications.");
+        DLog(@"First attempt to schedule notifications.");
       }
       
       // Now we can schedule notifications
@@ -306,7 +306,7 @@
           // Record and save first attempt to schedule
           self.appModel.notificationsAttemptedScheduled = YES; // maybe refactor in model later so this is one method call to save and set
           [self.appModel saveUserDefault:YES forKey:@"notificationsAttemptedScheduled"];
-          NSLog(@"First attempt to schedule notifications.");
+          DLog(@"First attempt to schedule notifications.");
           
         } else { // This is not the app's first attempt to schedule notifications.
 
@@ -318,7 +318,7 @@
     
   } else { // dailyQuote is OFF
       // cancel notifications, but don't bother if not enabled in device settings
-      NSLog(@"User has turned OFF daily quote in app.");
+      DLog(@"User has turned OFF daily quote in app.");
       if ([self.appModel notificationsCurrentlyEnabledInDeviceSettings]) {
         [self.appModel cancelDailyNotifications];
       }
@@ -342,19 +342,19 @@
 
   [self presentViewController:alert animated:YES completion:nil];
   
-  NSLog(@"Please enable notifications in settings.");
+  DLog(@"Please enable notifications in settings.");
 
 }
 
 -(void) goToSettings {
-  NSLog(@"Going to device settings.");
+  DLog(@"Going to device settings.");
   NSURL*url=[NSURL URLWithString:UIApplicationOpenSettingsURLString];
 
   dispatch_async(dispatch_get_main_queue(), ^{
     if([[UIApplication sharedApplication] canOpenURL:url]){
         [[UIApplication sharedApplication] openURL: url];
       } else {
-        NSLog(@"Can't open URL!");
+        DLog(@"Can't open URL!");
       }
     });
   
@@ -362,7 +362,7 @@
 
 -(void)cancelSettings {
   
-  NSLog(@"Undoing changes to settings.");
+  DLog(@"Undoing changes to settings.");
   
   // Restore settings
   _quoteSwitch.on = self.appModel.dailyQuoteOn;

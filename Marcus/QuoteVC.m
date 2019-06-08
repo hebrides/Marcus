@@ -31,7 +31,7 @@
     
     [self setUpQuoteView];
     
-  } else NSLog(@"QuoteVC Init Fail");
+  } else DLog(@"QuoteVC Init Fail");
   return self;
 }
 
@@ -40,6 +40,7 @@
   //
   // Make Share Button
   // -----------------
+  /*
   [self.viewHeader.rightButton setImage:[SMGGraphics imageOfShareWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
     [self.viewHeader.rightButton setImage:[SMGGraphics imageOfShareWithColor:[UIColor whiteColor]] forState:UIControlStateSelected];
   [self.viewHeader.rightButton setTintColor:[UIColor whiteColor]];
@@ -48,7 +49,8 @@
   [self.viewHeader.rightButton setImageEdgeInsets: UIEdgeInsetsMake(0, 0, 0, (25.0 - self.viewHeader.frame.size.height))];
   // Share Action
   [self.viewHeader.rightButton addTarget:self action:@selector(shareQuote) forControlEvents:UIControlEventTouchUpInside];
-
+  */
+  
   //
   // Make Quote Label
   // ----------------
@@ -77,7 +79,8 @@
         _quoteLabel.text = [self getQuoteOfTheDay];
 
         // React to tap on label
-        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoBook)];
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                                     action:@selector(invokeQuoteMenu)];
         // tapGesture.delegate=self;
         [_quoteLabel addGestureRecognizer:tapGesture];
 
@@ -115,15 +118,20 @@
   NSString* quote = [NSString stringWithFormat:@"\"%@\"", quoteOfTheDayElements[0]];
   NSString* spacer = @"\n\n        - ";
   NSString* citation = [NSString stringWithFormat:@"Book %@, Verse %@", quoteOfTheDayElements[1], quoteOfTheDayElements[2]];
-  NSLog(@"%@\n %@", quote, citation);
+  DLog(@"%@\n %@", quote, citation);
   
   return [NSString stringWithFormat:@"%@%@%@", quote, spacer, citation];
 
 }
 
-- (void) gotoBook {
-  NSLog(@"Touched");
+- (void) invokeQuoteMenu {
+  DLog(@"Touched");
   //[self turnQuoteBlue];
+}
+
+- (void) copyQuoteToClipboard {
+  UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+  pasteboard.string = [self getQuoteOfTheDay];
 }
 
 -(void)turnQuoteBlue {
@@ -154,7 +162,7 @@
 
 //  Sharekit pod (above) removed for 1.0 release -- needs to be configured
   
-  NSLog(@"ShareButton pressed");
+  DLog(@"ShareButton pressed");
   NSString *stringtoshare= _quoteLabel.text;
   UIImage *imagetoshare = [SMGGraphics imageOfQuoteWithColor:[SMGGraphics Blue22AADD]]; //This is an image to share.
   
@@ -172,7 +180,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   //
-    NSLog(@"Quoteview appeared");
+    DLog(@"Quoteview appeared");
   _quoteLabel.text = [self getQuoteOfTheDay];
 }
 

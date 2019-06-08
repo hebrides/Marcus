@@ -11,6 +11,11 @@
 #import <DTCoreText/DTAttributedTextView.h>
 #import <DTCoreText/NSAttributedString+HTML.h>
 
+typedef NS_ENUM(NSInteger, menuState) {
+  onceDown,
+  onceUp,
+  twiceUp,
+};
 
 @interface BookVC () <SMGHorizontalPickerViewDelegate, SMGHorizontalPickerViewDataSource, UIScrollViewDelegate>
 
@@ -35,7 +40,7 @@
   if (self = [super initWithTabTitle:tabTitle headerTitle:headerTitle modelObject:modelObject]) {
     [self setUpBookView];
     
-  } else NSLog(@"BookVC Init Fail");
+  } else DLog(@"BookVC Init Fail");
   return self;
 }
 
@@ -77,9 +82,9 @@
   [self.viewHeader.leftButton setImage:[SMGGraphics imageOfChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
 
   // Intended to make the left edge of the button spaced from the left edge of the device window exactly the height inset (Paint Code icons are 25.0 canvas size)
-  [self.viewHeader.leftButton setImageEdgeInsets: UIEdgeInsetsMake(0,  (25.0 - self.viewHeader.frame.size.height), 0, 0)];
+  self.viewHeader.leftButton.imageEdgeInsets = ([APPDELEGATE hasTopNotch]) ? UIEdgeInsetsMake(0,(50.0 - self.viewHeader.frame.size.height), 0, 0) : UIEdgeInsetsMake(0,(25.0 - self.viewHeader.frame.size.height), 0, 0);
   // Share Action
-  [self.viewHeader.leftButton addTarget:self action:@selector(animateChaptersMenuOpenClose) forControlEvents:UIControlEventTouchUpInside];
+  [self.viewHeader.leftButton addTarget:self action:@selector(leftButtonTouched) forControlEvents:UIControlEventTouchUpInside];
   
   //self.viewHeader.backgroundColor = [UIColor blueColor]; // debugging
   
@@ -87,14 +92,15 @@
   // Make Chapters Menu
   // ------------------
   _chaptersMenu = [[SMGHorizontalPickerView alloc] initWithFrame: CGRectMake(0, 0, BOUNDS.size.width, self.viewHeader.frame.size.height*.8)];
-  _chaptersMenu.elementFont = [UIFont systemFontOfSize:14.0f];
+  _chaptersMenu.elementFont = ([APPDELEGATE hasTopNotch]) ? [UIFont systemFontOfSize:17.0f] : [UIFont systemFontOfSize:14.0f] ;
   _chaptersMenu.backgroundColor   = [SMGGraphics Gray33];
   _chaptersMenu.selectedTextColor = [SMGGraphics Blue22AADD];
   _chaptersMenu.textColor = [UIColor whiteColor];
   _chaptersMenu.selectionPoint = CGPointMake(_chaptersMenu.frame.size.width/2, 0);
   
-  // Fix this
-  _chapters = [NSMutableArray arrayWithObjects:@"I", @"II", @"III", @"IV", @"V", @"VI", @"VII", @"VIII", @"IX", @"X", @"XI", @"XII", nil];
+  // Make Chapters Select Buttons
+  _chapters = ([APPDELEGATE hasTopNotch]) ? [NSMutableArray arrayWithObjects:@"I", @"II", @"III", @"IV", @"V", @"VI", @"VII", @"VIII", @"IX", @"X", @"XI", @"XII", nil] :
+      [NSMutableArray arrayWithObjects:@"I", @"II", @"III", @"IV ", @"V", @"VI ", @"VII ", @"VIII", @" IX", @"X", @"XI ", @" XII", nil];
   _chaptersMenu.delegate = self; _chaptersMenu.dataSource = self;
   
   //
@@ -120,6 +126,8 @@
   _shadowView.layer.shadowOffset = CGSizeMake(0.0f, 7.0f);
   _shadowView.layer.shadowPath = [UIBezierPath bezierPathWithRect: _chaptersMenu.bounds].CGPath;
   
+  [_chaptersMenu insertSubview:_shadowView atIndex:0];
+  
   //
   // Make Bottom Lines for Picker Menu Views  <-- Note: Replace these lineviews with CALayers
   // ---------------------------------------
@@ -131,10 +139,12 @@
   //
   // Put Menu Views Together
   // -----------------------
-  [_versesMenu insertSubview:_shadowView atIndex:0];
-  [_versesMenu insertSubview: versesMenuBottomLine atIndex:2];
+//  [_versesMenu insertSubview:_shadowView atIndex:0];
+//  [_versesMenu insertSubview: versesMenuBottomLine atIndex:2];
 
-  [_chaptersMenu insertSubview:_versesMenu atIndex:0];
+  
+//  [_chaptersMenu insertSubview:_versesMenu atIndex:0];
+
   [_chaptersMenu insertSubview: chaptersMenuBottomLine atIndex:2];
   //[_chaptersMenu addSubview: chaptersLabel];
 
@@ -148,191 +158,118 @@
   //
   // Record initial menu and header/footer states, reset picker to last viewed element
   // ---------------------------------------------------------------------------------
-  _chaptersMenu.opened = NO;
+  _chaptersMenu.opened = NO; // Hidden Menu
   [_chaptersMenu scrollToElement:0 animated:NO]; /*_lastViewedElement*/
   _animatingHeaderFooter = NO;
-  _headerFooterVisible = YES;
+  _headerFooterVisible = YES; // Hidden Header, NO
 
 
 }
 
 - (void)scrollViewDidScroll: (DTAttributedTextView*)scrollView {
-  NSLog(@"Scrolling");
+  DLog(@"Scrolling");
   CGPoint translation = [scrollView.panGestureRecognizer translationInView:scrollView];
-  NSLog(@"Translation X:%f, Y%f", translation.x, translation.y);
+  DLog(@"Translation X:%f, Y%f", translation.x, translation.y);
   
-  // Check if user still dragging and check if already animating
+  // Check if user still dragging and check if already animating (If already animating do nothing)
   if (_userDraggingScrollView && _animatingHeaderFooter == NO) {
-    // Detect direction by accessing x or y of translation
+    // Detect scroll direction by accessing x or y of translation
+    // If scrolling up, and the header/footer/menu is not already offscreen, animate header/footer/menu offscreen
     if (translation.y < 1 && _headerFooterVisible == YES) {
-      NSLog(@"UP! -- Animate AWAY header/footer");
-      [self animateHeaderFooterOpenClose];
+      DLog(@"UP! -- Animate AWAY header/footer");
+      [self animateHeaderFooter];
+      if (_chaptersMenu.opened) { // if menu open, move menu from open position all the way offscreen
+        [self animateChaptersMenu:twiceUp];
+         // then swap menu icon back to hamburger (close menu)
+         [self.viewHeader.leftButton setImage:[SMGGraphics imageOfChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
+        _chaptersMenu.opened = NO;
+      } else { // if menu closed, move menu from closed position all the way offscreen
+        [self animateChaptersMenu:onceUp];
+      }
     }
-    
+    // If scrolling down, and the header/footer is already offscreen, animate header onscreen
     if (translation.y > 1 && _headerFooterVisible == NO) {
-      NSLog(@"DOWN! -- Animate BACK header/footer");
-      [self animateHeaderFooterOpenClose];
+      DLog(@"DOWN! -- Animate BACK header/footer");
+      [self animateHeaderFooter];
+      [self animateChaptersMenu: onceDown];
     }
-
   }
-
 }
 
 - (void)scrollViewWillBeginDragging: (DTAttributedTextView*)scrollView {
-  NSLog(@"******* Begin Dragging Scrollview *********");
+  DLog(@"******* Begin Dragging Scrollview *********");
   _userDraggingScrollView = YES;
 }
 
 - (void)scrollViewDidEndDragging: (DTAttributedTextView*)scrollView willDecelerate: (BOOL) decelerate {
-  NSLog(@"******* Finished Dragging Scrollview *********");
+  DLog(@"******* Finished Dragging Scrollview *********");
   _userDraggingScrollView = NO;
 }
 
-- (void)animateHeaderFooterOpenClose {
-  _animatingHeaderFooter = YES;
-  NSLog(@"Animating Header/Footer: More Room to Read!!");
+- (void)animateHeaderFooter {
+  _animatingHeaderFooter = YES; // prevent changes during animation
 
-  //
-  // Get current frame, check if menu open, assign open and closed menu states
-  // -------------------------------------------------------------------------
   CGRect headerCurrentFrame = self.viewHeader.frame;
-  CGRect menuCurrentFrame = _chaptersMenu.frame;
   
-  // OffsetY is how far the menu moves up or down
-  CGFloat headerOffsetY = self.viewHeader.frame.size.height + 1 /*1 = bottom border line*/;
-  CGFloat menuOffsetY = _chaptersMenu.frame.size.height + 1 /*1 = bottom border line*/;
+  // headerOffsetY is how far the header moves up or down to hide; it is equal to the height of the header
+  CGFloat headerOffsetY = self.viewHeader.frame.size.height + 1; // 1px extra for bottom border line
   CGFloat newHeaderOffsetY = (_headerFooterVisible)? -headerOffsetY : headerOffsetY;
-  CGFloat newMenuOffsetY = (_headerFooterVisible)? -menuOffsetY : menuOffsetY;
   BOOL footerVisible = (_headerFooterVisible)? YES : NO;
 
-  //
   // Animate Header/Footer
-  // ---------------------
   
-  // Handle Menus
-  /*
-   Logic for accordian-style closing of chapter and verses menus, then closing of header/footer:
-      
-    closeMenus(array theMenus):
-      array allmenus;
-      for each menu in allmenus:
-        if menu.open:
-          transaction:
-            closemenu;
-          completion: continue;
-
-      closeheaderfooter;
-  */
-  
-  
-  /* 
-   Logic for moving any view to a before and after state
-  
-   moveView(currentFrame, offSetX, offSetY, {completion}):
-   
-  */
-  
-  
-  if (_chaptersMenu.opened) {
-    [CATransaction begin];
-    [CATransaction setCompletionBlock:^{
-      // Menu animation has finished
-      NSLog(@"Done tucking away the menus :-) !!!!");
-      [APPDELEGATE.tabBarController setTabBarHidden:footerVisible animated: YES];
-      [UIView animateWithDuration:0.35 animations:^{
-        self.viewHeader.frame = CGRectOffset(headerCurrentFrame, 0, newHeaderOffsetY);
-        _chaptersMenu.frame = CGRectOffset(menuCurrentFrame, 0, newMenuOffsetY);
-      } completion:^(BOOL finished) {
-        _headerFooterVisible = !_headerFooterVisible;
-        _animatingHeaderFooter = NO;
-      }];
-
-    }];
-    [self animateChaptersMenuOpenClose];
-    [CATransaction commit];
-    
-  } else {
     [APPDELEGATE.tabBarController setTabBarHidden:footerVisible animated: YES];
     [UIView animateWithDuration:0.35 animations:^{
       self.viewHeader.frame = CGRectOffset(headerCurrentFrame, 0, newHeaderOffsetY);
-      _chaptersMenu.frame = CGRectOffset(menuCurrentFrame, 0, newMenuOffsetY);
-    } completion:^(BOOL finished) {
-      _headerFooterVisible = !_headerFooterVisible;
-      _animatingHeaderFooter = NO;
+     } completion:^(BOOL finished) {
+      self.headerFooterVisible = !self.headerFooterVisible;
+      self.animatingHeaderFooter = NO;
     }];
+}
+
+
+- (void) leftButtonTouched {
+  if (_chaptersMenu.opened == NO) {
+    // Swap Icon to X
+    [self.viewHeader.leftButton setImage:[SMGGraphics imageOfCloseChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
+    [self animateChaptersMenu: onceDown];
+    _chaptersMenu.opened = YES;
+  } else {
+    // Swap Icon to Hamburger
+    [self.viewHeader.leftButton setImage:[SMGGraphics imageOfChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal];
+    [self animateChaptersMenu: onceUp];
+    _chaptersMenu.opened = NO;
   }
   
 }
 
-- (void)animateChaptersMenuOpenClose {
+- (void)animateChaptersMenu: (menuState) menuState  {
   
-  (_chaptersMenu.opened)?  [self.viewHeader.leftButton setImage:[SMGGraphics imageOfChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal] : [self.viewHeader.leftButton setImage:[SMGGraphics imageOfCloseChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal] ;
-  
-  self.viewHeader.leftButton.userInteractionEnabled = NO;
-  NSLog(@"#Animating chapters menu#");
-  NSLog(@"### menu Y = %f ###", _chaptersMenu.frame.origin.y);
+  self.viewHeader.leftButton.userInteractionEnabled = NO; // Disable leftbutton while animating
+  CGFloat dy; // position change to move menu: show / hide / offscreen
+  switch (menuState) {
+    case onceDown:
+      dy = self.viewHeader.frame.size.height; //move below header, or onscreen if offscreen
+      break;
+    case onceUp:
+      dy = -self.viewHeader.frame.size.height; //move behind header, or offscreen if already behind header
+      break;
+    case twiceUp:
+      dy = -2*self.viewHeader.frame.size.height; //move offscreen if already open
+  }
 
-  //
-  // Get current frame, check if menu open, assign open and closed menu states
-  // -------------------------------------------------------------------------
-  CGRect menuCurrentFrame = _chaptersMenu.frame;
-  
-  // OffsetY is how far the menu moves up or down
-  CGFloat offsetY = self.viewHeader.frame.size.height;
-  CGFloat newOffsetY = (_chaptersMenu.opened)? -offsetY : offsetY;
-  //CGFloat newAlpha = (_chaptersMenu.opened)? 0.0 : 1.0;
-  
-  //
-  // Animate Chapters Menu
-  // ---------------------
-  [UIView animateWithDuration:0.35 animations:^{
-    _chaptersMenu.frame = CGRectOffset(menuCurrentFrame, 0, newOffsetY);
-    } completion:^(BOOL finished) {
-    _chaptersMenu.opened = !_chaptersMenu.opened;
-        self.viewHeader.leftButton.userInteractionEnabled = YES;
-  }];
-
-}
-
-- (void)animateVersesMenuOpenClose {
-  
- // (_chaptersMenu.opened)?  [self.viewHeader.leftButton setImage:[SMGGraphics imageOfChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal] : [self.viewHeader.leftButton setImage:[SMGGraphics imageOfCloseChaptersWithColor:[UIColor whiteColor]] forState:UIControlStateNormal] ;
-  
-
-  
-  _chaptersMenu.userInteractionEnabled = NO;
-  NSLog(@"#Animating verses menu#");
-  NSLog(@"### menu Y = %f ###", _versesMenu.frame.origin.y);
-  
-  //
-  // Get current frame, check if menu open, assign open and closed menu states
-  // -------------------------------------------------------------------------
-  CGRect menuCurrentFrame = _versesMenu.frame;
-  
-  // OffsetY is how far the menu moves up or down
-  CGFloat offsetY = _versesMenu.frame.size.height;
-  CGFloat newOffsetY = (_versesMenu.opened)? -offsetY : offsetY;
-  //CGFloat newAlpha = (_chaptersMenu.opened)? 0.0 : 1.0;
-  
-  //
-  // Animate Verses Menu
-  // -------------------
-  [UIView animateWithDuration:0.35 animations:^{
-    _versesMenu.frame = CGRectOffset(menuCurrentFrame, 0, newOffsetY);
-  } completion:^(BOOL finished) {
-    _versesMenu.opened = !_versesMenu.opened;
-    _chaptersMenu.userInteractionEnabled = YES;
-  }];
-  
+  [UIView animateWithDuration:0.35
+                   animations:^{ self.chaptersMenu.frame = CGRectOffset(self.chaptersMenu.frame, 0, dy);}
+                   completion:^(BOOL finished) {
+                     
+                     // Enable leftbutton after animating
+                     self.viewHeader.leftButton.userInteractionEnabled = YES;
+                   }];
 }
 
 - (void)animateBookViewToRange:(NSRange)range  {
-
-// [_bookView setContentOffset:CGPointMake(0, scrollPos) animated:animated];
-  
   [_bookView scrollRangeToVisible:range animated:YES];
 }
-
 
 
 #pragma mark - HorizontalPickerView DataSource Methods
@@ -357,32 +294,32 @@
 
 - (void)horizontalPickerView:(SMGHorizontalPickerView *)picker didSelectElementAtIndex:(NSInteger)index {
   [_bookView scrollToAnchorNamed:[NSString stringWithFormat:@"meditations-book-%li", index+1 ] animated:YES];
-  NSLog (@"Selected index %ld", (long)index);
+  DLog (@"Selected index %ld", (long)index);
 }
 
-- (void)horizontalPickerView:(SMGHorizontalPickerView *)picker longPressDetectedAtIndex:(NSInteger)index {
-  NSLog (@"Delegate message: LongPress detected...");
-  
-  if (index == picker.currentSelectedIndex) {
-    NSLog (@"on current index");
-    if(!_versesMenu.opened) {[self populateVerses];}
-    [self animateVersesMenuOpenClose];
-  } else {NSLog(@"on new index");}
-  
-}
+//- (void)horizontalPickerView:(SMGHorizontalPickerView *)picker longPressDetectedAtIndex:(NSInteger)index {
+//  DLog (@"Delegate message: LongPress detected...");
+//
+//  if (index == picker.currentSelectedIndex) {
+//    DLog (@"on current index");
+//    if(!_versesMenu.opened) {[self populateVerses];}
+//    [self animateVersesMenuOpenClose];
+//  } else {DLog(@"on new index");}
+//
+//}
 
 - (void)populateVerses {
     _verses = [NSMutableArray arrayWithObjects:@"I", @"II", @"III", @"IV", @"V", @"VI", @"VII", @"VIII", @"IX", @"X", @"XI", @"XII", nil];
 }
 
 - (void)horizontalPickerView:(SMGHorizontalPickerView *)picker contentOffset: (CGPoint) offset {
-  NSLog(@"Picker offset: %f", offset.x);
+  DLog(@"Picker offset: %f", offset.x);
   // distance = distance between left end of chapter I label, and right end of chapter XII label
   // verticle offset = absolute horizontal offset (selectpoint minus relative offset)
   // x (height of verticle scollview / distance)
   
   float multiplier = _bookView.attributedTextContentView.frame.size.height/_chaptersMenu.frame.size.width;
-  NSLog(@"%f", multiplier); // 198.621872 (this is too much because label I-XII a little shorter)
+  DLog(@"%f", multiplier); // 198.621872 (this is too much because label I-XII a little shorter)
 //  [_bookView setContentOffset:CGPointMake(0.,(offset.x+148)*168.621872) animated:YES];
 }
 

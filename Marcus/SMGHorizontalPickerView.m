@@ -121,7 +121,7 @@
     // if the view doesn't intersect, it's not visible, so we can recycle it
     if (!CGRectIntersectsRect(scaledViewFrame, visibleBounds)) {
       [view removeFromSuperview];
-    } else { // if it is still visible, update it's selected state
+    } else { // if it is still visible, update its selected state
       if ([view respondsToSelector:setSelectedSelector]) {
         // view's tag is it's index
         BOOL isSelected = (self.currentSelectedIndex == [self indexForElement:view]);
@@ -464,7 +464,7 @@
   CGRect labelFrame     = [self frameForElementAtIndex:index];
   SMGHorizontalPickerLabel *elementLabel = [[SMGHorizontalPickerLabel alloc] initWithFrame:labelFrame];
   
-  elementLabel.textAlignment   = UITextAlignmentCenter;
+  elementLabel.textAlignment   = NSTextAlignmentCenter;
   elementLabel.backgroundColor = self.backgroundColor;
   elementLabel.text            = title;
   elementLabel.font            = self.elementFont;

@@ -13,17 +13,15 @@
 - (id) init {
   
   if (self = [super init]) {
-    
   //
   // Get user defaults, store as properties
   // --------------------------------------
-  
   [self getUserDefaults];
-    
-  } else NSLog(@"Model initialization failed.");
+  } else {
+    DLog(@"Model initialization failed.");
+  }
   
-  NSLog(@"Model initialized");
-
+    DLog(@"Model initialized");
   return self;
 
 }
@@ -43,13 +41,12 @@
     
   // If app has been run at least once already, timesActive setting exists: load saved settings
   if ([defaults integerForKey:@"timesActive"]) {
-    NSLog(@"App has been run before and quote time set to %ld.", (long)[defaults integerForKey:@"quoteTime"]);
+    DLog(@"App has been run before and quote time set to %ld.", (long)[defaults integerForKey:@"quoteTime"]);
     // Load saved settings
     [self loadAllUserDefaults];
     
   } else { // First run
-    NSLog(@"First time run.");
-    
+    DLog(@"First time run.");
     // Create initial default settings
     _timesActive = 0;
     _book = 1;
@@ -58,7 +55,8 @@
     _dailyQuoteOn = NO;
     _quoteTime = 800;
     _daysSinceNotificationsLastScheduled = 0;
-    _dayNotificationsLastScheduled = 16892; //April 1st, 2016 - use for debugging
+//    _dayNotificationsLastScheduled = 16892; //April 1st, 2016 - use for debugging
+    _dayNotificationsLastScheduled = 0; // use for production
     _savedDeviceNotificationsEnabledState = NO; // Assume NO for initial states
     _notificationsAttemptedScheduled = NO;
     
@@ -87,7 +85,7 @@
 
 - (void) saveUserDefaultRef:(NSInteger *)userDefault value:(NSInteger)value forKey:(NSString *)key {
   *userDefault = value;
-  NSLog(@"TEST: Setting = %li, BookVar = %li", (long)userDefault, (long)_book);
+  DLog(@"TEST: Setting = %li, BookVar = %li", (long)userDefault, (long)_book);
 }
 
 - (void) saveUserDefault:(NSInteger)userDefault forKey:(NSString*)key {
@@ -95,13 +93,17 @@
   
   // Don't need to save setting that hasn't changed
   if ((NSInteger)userDefault == [defaults integerForKey:key]) {
-    NSLog(@"Setting unchanged %@: %li",key,(long)userDefault);
+
+    DLog(@"Setting unchanged %@: %li",key,(long)userDefault);
+
     return;
   } else {
     // Update settings
     [defaults setInteger:(NSInteger)userDefault forKey:key]; //Note: This works for a BOOL setting as well
     [defaults synchronize];
-    NSLog(@"Saved %@: %li",key,(long)userDefault);
+
+    DLog(@"Saved %@: %li",key,(long)userDefault);
+
   }
   
   
@@ -120,13 +122,19 @@
   _savedDeviceNotificationsEnabledState = [defaults integerForKey:@"savedDeviceNotificationsEnabledState"];
   _notificationsAttemptedScheduled = [defaults integerForKey:@"savedDeviceNotificationsEnabledState"];
   _timesActive = [defaults integerForKey:@"timesActive"];
-  NSLog(@"Settings loaded");
+
+
+  DLog(@"Settings loaded");
+
   
 }
 
 - (NSInteger) getUserDefaultForKey:(NSString*)key {
   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-  NSLog(@"Returning %@: %li",key,(long)[defaults integerForKey:key]);
+
+
+  DLog(@"Returning %@: %li",key,(long)[defaults integerForKey:key]);
+
   return [defaults integerForKey:key];
 }
 
@@ -137,7 +145,10 @@
 - (void)cancelDailyNotifications {
   // Cancel this app's local notifications
   [[UIApplication sharedApplication] cancelAllLocalNotifications];
-  NSLog(@"Canceling current notifications.");
+
+
+  DLog(@"Canceling current notifications.");
+
 }
 
 - (void)scheduleDailyNotificationAtTime:(NSInteger)time24 {
@@ -166,7 +177,7 @@
 //  NSDateComponents *components=[[NSDateComponents alloc] init] ;
 //  components.day=1;
 //  NSDate *newDate=[calendar dateByAddingComponents: components toDate:[NSDate date] options: 0];
-//  NSLog(@"Next day : %@", newDate);
+//  DLog(@"Next day : %@", newDate);
 	
 //*********
 		
@@ -192,15 +203,19 @@
   
   // Rotates through all quotes by day
   NSUInteger quoteIndex = [self getUnixDayWithTimeZoneAdjust] % [quotes count];
-  NSLog(@"Quotes: %lu, Quote Index: %lu", (unsigned long)[quotes count], (unsigned long)quoteIndex);
-  
+
+
+  DLog(@"Quotes: %lu, Quote Index: %lu", (unsigned long)[quotes count], (unsigned long)quoteIndex);
+
   // Schedule 64 Quotes (Max local notifications allowed by iOS as of 2.1.2016)
   
   for (NSUInteger x = 0; x < 64; x++){
     // Create and schedule notification
     UILocalNotification *dailyNote = [[UILocalNotification alloc] init];
     dailyNote.alertBody = [NSString stringWithFormat:@"Day %lu: %@", (unsigned long)x, [[quotes objectAtIndex:quoteIndex] objectForKey:@"quote"]];
-    NSLog(@"%lu %lu %@", (unsigned long)x, (unsigned long)quoteIndex, dailyNote.alertBody);
+
+    DLog(@"%lu %lu %@", (unsigned long)x, (unsigned long)quoteIndex, dailyNote.alertBody);
+
     dailyNote.repeatInterval =  0; // NSCalendarUnitDay;
     dailyNote.timeZone = [NSTimeZone localTimeZone];
     dailyNote.soundName = UILocalNotificationDefaultSoundName;
@@ -225,13 +240,8 @@
 }
 
 - (NSArray*) getQuoteOfTheDay {
-  
-  //
-  // Get Quotes
-  // ----------
-  
-  NSLog(@"In app Model, getting quote of the day");
-  
+
+  DLog(@"In app Model, getting quote of the day");
   NSString* path  = [[NSBundle mainBundle] pathForResource:@"meditations-quotes" ofType:@"json"];
   NSString* jsonString = [[NSString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
   NSData* jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
@@ -239,13 +249,11 @@
   id quotes = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:&jsonError];
   
   NSUInteger quoteIndex = [self getUnixDayWithTimeZoneAdjust] % [quotes count];
-  
   NSString* quote = [[quotes objectAtIndex:quoteIndex] objectForKey:@"quote"];
-  NSString* book = [[quotes objectAtIndex:quoteIndex] objectForKey:@"book"];
-  book = [self romanNumeral:[book integerValue]];
+  NSString* book = [[quotes objectAtIndex:quoteIndex] objectForKey:@"chapter"];
   NSString* verse = [[quotes objectAtIndex:quoteIndex] objectForKey:@"verse"];
+  book = [self romanNumeral:[book integerValue]];
   verse = [self romanNumeral:[verse integerValue]];
-  
   return @[quote,book,verse];
   
 }
@@ -274,34 +282,33 @@
 
 - (NSInteger) getUnixDayWithTimeZoneAdjust {
   
-  NSLog(@"Unix UTC Day (seconds): %f",[[NSDate date] timeIntervalSince1970]);
-  NSLog(@"Time Zone Adjust (seconds): %li",(long)[[NSTimeZone localTimeZone] secondsFromGMT]);
-  NSInteger day = ([[NSDate date] timeIntervalSince1970]+[[NSTimeZone localTimeZone] secondsFromGMT])/86400.0;       // Number of seconds in 1 day = 60*60*24 = 86400.0
-  NSLog(@"The adjusted unix day is %li,", (long)day);
-  NSLog(@"Date for local timezone is: %@", [NSDateFormatter localizedStringFromDate:[NSDate date] dateStyle:NSDateFormatterMediumStyle timeStyle:NSDateFormatterMediumStyle]);
-  // timeIntervalSince1970 returns seconds since Jan. 1 1970 UTC
+  DLog(@"Unix UTC Day (seconds): %f",[[NSDate date] timeIntervalSince1970]);
+  DLog(@"Time Zone Adjust (seconds): %li",(long)[[NSTimeZone localTimeZone] secondsFromGMT]);
+  // Number of seconds in 1 day = 60*60*24 = 86400.0
+  NSInteger day = ([[NSDate date] timeIntervalSince1970]+[[NSTimeZone localTimeZone] secondsFromGMT])/86400.0;
+  DLog(@"The adjusted unix day is %li,", (long)day);
+  DLog(@"Date for local timezone is: %@", [NSDateFormatter localizedStringFromDate:[NSDate date] dateStyle:NSDateFormatterMediumStyle timeStyle:NSDateFormatterMediumStyle]);
   return  day;
-  
 }
 
 - (NSInteger)daysSinceNotificationsLastScheduled {
   if (_dayNotificationsLastScheduled > 0) { // If notifications have not been scheduled yet, this value is zero
-    NSLog(@"Days since notifications last scheduled = %li - %li: %ld",(long)[self getUnixDayWithTimeZoneAdjust], (long)_dayNotificationsLastScheduled, [self getUnixDayWithTimeZoneAdjust] - _dayNotificationsLastScheduled);
+    DLog(@"Days since notifications last scheduled = %li - %li: %ld",(long)[self getUnixDayWithTimeZoneAdjust], (long)_dayNotificationsLastScheduled, [self getUnixDayWithTimeZoneAdjust] - _dayNotificationsLastScheduled);
     return [self getUnixDayWithTimeZoneAdjust] - _dayNotificationsLastScheduled;
   } else {
-    NSLog(@"Notifications have not been scheduled.");
+    DLog(@"Notifications have not been scheduled.");
     return 0;
   }
 }
 
 - (BOOL)notificationsCurrentlyEnabledInDeviceSettings {
   UIUserNotificationSettings *settings = [[UIApplication sharedApplication] currentUserNotificationSettings];
-  NSLog(@"User device settings permit notifications: %i", (settings.types != UIUserNotificationTypeNone));
+  DLog(@"User device settings permit notifications: %i", (settings.types != UIUserNotificationTypeNone));
   return settings.types != UIUserNotificationTypeNone;
 }
 
 - (void) application:(UIApplication *)application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)notificationSettings {
-  NSLog(@"User changed notification settings: %i", (notificationSettings.types != UIUserNotificationTypeNone));
+  DLog(@"User changed notification settings: %i", (notificationSettings.types != UIUserNotificationTypeNone));
   
 }
 
@@ -309,16 +316,16 @@
   
   if ([self notificationsCurrentlyEnabledInDeviceSettings] == YES) {
     if (_savedDeviceNotificationsEnabledState == YES) {
-      NSLog(@"Notifications not newly enabled.");
+      DLog(@"Notifications not newly enabled.");
       return NO;
     } else { // previous state was NO, so newly changed
       _savedDeviceNotificationsEnabledState = YES; //update saved state
-      NSLog(@"Notifications newly enabled.");
+      DLog(@"Notifications newly enabled.");
       return YES;
     }
   } else { // notifications are NOT currently enabled
     _savedDeviceNotificationsEnabledState = NO; //update saved state
-    NSLog(@"Notifications not currently enabled or user JUST enabled from within APP.");
+    DLog(@"Notifications not currently enabled or user JUST enabled from within APP.");
     return NO;
   }
   
