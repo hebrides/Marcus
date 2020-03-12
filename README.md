@@ -1,5 +1,5 @@
 # MEDITATIONS 
 
-Simple app for reading Marcus Aurelius's Meditations.
+Simple native iOS app for reading Marcus Aurelius's Meditations.
 
-Started to make this with native iOS obj-c, but will refactor into an HTML5 framework (IONIC) in the near future.
+NOTE: in 2019, Apple rejected this because they said it was a book. The nerve. Books don't send you daily quotes, do they? I'm going to make this into a website as a result. Stay tuned. 
