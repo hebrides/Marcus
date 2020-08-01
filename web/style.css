@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css?family=Sorts+Mill+Goudy&display=swap');
+html, body {
+  background-color: #000000;
+  font-size: 1em;
+  font-family: sans-serif;
+  color: rgb(146,146,146);
+  text-align: center;
+  line-height: 1.8em;
+}
+
+.center {
+  text-align: center;
+}
+
+a:link, a:visited, a:hover {
+  color: rgb(146,146,146);
+  text-decoration: none;
+}
+
+#brand {
+  width: 80%;
+  padding: 0;
+  max-width: 320px;
+}
+
+#instructions {
+  font-size: .9em;
+  line-height: 1.4em;
+}
+
+#text {
+  margin-top: 20px;
+}
+
+#quote {
+  padding-top: 20px;
+  margin: 0 auto;
+  max-width: 650px;
+  font-size: 28px;
+  font-family: "Sorts Mill Goudy", serif;
+  line-height: 42px;
+}
+
+#title {
+font-size: 27px;
+padding-top: 69px;
+padding-bottom: 22px;
+display: inline-block;
+text-transform: uppercase;
+font-family: "Sorts Mill Goudy";
+color: #eee;
+letter-spacing: 10px;
+}
+
+#subtitle, #subtitle > a {
+  font-size: 14px;
+  color: #bbb;
+}
+
+#content {
+  margin: 50px;
+  text-align: left;
+  line-height: normal;
+}
