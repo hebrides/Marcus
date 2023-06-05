@@ -14,17 +14,35 @@ else {
 <!DOCTYPE html>
 <html lang="en">
 
+
+
 <head>
-<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-<title>SMG MOBILE | Dream Catchers</title>
-<link rel="icon" type="image/png" href="favicon.png"  />
-<link rel="stylesheet" href="style.css" />
+
+  <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+
+
+  <title>The Aurelius Fund | Read The Stoics, Donate to Veterans</title>
+
+
+
+  <link rel="icon" type="image/png" href="favicon.png"  />
+
+  <link rel="stylesheet" href="style.css" />
+
 </head>
 
+
+
+
+
 <body>
+<div id="content">
 
 <div>
-  <img id="brand" src="brand.png" />
+  <img id="brand" src="marcus.png" />
 </div>
 
 <div id="quote">
@@ -33,30 +51,92 @@ else {
 ?>”
 </div>
 
-<div id="text">~Marcus Aurelius, Meditations, Book <?php echo $book; ?>, Verse <?php echo $verse; ?><br/>
-<span id="title">M e d i t a t i o n s</span><br/>
-<span id="subtitle">Adapted from the 1862 George Long book via <a href="http://classics.mit.edu/Antoninus/meditations.html">The Internet Classics Archive</a></span><br/>
-© <?php echo date("Y"); ?> Marcus Skye Lewis. All Rights Reserved.<br/>
+<div id="text"><a href="#">—Marcus Aurelius, Meditations, Book <?php echo $book; ?>, Verse <?php echo $verse; ?></a>
+  <br/>
+  <span id="title">M e d i t a t i o n s</span>
+  <br/>
+  <span id="subtitle">Adapted from the 1862 George Long book via <a href="http://classics.mit.edu/Antoninus/meditations.html">The Internet Classics Archive</a></span>
+  <br/>
+  © <?php echo date("Y"); ?> Marcus Skye Lewis. All Rights Reserved.
+  <br/>
+  <br/>
+  <span id="footer-links"><a href="https://www.smgmobile.com/apps/marcus/privacy/">Privacy Policy</a> | <a href="https://www.smgmobile.com/">About Marcus</a></span>
+  <br/>
+  <br/>
+  <br/>
+</div>
 </div>
 
-<div id="content">
-  <div>
-     <h2>Privacy Policy</h2>
-    <p>In this policy, "SMG Mobile" refers to SMG Mobile staff, board members, cooperating attorneys, interns, volunteers, and consultants, all of whom are bound by law or contract to keep confidential information they receive as part of their assistance to SMG Mobile.</p>
-    <p>SMG Mobile does not sell application user or website visitor information under any circumstances, and we do not share this information without prior consent except as compelled by law. SMG Mobile is located within the United States, and therefore will transfer, process, and store your information in the United States.</p>
-    <p><strong>Logging:</strong> For visitors to our website, our site server logs minimal information about requests and generally purges this information after seven days. Circumstances in which SMG Mobile may need to log and retain technical information for longer than seven days include when we believe it is reasonably necessary for SMG Mobile’s mission and functionality, including situations such as: site testing, diagnosis of technical problems, defending against attacks to the site, handling a spike in traffic or other abnormal, short-term circumstances. We will delete the information as soon as it is apparent that the information is no longer needed for the purpose for which it was retained.</p>
-    <p><strong>Analytics:</strong> SMG Mobile may gather information for analyzing our website and how visitors move within it without compromising the privacy of our visitors. SMG Mobile’s website logging service may log the IP address, as well as the referrer page, time stamp, page requested, user agent, language header, website visited, and a hash of all of this information. After seven days only aggregate information from these logs may be stored. We also may geolocate IP addresses before anonymizing them and store only the country.</p>
-    <p><strong>Cookies:</strong> We do not use persistent ID cookies on this site. Where possible, we take steps to limit the ability of third parties to retain data about our users. These service providers may place session cookies on your computer. SMG Mobile’s service providers may also log standard technical information, such as the numerical Internet Protocol (IP) address of the computer you are using; the browser software you use and your operating system; the date and time you access our site; and the Internet address of the website from which you linked directly to our site. Our service providers may also store and organize the personal information collected through this site on our behalf. SMG Mobile’s third party providers primarily process information in the United States, but may process data in other jurisdictions.
-    <p><strong>Retention:</strong> SMG Mobile’s server logs are stored and retained as explained above in the section on logging. If you communicate with SMG Mobile, we may keep records of those communications indefinitely. If we inadvertently collect more personal information than intended, we endeavor to delete the extraneous information. When we no longer need to retain information or when deleting information on request, we endeavor to remove all copies. However, please understand that deleted information may continue to persist on backup media.</p>
-    <p><strong>Security:</strong> SMG Mobile employs industry standard security measures to protect the loss, misuse, and alteration of the information under our control, including appropriate technical and organizational measures to ensure a level of security appropriate to the risk. Although we make good faith efforts to store information collected by SMG Mobile in a secure operating environment, we cannot guarantee complete security.</p>
-  </div>
-</div>
+<script>
+/*
+$(document).ready( 
+function() {
+                  
+      updateDay ();
+
+      function updateDay () {
+            var quotation = document.getElementById('quotation');
+            var citation = document.getElementById('citation');
+            quoteOfTheDay = getQuoteOfTheDay();
+            quotation.innerHTML = quoteOfTheDay.quote;
+            citation.innerHTML = "Book " + quoteOfTheDay.book + ", Verse " + quoteOfTheDay.verse;
+      }
+
+      function getQuoteOfTheDay(selectionMethod) {
+            var quotesArray = loadJSON("meditations-quotes.json");
+
+            // Rotate through quotes by day, default behavior
+            var now = new Date();
+            // Index is number of days since 1/1/1970 % number of quotes
+            var quoteIndex = ( Math.ceil(now.getTime() / (1000 * 3600 * 24)) % quotesArray.length);
+
+            // Or get random
+            if (selectionMethod == 'random') {
+                  quoteIndex = Math.floor( Math.random() * quotesArray.length );
+            }
+
+            return quotesArray[quoteIndex];
+      }
+
+      function getDayOfCurrentYear() {
+            var now = new Date();
+            var start = new Date(now.getFullYear(), 0, 0);
+            var diff = now - start;
+            var oneDay = 1000 * 60 * 60 * 24;
+            var dayOfYear = Math.floor(diff / oneDay);
+            return dayOfYear;
+      }
+
+      // Load local JSON to Array
+      function loadJSON(file) {
+            $.ajaxSetup({'async': false}); // Want to make sure we get all the quotes
+            var objects = [];
+            $.getJSON(file, function(json) {
+                  $.each(json, function( key, val ) {
+                        objects.push( val );
+                  });
+
+            });
+            return objects;
+      }
+
+});
+
+/* Remote?
+  var xobj = new XMLHttpRequest();
+  xobj.overrideMimeType("application/json");
+  xobj.open('GET', 'verses-english-classic.json', true);
+  xobj.onreadystatechange = function () {
+  if (xobj.readyState == 4 && xobj.status == "200") {
+  // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+  callback(xobj.responseText);
+  }
+  };
+  xobj.send(null); */
+
+</script>
 </body>
-
 <!--
-
-
-
 
 
 
