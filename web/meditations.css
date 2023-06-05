@@ -1,0 +1,58 @@
+/* GLOBAL */
+
+body { background: /*#333333*/; font-family: sans-serif; color: #FFFFFF; margin: 20px;}
+a { color: #22aadd;}
+
+*:not(input):not(textarea) {
+    -webkit-touch-callout: none; /* globally disable the IOS popup when long-press on a link */
+}
+#tab-3, #main-nav-header {
+    -webkit-user-select: none; /* disable selection/Copy in these areas */
+}
+
+
+/* HEADER & NAV */
+
+#main-nav-header {
+    letter-spacing: 2px;
+    font-size: 14px;
+    text-transform: uppercase; /* Consider Serif */
+}
+
+#title {
+    margin-top: 20%;
+
+}
+
+/* CONTENT */
+
+.ui-content { margin: 20px; margin-top: 40px; }
+
+#tab-1, #tab-3 {
+     line-height: 25px;
+}
+
+#tab-2 {
+    letter-spacing: 1px;
+    line-height: 40px;
+    font-size: 18px;
+}
+
+/* FOOTER */
+
+/*  Customize Tab Bar Icons, Font  */
+#book:after {
+    background-image: url(book.svg); background-size: 14px 14px;
+}
+
+#quote:after {
+    background-image: url(quote.svg); background-size: 12px 12px;
+}
+
+[data-role=navbar] {
+    text-transform: uppercase;
+}
+
+
+
+
