@@ -39,7 +39,7 @@ The Aurelius Fund is committed to protecting the privacy of our users. We do not
 <h2>More information</h2>
 
 <ul>
+  <li>https://hiddenforces.io/podcasts/american-surveillance-state-byron-tau/</li>
   <li>https://www.un.org/en/about-us/universal-declaration-of-human-rights</li>
-  <li>https://youtu.be/vitbxi_36Ew</li>
   <li>https://en.wikipedia.org/wiki/Right_to_privacy</li>
 </ul>
