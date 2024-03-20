@@ -34,7 +34,7 @@ a {
  text-decoration: none;
  color: #D9D9D9;
 }
-a:hover { color:white; }
+a:hover { color:white; text-decoration: underline;}
 
 body, html {
     height: 100%;
@@ -50,8 +50,8 @@ body {
 }
 
 header, footer {
-    height: 83px;
-    padding:20px;
+    height: 61px;
+    padding:22px 20px 20px 18px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -59,12 +59,17 @@ header, footer {
     letter-spacing: 0.05em;
 }
 
+footer {
+  padding-top: 30px;
+  font-size: 14px;
+}
+
 nav, button {
  cursor: pointer;
 }
 
 main {
-    height: calc(100% - 166px); /* 100% minus two times the header/footer height */
+    height: calc(100% - 122px); /* 100% minus two times the header/footer height */
     width: 100%;
     background: linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.4)), url('/bg.jpg') no-repeat center center / cover fixed;
     /* Can also use blend mode: https://css-tricks.com/almanac/properties/b/background-blend-mode/ */
@@ -72,19 +77,23 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
 }
 
 #selection {
     text-align: center;
     padding: 20px;
     max-width: 80%;
+    letter-spacing: .03em;
 }
 #quote {
-    font-size: 32px;
+    font-size: calc(2.1vw + 2.1vh + 10%);
 }
 #citation {
-    font-size: 22px;
+  font-size: calc(1.4vw + 1.4vh);
+  padding-top: 3%;
 }
+
 
 #menu-open-button {
   font-family: 'Josefin Sans', sans-serif;
@@ -103,14 +112,10 @@ main {
  border-color: white;
 }
 
-#data-protection {
-   font-size: 12px;
+#copyright {
+  text-align: right;
 }
 
-#copyright {
-   font-size: 14px;
-   text-align: right;
-}
 </style>
 
 
@@ -132,7 +137,7 @@ main {
 </main>
 <footer>
 <div id="data-protection"><a href="/data-protection-policy">Data Protection Policy</a></div>
-    <div id="copyright">Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved</div>
+    <div id="copyright">Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
 </footer>
 
  <script>
