@@ -7,7 +7,7 @@
 </p>
 
 <p>
-  We assert that security services must be required to obtain hard-to-acquire warrants prior to any surveillance activities. Every citizen has the right to freedom from the perils associated with unchecked governmental intrusion into their private lives.
+  We assert that security services must follow the law and obtain warrants prior to any surveillance activities. Every citizen has the right to freedom from the perils associated with unchecked governmental intrusion into their private lives.
 </p>
 
 <p>
