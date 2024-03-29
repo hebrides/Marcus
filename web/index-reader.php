@@ -132,7 +132,7 @@ main {
 
 /* Responsive */
 
-@media (max-width: 414px) {
+@media (max-width: 507px) {
     header, footer {
         padding: 22px 12px 20px 12px; /* Reduced left-right padding */
     }
@@ -155,6 +155,16 @@ main {
     content: '✶'; /* Traditional ☰ from: https://www.symbolcopy.com/star-symbol.html */
     display: block;
     }
+
+    #data-protection {
+      display: none;
+    }
+    #copyright {
+      text-align: center;
+    }
+    footer {
+      justify-content: space-evenly;
+    }
 }
 
 </style>
@@ -164,7 +174,7 @@ main {
     <header>
 	<img id="logo" src="/logo.svg" alt="The Stoic Reader" />
 	<nav id="menu">
-            <button id="menu-open-button"></button>
+            <button id="menu-open-button" alt="Open Book"></button>
         </nav>
     </header>
     <main>
@@ -177,8 +187,9 @@ main {
 
 </main>
 <footer>
-<div id="data-protection"><a href="/data-protection-policy">Data Protection Policy</a></div>
-    <div id="copyright">Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
+<div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
+    <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
+    Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
 </footer>
 
  <script>
