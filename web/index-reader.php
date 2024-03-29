@@ -78,8 +78,8 @@ main {
     align-items: center;
     justify-content: center;
     color: white;
+    animation: fadeIn 1s ease-in forwards;
 }
-
 #selection {
     text-align: center;
     padding: 20px;
@@ -88,10 +88,20 @@ main {
 }
 #quote {
     font-size: calc(2.1vw + 2.1vh + 10%);
+    animation: fadeIn 1s ease-in forwards;
+    animation-delay: .05s; /* Starts the animation after the quote has faded in */
+    opacity: 0;
 }
 #citation {
   font-size: calc(1.4vw + 1.4vh);
   padding-top: 3%;
+  animation: fadeIn 1s ease-in forwards;
+  animation-delay: .1s; /* Starts the animation after the quote has faded in */
+  opacity: 0;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 
@@ -114,6 +124,7 @@ main {
 
 #copyright {
   text-align: right;
+
 }
 
 </style>
