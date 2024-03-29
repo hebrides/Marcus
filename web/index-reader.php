@@ -132,7 +132,7 @@ main {
 
 /* Responsive */
 
-@media (max-width: 507px) {
+@media (max-width: 768px) {
     header, footer {
         padding: 22px 12px 20px 12px; /* Reduced left-right padding */
     }
