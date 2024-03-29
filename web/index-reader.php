@@ -117,6 +117,10 @@ main {
   background: #112233;
 }
 
+#menu-open-button:before {
+  content: "OPEN BOOK";
+}
+
 #menu-open-button:hover {
  color: white;
  border-color: white;
@@ -124,7 +128,33 @@ main {
 
 #copyright {
   text-align: right;
+}
 
+/* Responsive */
+
+@media (max-width: 414px) {
+    header, footer {
+        padding: 22px 12px 20px 12px; /* Reduced left-right padding */
+    }
+
+    footer {
+      padding-top: 30px;
+      font-size: 12px;
+    }
+
+    #logo {
+        width: 200px; /* Adjust logo width */
+    }
+
+    #menu-open-button {
+        border: none; /* Remove border if it's not part of the design */
+        padding: 0 10px 5px; /* Adjust padding as needed */
+      }
+
+    #menu-open-button:before {
+    content: '✶'; /* Traditional ☰ from: https://www.symbolcopy.com/star-symbol.html */
+    display: block;
+    }
 }
 
 </style>
@@ -134,7 +164,7 @@ main {
     <header>
 	<img id="logo" src="/logo.svg" alt="The Stoic Reader" />
 	<nav id="menu">
-            <button id="menu-open-button">OPEN BOOK</button>
+            <button id="menu-open-button"></button>
         </nav>
     </header>
     <main>
