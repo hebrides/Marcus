@@ -87,12 +87,14 @@ main {
     letter-spacing: .03em;
 }
 #quote {
+    text-shadow: 1px 1px 15px black;
     font-size: calc(2.1vw + 2.1vh + 10%);
     animation: fadeIn 1s ease-in forwards;
-    animation-delay: .05s; /* Starts the animation after the quote has faded in */
+    animation-delay: .05s; /* Starts the animation after the bg has faded in */
     opacity: 0;
 }
 #citation {
+  text-shadow: 1px 1px 15px black;
   font-size: calc(1.4vw + 1.4vh);
   padding-top: 3%;
   animation: fadeIn 1s ease-in forwards;
