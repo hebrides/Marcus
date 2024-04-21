@@ -119,13 +119,14 @@ main {
   background: #112233;
 }
 
-#menu-open-button:before {
-  content: "OPEN BOOK";
+#menu-open-button:hover {
+  border-color: white;
+  background-color: white;
+  color: #112233;
 }
 
-#menu-open-button:hover {
- color: white;
- border-color: white;
+#menu-open-button:before {
+  content: "OPEN BOOK";
 }
 
 #copyright {
