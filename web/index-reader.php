@@ -101,6 +101,9 @@ main {
   animation-delay: .1s; /* Starts the animation after the quote has faded in */
   opacity: 0;
 }
+#citation > a {
+  color: white;
+}
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -123,6 +126,7 @@ main {
   border-color: white;
   background-color: white;
   color: #112233;
+  box-shadow: 1px 1px 10px black;
 }
 
 #menu-open-button:before {
@@ -154,6 +158,12 @@ main {
         padding: 0 10px 5px; /* Adjust padding as needed */
       }
 
+    #menu-open-button:hover {
+      background: none;
+      box-shadow: none;
+      color: white; 
+    }
+
     #menu-open-button:before {
     content: '✶'; /* Traditional ☰ from: https://www.symbolcopy.com/star-symbol.html */
     display: block;
@@ -184,7 +194,7 @@ main {
           <div id="selection">
             <p id="quote">“<?php echo $quote;?>”</p>
              <p id="citation">
-             ~<?php echo $author.", ".$title.", Book ".$chapter.", Verse ".$verse; ?>
+             ~<a href="#"><?php echo $author.", ".$title.", Book ".$chapter.", Verse ".$verse; ?></a>
              </p>
           </div>
 
