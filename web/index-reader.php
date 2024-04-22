@@ -31,10 +31,10 @@ else {
 }
 
 a {
- text-decoration: none;
- color: #D9D9D9;
+    text-decoration: none;
+    color: #D9D9D9;
 }
-a:hover { color:white; text-decoration: underline;}
+a:hover { color: white; text-decoration: underline; }
 
 body, html {
     height: 100%;
@@ -43,7 +43,6 @@ body, html {
     color: #D9D9D9;
 }
 
-/* Ensures the main content is flexibly sized */
 body {
     display: flex;
     flex-direction: column;
@@ -51,7 +50,7 @@ body {
 
 header, footer {
     height: 61px;
-    padding:22px 20px 20px 18px;
+    padding: 22px 20px 20px 18px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -60,81 +59,151 @@ header, footer {
 }
 
 footer {
-  padding-top: 30px;
-  font-size: 14px;
+    padding-top: 30px;
+    font-size: 14px;
 }
 
 nav, button {
- cursor: pointer;
+    cursor: pointer;
 }
 
 main {
     height: calc(100% - 122px); /* 100% minus two times the header/footer height */
     width: 100%;
     background: linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.4)), url('/bg.jpg') no-repeat center center / cover fixed;
-    /* Can also use blend mode: https://css-tricks.com/almanac/properties/b/background-blend-mode/ */
-    overflow: auto; /* Adds scroll to the main content if needed */
+    overflow: auto;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     animation: fadeIn 1s ease-in forwards;
 }
+
 #selection {
     text-align: center;
     padding: 20px;
     max-width: 80%;
     letter-spacing: .03em;
 }
-#quote {
+
+#quote, #citation {
     text-shadow: 1px 1px 15px black;
-    font-size: calc(2.1vw + 2.1vh + 10%);
     animation: fadeIn 1s ease-in forwards;
-    animation-delay: .05s; /* Starts the animation after the bg has faded in */
-    opacity: 0;
-}
-#citation {
-  text-shadow: 1px 1px 15px black;
-  font-size: calc(1.4vw + 1.4vh);
-  padding-top: 3%;
-  animation: fadeIn 1s ease-in forwards;
-  animation-delay: .1s; /* Starts the animation after the quote has faded in */
-  opacity: 0;
-}
-#citation > a {
-  color: white;
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
+#quote {
+    font-size: calc(2.1vw + 2.1vh + 10%);
+    animation-delay: .05s;
+}
+
+#citation {
+    font-size: calc(1.4vw + 1.4vh);
+    padding-top: 3%;
+    animation-delay: .1s;
+}
+
+#citation > a {
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 #menu-open-button {
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: 16px;
-  height: 38px;
-  color: #D9D9D9;
-  letter-spacing: 0.05em;
-  border: 2px solid #D9D9D9;
-  padding: 11px 18px;
-  border-radius: 50px;
-  background: #112233;
-}
-
-#menu-open-button:hover {
-  border-color: white;
-  background-color: white;
-  color: #112233;
-  box-shadow: 1px 1px 10px black;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 16px;
+    height: 38px;
+    color: #D9D9D9;
+    letter-spacing: 0.05em;
+    border: 2px solid #D9D9D9;
+    padding: 11px 18px;
+    border-radius: 50px;
+    background: #112233;
+    position: relative;
+    z-index: 30; /* Higher than the menu to manage stack order */
 }
 
 #menu-open-button:before {
-  content: "OPEN BOOK";
+        content: 'OPEN BOOK';
+}
+#menu-open-button:hover {
+    border-color: white;
+    background-color: white;
+    color: #112233;
+    box-shadow: 1px 1px 10px black;
 }
 
-#copyright {
-  text-align: right;
+#menu {
+    display: none;
+    position: absolute;
+    background-color: #112233;
+    width: auto;
+    min-width: 150px; /* Ensure it has a minimum width */
+    top: 61px; /* Height of the header */
+    right: 20px; /* Aligns to the right edge of the header */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 20; /* Above the overlay */
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent; /* Ensure overlay is invisible */
+    z-index: 10; /* Below the menu but above other content */
+}
+
+#toggle-menu:checked ~ #menu {
+    display: block; /* Show nav menu when toggled */
+}
+
+#toggle-menu:checked ~ .overlay {
+    display: block; /* Show overlay when nav menu is active */
+}
+
+#menu ul {
+    list-style-type: none;
+}
+
+#menu li {
+    position: relative;
+}
+
+#menu li label {
+    padding: 10px;
+    display: block;
+    cursor: pointer;
+    color: white;
+    background: #555;
+}
+
+#menu li label:hover {
+    background-color: #777;
+}
+
+#menu li input:checked + label + ul {
+    display: block;
+}
+
+#menu li ul {
+    display: none;
+    background: #666;
+    padding-left: 20px;
+}
+
+#menu li ul li a {
+    display: block;
+    padding: 8px;
+    color: white;
+    background: none;
+}
+
+#menu li ul li a:hover {
+    background-color: #888;
 }
 
 /* Responsive */
@@ -145,8 +214,8 @@ main {
     }
 
     footer {
-      padding-top: 30px;
-      font-size: 12px;
+        padding-top: 30px;
+        font-size: 12px;
     }
 
     #logo {
@@ -155,50 +224,100 @@ main {
 
     #menu-open-button {
         border: none; /* Remove border if it's not part of the design */
-        padding: 0 10px 5px; /* Adjust padding as needed */
-      }
+        padding: 10px 10px 5px; /* Adjust padding as needed */
+    }
 
     #menu-open-button:hover {
-      background: none;
-      box-shadow: none;
-      color: white; 
+        background: none;
+        box-shadow: none;
+        color: white;
     }
 
     #menu-open-button:before {
-    content: '✶'; /* Traditional ☰ from: https://www.symbolcopy.com/star-symbol.html */
-    display: block;
+        content: '✶'; /* Traditional ☰ from: https://www.symbolcopy.com/star-symbol.html */
+        display: block;
     }
 
     #data-protection {
-      display: none;
+        display: none;
     }
+
     #copyright {
-      text-align: center;
+        text-align: center;
     }
+
     footer {
-      justify-content: space-evenly;
+        justify-content: space-evenly;
     }
 }
-
 </style>
 
-
 <body>
+    <!-- Overlay input for closing menu when clicked outside -->
+    <input type="checkbox" id="overlay" hidden />
+
     <header>
-	<img id="logo" src="/logo.svg" alt="The Stoic Reader" />
-	<nav id="menu">
-            <button id="menu-open-button" alt="Open Book"></button>
+        <img id="logo" src="/logo.svg" alt="The Stoic Reader" />
+
+        <!-- Menu toggle button -->
+        <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
+        <input type="checkbox" id="toggle-menu" hidden />
+
+        <!-- Navigation menu -->
+        <nav id="menu">
+            <ul>
+                <li>
+                    <input type="checkbox" id="marcus-toggle" hidden />
+                    <label for="marcus-toggle">Marcus Aurelius</label>
+                    <ul>
+                        <li><a href="#">Meditations</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="epictetus-toggle" hidden />
+                    <label for="epictetus-toggle">Epictetus</label>
+                    <ul>
+                        <li><a href="#">The Discourses</a></li>
+                        <li><a href="#">The Enchiridion</a></li>
+                        <li><a href="#">The Golden Sayings</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="seneca-toggle" hidden />
+                    <label for="seneca-toggle">Seneca</label>
+                    <ul>
+                        <li><a href="#">Letters from a Stoic</a></li>
+                        <li><a href="#">On the Shortness of Life</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="cicero-toggle" hidden />
+                    <label for="cicero-toggle">Cicero</label>
+                    <ul>
+                        <li><a href="#">On the Ends of Good and Evil</a></li>
+                        <li><a href="#">Tuscan Disputations</a></li>
+                        <li><a href="#">On Duties</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
         </nav>
+
+        <!-- Overlay label for closing menu when clicked outside -->
+        <label for="overlay" class="overlay"></label>
     </header>
-    <main>
+
+
+<main>
           <div id="selection">
             <p id="quote">“<?php echo $quote;?>”</p>
              <p id="citation">
              ~<a href="#"><?php echo $author.", ".$title.", Book ".$chapter.", Verse ".$verse; ?></a>
              </p>
           </div>
-
 </main>
+
 <footer>
 <div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
     <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
