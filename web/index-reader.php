@@ -63,7 +63,7 @@ footer {
     font-size: 14px;
 }
 
-nav, button {
+nav, button, label {
     cursor: pointer;
 }
 
@@ -253,8 +253,8 @@ main {
 </style>
 
 <body>
-    <!-- Overlay input for closing menu when clicked outside -->
-    <input type="checkbox" id="overlay" hidden />
+    <!-- Overlay input for closing menu when clicked outside (full screen) -->
+    <input type="checkbox" id="dimiss-overlay" hidden />
 
     <header>
         <img id="logo" src="/logo.svg" alt="The Stoic Reader" />
@@ -305,7 +305,7 @@ main {
         </nav>
 
         <!-- Overlay label for closing menu when clicked outside -->
-        <label for="overlay" class="overlay"></label>
+        <label for="toggle-menu" class="overlay"></label>
     </header>
 
 
