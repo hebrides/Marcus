@@ -145,9 +145,10 @@ main {
     right: 20px; /* Aligns to the right edge of the header */
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 20; /* Above the overlay */
+    width: 270px;
 }
 
-.overlay {
+#overlay {
     display: none;
     position: fixed;
     top: 0; left: 0;
@@ -161,7 +162,7 @@ main {
     display: block; /* Show nav menu when toggled */
 }
 
-#toggle-menu:checked ~ .overlay {
+#toggle-menu:checked ~ #overlay {
     display: block; /* Show overlay when nav menu is active */
 }
 
@@ -173,15 +174,15 @@ main {
     position: relative;
 }
 
-#menu li label {
+#menu li label, #menu li a {
     padding: 10px;
     display: block;
     cursor: pointer;
     color: white;
-    background: #555;
+    background: #555;    
 }
 
-#menu li label:hover {
+#menu li label:hover, #menu li a:hover {
     background-color: #777;
 }
 
@@ -305,7 +306,7 @@ main {
         </nav>
 
         <!-- Overlay label for closing menu when clicked outside -->
-        <label for="toggle-menu" class="overlay"></label>
+        <label for="toggle-menu" id="overlay"></label>
     </header>
 
 
