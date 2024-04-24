@@ -146,6 +146,9 @@ main {
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 20; /* Above the overlay */
     width: 270px;
+    max-height: calc(100vh - 55px);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #overlay {
@@ -161,6 +164,7 @@ main {
 #menu ul {
     list-style-type: none;
   }
+
 
 #menu li {
     position: relative;
@@ -306,6 +310,8 @@ main {
                         <li><a href="#">On Duties</a></li>
                     </ul>
                 </li>
+                <li><a href="#">Random Quote</a></li>
+                <li><a href="#">Stoic Chat</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Settings</a></li>
             </ul>
@@ -333,44 +339,48 @@ main {
 </footer>
 
  <script>
-/*
-$(document).ready( 
-function() {
-                  
-      updateDay ();
+document.addEventListener('DOMContentLoaded', function() {
 
-      function updateDay () {
+      /*
+      /* App Lifecycle 
+      */
+
+      fetch('meditations-quotes.json')
+          .then(response => response.json())
+          .then(quotes => {
+          const quoteOfTheDay = quotes[Math.floor(Math.random() * quotes.length)];
+          document.getElementById('quote').innerHTML = `${quoteOfTheDay.quote}`;
+        })
+        .catch(error => console.error('Error loading the quotes:', error));
+
+
+
+
+
+      function updateQuote (quoteOfTheDay) {
             var quotation = document.getElementById('quotation');
             var citation = document.getElementById('citation');
-            quoteOfTheDay = getQuoteOfTheDay();
             quotation.innerHTML = quoteOfTheDay.quote;
             citation.innerHTML = "Book " + quoteOfTheDay.book + ", Verse " + quoteOfTheDay.verse;
       }
 
-      function getQuoteOfTheDay(selectionMethod) {
-            var quotesArray = loadJSON("meditations-quotes.json");
+      function getQuote(selectionMethod) {
 
-            // Rotate through quotes by day, default behavior
-            var now = new Date();
-            // Index is number of days since 1/1/1970 % number of quotes
-            var quoteIndex = ( Math.ceil(now.getTime() / (1000 * 3600 * 24)) % quotesArray.length);
+            // var quotesArray = loadJSON("meditations-quotes.json");
 
-            // Or get random
-            if (selectionMethod == 'random') {
-                  quoteIndex = Math.floor( Math.random() * quotesArray.length );
-            }
+            // // Rotate through quotes by day, default behavior
+            // var now = new Date();
+            // // Index is number of days since 1/1/1970 % number of quotes
+            // var quoteIndex = ( Math.ceil(now.getTime() / (1000 * 3600 * 24)) % quotesArray.length);
 
-            return quotesArray[quoteIndex];
+            // // Or get random
+            // if (selectionMethod == 'random') {
+            //       quoteIndex = Math.floor( Math.random() * quotesArray.length );
+            // }
+
+            // return quotesArray[quoteIndex];
       }
 
-      function getDayOfCurrentYear() {
-            var now = new Date();
-            var start = new Date(now.getFullYear(), 0, 0);
-            var diff = now - start;
-            var oneDay = 1000 * 60 * 60 * 24;
-            var dayOfYear = Math.floor(diff / oneDay);
-            return dayOfYear;
-      }
 
       // Load local JSON to Array
       function loadJSON(file) {
@@ -387,17 +397,6 @@ function() {
 
 });
 
-/* Remote?
-  var xobj = new XMLHttpRequest();
-  xobj.overrideMimeType("application/json");
-  xobj.open('GET', 'verses-english-classic.json', true);
-  xobj.onreadystatechange = function () {
-  if (xobj.readyState == 4 && xobj.status == "200") {
-  // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-  callback(xobj.responseText);
-  }
-  };
-  xobj.send(null); */
 
 </script>
 </body>
