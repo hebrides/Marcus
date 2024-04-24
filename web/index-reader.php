@@ -249,11 +249,8 @@ main {
         <img id="logo" src="/logo.svg" alt="The Stoic Reader" />
 
         <!-- Menu toggle button -->
-        <input type="checkbox" id="toggle-menu" hidden />
-        <!-- Reset option
-          onchange="if(!this.checked) document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);" 
-        -->
-        
+        <input type="checkbox" id="toggle-menu" hidden onchange="if(!this.checked) document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);"/>
+                  
 
         <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
 
@@ -293,7 +290,7 @@ main {
                         <li><a href="#">On Duties</a></li>
                     </ul>
                 </li>
-                <li><a href="#" onclick="newQuote(selectionMethod);" >Random Quote</a></li>
+                <li><a href="#" onclick="newQuote('random'); dismissMenu();" >Random Quote</a></li>
                 <li><a href="#">Stoic Chat</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Settings</a></li>
@@ -327,27 +324,37 @@ document.addEventListener('DOMContentLoaded', function() {
       /* App Lifecycle 
       */  
        
-      newQuote(); // Use PHP to show quote at first
-
-      function newQuote(selectionMethod) {
-
-        fetch('stoic-quotes.json')
-          .then(response => response.json())
-          .then(data => {
-            const { works, quotes } = data;
-            if (selectionMethod == 'random') { 
-              var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
-            } else { 
-              // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
-              var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
-            }
-            var myWork = works.find(work => work.id === myQuote.workId);
-            document.getElementById('quote').innerHTML = `${myQuote.quote}`;
-            document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}</a>`;
-        })
-        .catch(error => console.error('Error fetching the quote:', error));
-      }
+      newQuote(); // Maybe later let's go back to using PHP to show quote on initial load
+      
 });
+
+function newQuote(selectionMethod) {
+
+fetch('stoic-quotes.json')
+  .then(response => response.json())
+  .then(data => {
+    const { works, quotes } = data;
+    if (selectionMethod === 'random') { 
+      var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
+    } else { 
+      // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
+      var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
+    }
+    const myWork = works.find(work => work.id === myQuote.workId);
+    document.getElementById('quote').innerHTML = `${myQuote.quote}`;
+    document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}</a>`;
+})
+.catch(error => {
+  console.error('Error fetching the quote:', error);
+  document.getElementById('quote').innerHTML = 'Derp. Failed to load quote! <a href=".">Try again?</a>';
+  document.getElementById('citation').innerHTML = '';
+});
+}
+
+function dismissMenu() {
+  document.getElementById("toggle-menu").checked = false;
+  document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
+}
 
 
 </script>
