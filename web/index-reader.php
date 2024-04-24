@@ -141,7 +141,7 @@ main {
     background-color: #112233;
     width: auto;
     min-width: 150px; /* Ensure it has a minimum width */
-    top: 61px; /* Height of the header */
+    top: 55px; /* Height of the header */
     right: 20px; /* Aligns to the right edge of the header */
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 20; /* Above the overlay */
@@ -168,7 +168,7 @@ main {
 
 #menu ul {
     list-style-type: none;
-}
+  }
 
 #menu li {
     position: relative;
@@ -178,12 +178,13 @@ main {
     padding: 10px;
     display: block;
     cursor: pointer;
-    color: white;
-    background: #555;    
+    color: white;   
 }
 
 #menu li label:hover, #menu li a:hover {
-    background-color: #777;
+  background-color: white;
+  color: #112233;
+  text-decoration: none;
 }
 
 #menu li input:checked + label + ul {
@@ -192,19 +193,19 @@ main {
 
 #menu li ul {
     display: none;
-    background: #666;
-    padding-left: 20px;
+    background-color: #1a2c45;
 }
 
 #menu li ul li a {
     display: block;
     padding: 8px;
     color: white;
-    background: none;
+    padding-left: 20px;
+
 }
 
 #menu li ul li a:hover {
-    background-color: #888;
+    /* background-color: #1a2c45; */
 }
 
 /* Responsive */
