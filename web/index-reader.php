@@ -158,14 +158,6 @@ main {
     z-index: 10; /* Below the menu but above other content */
 }
 
-#toggle-menu:checked ~ #menu {
-    display: block; /* Show nav menu when toggled */
-}
-
-#toggle-menu:checked ~ #overlay {
-    display: block; /* Show overlay when nav menu is active */
-}
-
 #menu ul {
     list-style-type: none;
   }
@@ -207,6 +199,16 @@ main {
 #menu li ul li a:hover {
     /* background-color: #1a2c45; */
 }
+
+#toggle-menu:checked ~ #menu {
+    display: block; /* Show nav menu when toggled */
+}
+
+#toggle-menu:checked ~ #overlay {
+    display: block; /* Show overlay when nav menu is active */
+}
+
+
 
 /* Responsive */
 
@@ -255,15 +257,18 @@ main {
 </style>
 
 <body>
-    <!-- Overlay input for closing menu when clicked outside (full screen) -->
-    <input type="checkbox" id="dimiss-overlay" hidden />
 
     <header>
         <img id="logo" src="/logo.svg" alt="The Stoic Reader" />
 
         <!-- Menu toggle button -->
-        <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
         <input type="checkbox" id="toggle-menu" hidden />
+        <!-- Reset option
+          onchange="if(!this.checked) document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);" 
+        -->
+        
+
+        <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
 
         <!-- Navigation menu -->
         <nav id="menu">
@@ -308,6 +313,7 @@ main {
 
         <!-- Overlay label for closing menu when clicked outside -->
         <label for="toggle-menu" id="overlay"></label>
+
     </header>
 
 
