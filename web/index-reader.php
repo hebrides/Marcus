@@ -325,13 +325,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
       /*
       /* App Lifecycle 
-      */
+      */  
        
-      newQuote();
+      newQuote(); // Use PHP to show quote at first
 
       function newQuote(selectionMethod) {
 
-        fetch('meditations-quotes.json')
+        fetch('stoic-quotes.json')
           .then(response => response.json())
           .then(data => {
             const { works, quotes } = data;
@@ -341,8 +341,9 @@ document.addEventListener('DOMContentLoaded', function() {
               // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
               var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
             }
+            var myWork = works.find(work => work.id === myQuote.workId);
             document.getElementById('quote').innerHTML = `${myQuote.quote}`;
-            document.getElementById('citation').innerHTML = `~<a href="#">${myQuote.author}, ${myQuote.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}}</a>`;
+            document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}</a>`;
         })
         .catch(error => console.error('Error fetching the quote:', error));
       }
