@@ -1,18 +1,3 @@
-<?php
-
-// Quote of the Day Generator For Marcus Aurelius Page
-
-exec("cd ". getcwd(). " && /usr/local/bin/node get_quote.js rotated 2>&1", $output, $error);
-if ($error){ echo $error;}
-else {
-  $quote = $output[0];
-  $author = "Marcus Aurelius";  
-  $title = "Meditations";
-  $chapter = $output[1];
-  $verse = $output[2];
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -212,8 +197,6 @@ main {
     display: block; /* Show overlay when nav menu is active */
 }
 
-
-
 /* Responsive */
 
 @media (max-width: 768px) {
@@ -310,7 +293,7 @@ main {
                         <li><a href="#">On Duties</a></li>
                     </ul>
                 </li>
-                <li><a href="#">Random Quote</a></li>
+                <li><a href="#" onclick="newQuote(selectionMethod);" >Random Quote</a></li>
                 <li><a href="#">Stoic Chat</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Settings</a></li>
@@ -325,9 +308,8 @@ main {
 
 <main>
           <div id="selection">
-            <p id="quote">“<?php echo $quote;?>”</p>
+            <p id="quote"></p>
              <p id="citation">
-             ~<a href="#"><?php echo $author.", ".$title.", Book ".$chapter.", Verse ".$verse; ?></a>
              </p>
           </div>
 </main>
@@ -338,68 +320,38 @@ main {
     Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
 </footer>
 
- <script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
 
       /*
       /* App Lifecycle 
       */
+       
+      newQuote();
 
-      fetch('meditations-quotes.json')
+      function newQuote(selectionMethod) {
+
+        fetch('meditations-quotes.json')
           .then(response => response.json())
-          .then(quotes => {
-          const quoteOfTheDay = quotes[Math.floor(Math.random() * quotes.length)];
-          document.getElementById('quote').innerHTML = `${quoteOfTheDay.quote}`;
+          .then(data => {
+            const { works, quotes } = data;
+            if (selectionMethod == 'random') { 
+              var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
+            } else { 
+              // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
+              var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
+            }
+            document.getElementById('quote').innerHTML = `${myQuote.quote}`;
+            document.getElementById('citation').innerHTML = `~<a href="#">${myQuote.author}, ${myQuote.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}}</a>`;
         })
-        .catch(error => console.error('Error loading the quotes:', error));
-
-
-
-
-
-      function updateQuote (quoteOfTheDay) {
-            var quotation = document.getElementById('quotation');
-            var citation = document.getElementById('citation');
-            quotation.innerHTML = quoteOfTheDay.quote;
-            citation.innerHTML = "Book " + quoteOfTheDay.book + ", Verse " + quoteOfTheDay.verse;
+        .catch(error => console.error('Error fetching the quote:', error));
       }
-
-      function getQuote(selectionMethod) {
-
-            // var quotesArray = loadJSON("meditations-quotes.json");
-
-            // // Rotate through quotes by day, default behavior
-            // var now = new Date();
-            // // Index is number of days since 1/1/1970 % number of quotes
-            // var quoteIndex = ( Math.ceil(now.getTime() / (1000 * 3600 * 24)) % quotesArray.length);
-
-            // // Or get random
-            // if (selectionMethod == 'random') {
-            //       quoteIndex = Math.floor( Math.random() * quotesArray.length );
-            // }
-
-            // return quotesArray[quoteIndex];
-      }
-
-
-      // Load local JSON to Array
-      function loadJSON(file) {
-            $.ajaxSetup({'async': false}); // Want to make sure we get all the quotes
-            var objects = [];
-            $.getJSON(file, function(json) {
-                  $.each(json, function( key, val ) {
-                        objects.push( val );
-                  });
-
-            });
-            return objects;
-      }
-
 });
 
 
 </script>
 </body>
+
 <!--
 
 
