@@ -159,7 +159,7 @@ main {
 
 #menu li {
     position: relative;
-    padding-left: 4px;
+    text-indent: 4px;
 }
 
 #menu li label, #menu li a {
