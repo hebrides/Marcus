@@ -78,7 +78,12 @@ main {
 
 #quote {
     font-size: calc(2.1vw + 2.1vh + 10%);
-    animation-delay: .05s;
+    animation-delay: .05s;    
+}
+
+#quote > a, #quote > a:hover {
+    color: #e9e9e9;
+    text-decoration: none;
 }
 
 #citation {
@@ -88,7 +93,7 @@ main {
 }
 
 #citation > a {
-    color: white;
+    color: #e9e9e9;
 }
 
 @keyframes fadeIn {
@@ -154,7 +159,7 @@ main {
 
 #menu li {
     position: relative;
-    padding-left: 3px;
+    padding-left: 4px;
 }
 
 #menu li label, #menu li a {
@@ -343,8 +348,8 @@ fetch('stoic-quotes.json')
       var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
     }
     const myWork = works.find(work => work.id === myQuote.workId);
-    document.getElementById('quote').innerHTML = `${myQuote.quote}`;
-    document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}</a>`;
+    document.getElementById('quote').innerHTML = `<a href="#">${myQuote.quote}</a>`;
+    document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}</a>, <a href="#">${myWork.title}</a>, <a href="#">Book ${myQuote.chapter}</a>, <a href="#">Verse ${myQuote.verse}</a>`;
 })
 .catch(error => {
   console.error('Error fetching the quote:', error);
