@@ -204,6 +204,54 @@ main {
     display: block; /* Show overlay when nav menu is active */
 }
 
+
+
+
+/* Modal overlay and content styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 51;
+}
+
+.modal-close {
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+/* Show modal when checkbox is checked */
+#modal-toggle:checked + .modal {
+    display: flex;
+}
+
+
+
+
 /* Responsive */
 
 @media (max-width: 768px) {
@@ -318,6 +366,17 @@ main {
           </div>
 </main>
 
+<!-- Modal -->
+<input type="checkbox" id="modal-toggle" hidden />
+<div class="modal">
+    <label for="modal-toggle" class="modal-overlay"></label>
+    <div class="modal-content">
+        <h2>Modal Title</h2>
+        <p>Details about the selection...</p>
+        <label for="modal-toggle" class="modal-close">Close</label>
+    </div>
+</div>
+
 <footer>
 <div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
     <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
@@ -349,7 +408,11 @@ fetch('stoic-quotes.json')
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     document.getElementById('quote').innerHTML = `<a href="#">${myQuote.quote}</a>`;
-    document.getElementById('citation').innerHTML = `~<a href="#">${myWork.author}</a>, <a href="#">${myWork.title}</a>, <a href="#">Book ${myQuote.chapter}</a>, <a href="#">Verse ${myQuote.verse}</a>`;
+    document.getElementById('citation').innerHTML = 
+    `~<a href="#"><label for='modal-toggle'>${myWork.author}</label></a>, 
+    <a href="#"><label for='modal-toggle'>${myWork.title}</a>, 
+    <a href="#"><label for='modal-toggle'>Book ${myQuote.chapter}</a>, 
+    <a href="#"><label for='modal-toggle'>Verse ${myQuote.verse}</a>`;
 })
 .catch(error => {
   console.error('Error fetching the quote:', error);
