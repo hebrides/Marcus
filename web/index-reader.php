@@ -242,10 +242,6 @@ main {
     z-index: 51;
 }
 
-.modal-header {
-    position: fixed;
-}
-
 .modal-close {
     cursor: pointer;
     position: absolute;
@@ -378,6 +374,7 @@ main {
 <!-- Modal -->
 <input type="checkbox" id="modal-toggle" hidden />
 <div class="modal">
+    <label for="modal-toggle" class="modal-overlay"></label>
      <div class="modal-content">
      <h2>Modal Title</h2>
      <label for="modal-toggle" class="modal-close">Close</label>
