@@ -234,7 +234,16 @@ main {
     background: white;
     padding: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 90vw;
+    height: 90vh;
+    background: #123456;
+    border: 1px solid;
+    overflow-y: scroll;
     z-index: 51;
+}
+
+.modal-header {
+    position: fixed;
 }
 
 .modal-close {
@@ -369,11 +378,11 @@ main {
 <!-- Modal -->
 <input type="checkbox" id="modal-toggle" hidden />
 <div class="modal">
-    <label for="modal-toggle" class="modal-overlay"></label>
-    <div class="modal-content">
-        <h2>Modal Title</h2>
-        <p>Details about the selection...</p>
-        <label for="modal-toggle" class="modal-close">Close</label>
+     <div class="modal-content">
+     <h2>Modal Title</h2>
+     <label for="modal-toggle" class="modal-close">Close</label>
+     <p>Details about the selection...</p>        
+    </div>
     </div>
 </div>
 
@@ -407,7 +416,8 @@ fetch('stoic-quotes.json')
       var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
     }
     const myWork = works.find(work => work.id === myQuote.workId);
-    document.getElementById('quote').innerHTML = `<a href="#">${myQuote.quote}</a>`;
+    document.getElementById('quote').innerHTML = 
+    `<a href="#"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
     document.getElementById('citation').innerHTML = 
     `~<a href="#"><label for='modal-toggle'>${myWork.author}</label></a>, 
     <a href="#"><label for='modal-toggle'>${myWork.title}</a>, 
