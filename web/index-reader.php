@@ -231,22 +231,40 @@ main {
 
 .modal-content {
     position: relative;
-    background: white;
-    padding: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     width: 90vw;
     height: 90vh;
+    display: flex;
+    flex-direction: column;
     background: #123456;
-    border: 1px solid;
-    overflow-y: scroll;
+    border: 1px solid #ccc;
+    overflow-y: hidden;
     z-index: 51;
+}
+
+.modal-header {
+    position: sticky;
+    top: 0;
+    background: inherit;
+    padding: 20px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    overflow-y: auto;
+    padding: 20px;
+    flex-grow: 1;
 }
 
 .modal-close {
     cursor: pointer;
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 /* Show modal when checkbox is checked */
@@ -371,15 +389,19 @@ main {
           </div>
 </main>
 
-<!-- Modal -->
+<!-- Modal Structure -->
 <input type="checkbox" id="modal-toggle" hidden />
 <div class="modal">
     <label for="modal-toggle" class="modal-overlay"></label>
-     <div class="modal-content">
-     <h2>Modal Title</h2>
-     <label for="modal-toggle" class="modal-close">Close</label>
-     <p>Details about the selection...</p>        
-    </div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Modal Title</h2>
+            <label for="modal-toggle" class="modal-close">Close</label>
+        </div>
+        <div class="modal-body">
+            <p>Details about the selection...</p>
+            <!-- Additional content can go here and will scroll if too long -->
+        </div>
     </div>
 </div>
 
