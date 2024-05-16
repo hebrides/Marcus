@@ -237,7 +237,7 @@ main {
     display: flex;
     flex-direction: column;
     background: #123456;
-    border: 1px solid #ccc;
+    border: 1px solid rgba(255,255,255,.5);
     overflow-y: hidden;
     z-index: 51;
 }
@@ -246,8 +246,8 @@ main {
     position: sticky;
     top: 0;
     background: inherit;
-    padding: 20px;
-    border-bottom: 1px solid #ccc;
+    padding: 10px 10px 5px 15px;
+    border-bottom: 1px solid rgba(255,255,255,.5);;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -261,10 +261,7 @@ main {
 
 .modal-close {
     cursor: pointer;
-    color: white;
     border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
 }
 
 /* Show modal when checkbox is checked */
@@ -396,7 +393,14 @@ main {
     <div class="modal-content">
         <div class="modal-header">
             <h2>Modal Title</h2>
-            <label for="modal-toggle" class="modal-close">Close</label>
+            <label for="modal-toggle" class="modal-close"><svg height="30px" width="30px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
+<path fill="#dedede" d="M9.016,40.837c0.195,0.195,0.451,0.292,0.707,0.292c0.256,0,0.512-0.098,0.708-0.293l14.292-14.309
+	l14.292,14.309c0.195,0.196,0.451,0.293,0.708,0.293c0.256,0,0.512-0.098,0.707-0.292c0.391-0.39,0.391-1.023,0.001-1.414
+	L26.153,25.129L40.43,10.836c0.39-0.391,0.39-1.024-0.001-1.414c-0.392-0.391-1.024-0.391-1.414,0.001L24.722,23.732L10.43,9.423
+	c-0.391-0.391-1.024-0.391-1.414-0.001c-0.391,0.39-0.391,1.023-0.001,1.414l14.276,14.293L9.015,39.423
+	C8.625,39.813,8.625,40.447,9.016,40.837z"/>
+</svg></label>
         </div>
         <div class="modal-body">
             <p>Details about the selection...</p>
