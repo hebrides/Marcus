@@ -236,6 +236,7 @@ main {
     height: 90vh;
     display: flex;
     flex-direction: column;
+    align-items: center;
     background-color: #112233;
     border: 1px solid rgba(255,255,255,.1);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
@@ -252,6 +253,7 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     color: #e9e9e9;
 }
 
@@ -264,6 +266,9 @@ main {
     overflow-y: auto;
     padding: 20px;
     flex-grow: 1;
+    max-width: 600px;
+    line-height: 38px;
+    letter-spacing: 1px;
 }
 
 .modal-close {
