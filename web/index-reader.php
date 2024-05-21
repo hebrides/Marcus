@@ -247,7 +247,7 @@ main {
     position: sticky;
     top: 0;
     background: inherit;
-    padding: 10px 10px 5px 15px;
+    padding: 10px 10px 5px 18px;
     border-bottom: 1px solid rgba(255,255,255,.1);;
     display: flex;
     justify-content: space-between;
@@ -257,6 +257,7 @@ main {
 
 .modal-header > h2 {
     font-weight: normal;
+    letter-spacing: 5px;
 }
 
 .modal-body {
