@@ -259,7 +259,7 @@ main {
 
 .modal-header > h2 {
     font-weight: normal;
-    letter-spacing: 5px;
+    letter-spacing: 4px;
 }
 
 .modal-body {
