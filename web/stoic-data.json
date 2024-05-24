@@ -1,4 +1,12 @@
 {
+
+  "authors": [
+    { "name": "Marcus Aurelius", "image": "stoics/aurelius/marcus.jpg", "biography": "Marcus Aurelius was Roman emperor from 161 to 180 and a Stoic philosopher. He was the last of the rulers known as the Five Good Emperors, and is also considered one of the most important Stoic philosophers. His work 'Meditations', written in Greek while on campaign, is still revered as a literary monument to a philosophy of service and duty, describing how to find and preserve equanimity in the midst of conflict by following nature as a source of guidance and inspiration." },
+    { "name": "Seneca", "image": "stoics/seneca/seneca.jpg", "biography": "Lucius Annaeus Seneca was a Roman Stoic philosopher, statesman, and dramatist from the Silver Age of Latin literature. Known for his crisp and polished style, his works have been revered not only for their philosophical insights but also for their literary excellence. Seneca's contributions to Stoicism are immense, with his writings on ethics and morality standing as pillars of Stoic philosophy."     },
+    { "name": "Epictetus", "image": "stoics/epictetus/epictetus.jpg", "biography": "Epictetus was a Greek Stoic philosopher born into slavery. His teachings were recorded by his pupil Arrian in the 'Discourses' and 'Enchiridion'. Epictetus believed that philosophy is a way of life and not just a theoretical discipline. His works focus on the importance of maintaining personal freedom and tranquility through the rational control of one's thoughts and perceptions."     },
+    { "name": "Cicero", "image": "stoics/cicero/cicero.jpg", "biography": "Marcus Tullius Cicero was a Roman statesman, orator, and philosopher. He is widely considered one of Rome's greatest orators and prose stylists. Cicero's writings include treatises on rhetoric, philosophy, and politics, and his correspondence provides a detailed and vivid picture of the politics and culture of his time. Cicero's influence on the Latin language was immense, and he is responsible for introducing Greek philosophy to Rome."     }
+  ],
+
   "works": 
   [ 
     { "id": "1", "author": "Marcus Aurelius", "title": "Meditations" },

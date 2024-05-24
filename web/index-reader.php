@@ -208,7 +208,7 @@ main {
 
 
 /* Modal overlay and content styles */
-.modal {
+#modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -220,7 +220,7 @@ main {
     z-index: 50;
 }
 
-.modal-overlay {
+#modal-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -229,7 +229,7 @@ main {
     background: rgba(0, 0, 0, 0.8);
 }
 
-.modal-content {
+#modal-content {
     position: relative;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     width: 92vw;
@@ -244,7 +244,7 @@ main {
     z-index: 51;
 }
 
-.modal-header {
+#modal-header {
     position: sticky;
     top: 0;
     background: inherit;
@@ -257,12 +257,14 @@ main {
     color: #e9e9e9;
 }
 
-.modal-header > h2 {
+#modal-header > h2 {
     font-weight: normal;
     letter-spacing: 4px;
+    font-size: 14px;
+    text-transform: uppercase; /* maybe */
 }
 
-.modal-body {
+#modal-body {
     overflow-y: auto;
     padding: 20px;
     flex-grow: 1;
@@ -271,13 +273,20 @@ main {
     letter-spacing: 1px;
 }
 
-.modal-close {
+#modal-close {
     cursor: pointer;
     border: none;
 }
 
+#modal-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
 /* Show modal when checkbox is checked */
-#modal-toggle:checked + .modal {
+#modal-toggle:checked + #modal {
     display: flex;
 }
 
@@ -400,21 +409,20 @@ main {
 
 <!-- Modal Structure -->
 <input type="checkbox" id="modal-toggle" hidden />
-<div class="modal">
-    <label for="modal-toggle" class="modal-overlay"></label>
-    <div class="modal-content">
-        <div class="modal-header">
+<div id="modal">
+    <label for="modal-toggle" id="modal-overlay"></label>
+    <div id="modal-content">
+        <div id="modal-header">
             <h2>Modal Title</h2>
-            <label for="modal-toggle" class="modal-close"><svg height="30px" width="30px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
-<path fill="#dedede" d="M9.016,40.837c0.195,0.195,0.451,0.292,0.707,0.292c0.256,0,0.512-0.098,0.708-0.293l14.292-14.309
-	l14.292,14.309c0.195,0.196,0.451,0.293,0.708,0.293c0.256,0,0.512-0.098,0.707-0.292c0.391-0.39,0.391-1.023,0.001-1.414
-	L26.153,25.129L40.43,10.836c0.39-0.391,0.39-1.024-0.001-1.414c-0.392-0.391-1.024-0.391-1.414,0.001L24.722,23.732L10.43,9.423
-	c-0.391-0.391-1.024-0.391-1.414-0.001c-0.391,0.39-0.391,1.023-0.001,1.414l14.276,14.293L9.015,39.423
-	C8.625,39.813,8.625,40.447,9.016,40.837z"/>
-</svg></label>
+            <label for="modal-toggle" id="modal-close">
+                <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
+                    <line x1="40" y1="10" x2="10" y2="40" stroke="#dedede" stroke-width="2"/>
+                </svg>
+            </label>
         </div>
-        <div class="modal-body">
+        <div id="modal-body">
+            <img src="" alt="Author Image" id="modal-image" style="display: none;">
             <p>Details about the selection...</p>
             <!-- Additional content can go here and will scroll if too long -->
         </div>
@@ -440,10 +448,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function newQuote(selectionMethod) {
 
-fetch('stoic-quotes.json')
+fetch('stoic-data.json')
   .then(response => response.json())
   .then(data => {
-    const { works, quotes } = data;
+    const { authors, works, quotes } = data;
     if (selectionMethod === 'random') { 
       var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
     } else { 
