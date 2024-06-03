@@ -257,7 +257,7 @@ main {
     color: #e9e9e9;
 }
 
-#modal-header > h2 {
+#modal-title {
     font-weight: normal;
     letter-spacing: 4px;
     font-size: 14px;
@@ -413,7 +413,7 @@ main {
     <label for="modal-toggle" id="modal-overlay"></label>
     <div id="modal-content">
         <div id="modal-header">
-            <h2>Modal Title</h2>
+            <h2 id="modal-title">Modal Title</h2>
             <label for="modal-toggle" id="modal-close">
                 <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
@@ -423,7 +423,7 @@ main {
         </div>
         <div id="modal-body">
             <img src="" alt="Author Image" id="modal-image" style="display: none;">
-            <p>Details about the selection...</p>
+            <p id="modal-text" >Details about the selection...</p>
             <!-- Additional content can go here and will scroll if too long -->
         </div>
     </div>
@@ -456,19 +456,30 @@ fetch('stoic-data.json')
       var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
     } else { 
       // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
-      var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length)];
+      var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length )];
     }
     const myWork = works.find(work => work.id === myQuote.workId);
-    document.getElementById('quote').innerHTML = 
+    const myAuthor = authors.find(author => author.id === myWork.authorId);
+    
+    // Set up Quote
+    document.getElementById('quote').innerHTML =  // quote
     `<a href="#"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
-    document.getElementById('citation').innerHTML = 
-    `~<a href="#"><label for='modal-toggle'>${myWork.author}</label></a>, 
-    <a href="#"><label for='modal-toggle'>${myWork.title}</a>, 
-    <a href="#"><label for='modal-toggle'>Book ${myQuote.chapter}</a>, 
-    <a href="#"><label for='modal-toggle'>Verse ${myQuote.verse}</a>`;
+    
+    document.getElementById('citation').innerHTML = // citation
+    `~<a href="#" onclick="showBiography();"><label for="modal-toggle">${myWork.author}</label></a>, 
+    <a href="#"><label for="modal-toggle">${myWork.title}</a>, 
+    <a href="#"><label for="modal-toggle">Book ${myQuote.chapter}</a>, 
+    <a href="#"><label for="modal-toggle">Verse ${myQuote.verse}</a>`;
+
+    // Bio
+    document.getElementById('modal-title').innerHTML = `${myAuthor.name}`; 
+    document.getElementById('modal-image').src = `${myAuthor.image}`;
+    document.getElementById('modal-image').style.display = `block`;
+    document.getElementById('modal-text').innerHTML = `${myAuthor.biography}`;  
+
 })
 .catch(error => {
-  console.error('Error fetching the quote:', error);
+  console.error('Error fetching Stoic Reader data:', error);
   document.getElementById('quote').innerHTML = 'Derp. Failed to load quote! <a href=".">Try again?</a>';
   document.getElementById('citation').innerHTML = '';
 });
@@ -477,6 +488,13 @@ fetch('stoic-data.json')
 function dismissMenu() {
   document.getElementById("toggle-menu").checked = false;
   document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
+}
+
+function showBiography(author, image, biography) {
+  // Set up Biography Modal
+//   document.getElementById('modal-header').innerHTML = `${myWork.author}`; 
+//   document.getElementById('modal-image').source = `${myWork.author}`;
+//   document.getElementById('modal-body').source = `${myWork.biography}`;  
 }
 
 
