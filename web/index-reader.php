@@ -386,7 +386,7 @@ main {
                         <li><a href="#">On Duties</a></li>
                     </ul>
                 </li>
-                <li><a href="#" onclick="newQuote('random'); dismissMenu();" >Random Quote</a></li>
+                <li><a href="#" onclick="showNewQuote('random'); dismissMenu();" >Random Quote</a></li>
                 <li><a href="#">Stoic Chat</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Settings</a></li>
@@ -435,7 +435,7 @@ main {
 
 <script>
 
-// State and Data Globals - consider replacing with object later
+// State and data globals - replace state and data vars, HTML, and functions with app object like stoicApp{} later 
 let state = {
         currentQuote: null,
         currentView: 'quote'
@@ -444,53 +444,74 @@ let state = {
 let myData;
 
 document.addEventListener('DOMContentLoaded', function() {
-
-      /*
-      /* App Lifecycle 
-      */ 
-      // restoreState();  
-      // fetchData(); 
-      newQuote(); // Maybe later let's go back to using PHP to show quote on initial load
-
+    fetchData().then(data => {
+        myData = data;
+        showNewQuote(myData);
+        // restoreState();
+        // attachEventListeners();
+    }).catch(error => {
+        console.error('Initialization error:', error);
+    });
 });
 
-function newQuote(selectionMethod) {
 
-fetch('stoic-data.json')
-  .then(response => response.json())
-  .then(data => {
-    const { authors, works, quotes } = data;
+function fetchData() {
+    return fetch('stoic-data.json')
+    .then(response => {
+        if (!response.ok) { throw new Error('Dang. Network response was *not* okay'); }
+        return response.json();
+        })
+    .catch(error => {
+        console.error('Error fetching Stoic Reader data:', error);
+        document.getElementById('quote').innerHTML = 'Derp. Failed to load quote! <a href=".">Try again?</a>';
+        document.getElementById('citation').innerHTML = '';
+        throw error; // Re-throw the error to handle it in the caller function if needed
+    });
+}
+
+function restoreState() {
+    return;
+}
+
+function attachEventListeners() {
+    return;
+}
+
+function showNewQuote(selectionMethod) {
+    const { authors, works, quotes } = myData;
+    let myQuote;
     if (selectionMethod === 'random') { 
-      var myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
+        myQuote = quotes[ Math.floor( Math.random() * quotes.length )];
     } else { 
       // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
-      var myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length )];
+        myQuote = quotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotes.length )];
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     const myAuthor = authors.find(author => author.id === myWork.authorId);
     
-    // Set up Quote
+    // display quote, citation
     document.getElementById('quote').innerHTML =  // quote
-    `<a href="#"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
+        `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
     
     document.getElementById('citation').innerHTML = // citation
-    `~<a href="#" onclick="showBiography();"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-    <a href="#"><label for="modal-toggle">${myWork.title}</a>, 
-    <a href="#"><label for="modal-toggle">Book ${myQuote.chapter}</a>, 
-    <a href="#"><label for="modal-toggle">Verse ${myQuote.verse}</a>`;
+        `~<a href="#" id="authorLink"><label for="modal-toggle">${myAuthor.name}</label></a>, 
+        <a href="#" id="workLink"><label for="modal-toggle">${myWork.title}</a>, 
+        <a href="#" id="chapterLink"><label for="modal-toggle">Book ${myQuote.chapter}</a>, 
+        <a href="#" id="verseLink"><label for="modal-toggle">Verse ${myQuote.verse}</a>`;
+    
+    // link quote, citation data to click event listeners for modal update functions
+    const links = [
+        { id: 'quoteLink', handler: () => showQuoteInContext(myWork, myQuote) },
+        { id: 'authorLink', handler: () => showBiography(myAuthor) },
+        { id: 'workLink', handler: () => showWork(myWork) },
+        { id: 'chapterLink', handler: () => showChapter(myWork, myQuote) },
+        { id: 'verseLink', handler: () => showVerse(myWork, myQuote) }
+    ];
 
-    // Bio
-    document.getElementById('modal-title').innerHTML = `${myAuthor.name}`; 
-    document.getElementById('modal-image').src = `${myAuthor.image}`;
-    document.getElementById('modal-image').style.display = `block`;
-    document.getElementById('modal-text').innerHTML = `${myAuthor.biography}`;  
+    links.forEach(link => {
+        document.getElementById(link.id).addEventListener('click', link.handler);
+    });
 
-})
-.catch(error => {
-  console.error('Error fetching Stoic Reader data:', error);
-  document.getElementById('quote').innerHTML = 'Derp. Failed to load quote! <a href=".">Try again?</a>';
-  document.getElementById('citation').innerHTML = '';
-});
 }
 
 function dismissMenu() {
@@ -498,13 +519,28 @@ function dismissMenu() {
   document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
 }
 
-function showBiography(author, image, biography) {
-  // Set up Biography Modal
-//   document.getElementById('modal-header').innerHTML = `${myWork.author}`; 
-//   document.getElementById('modal-image').source = `${myWork.author}`;
-//   document.getElementById('modal-body').source = `${myWork.biography}`;  
+function showBiography(myAuthor) {    
+    document.getElementById('modal-title').innerHTML = `${myAuthor.name}`; 
+    document.getElementById('modal-image').src = `${myAuthor.image}`;
+    document.getElementById('modal-image').style.display = `block`;
+    document.getElementById('modal-text').innerHTML = `${myAuthor.biography}`;  
 }
 
+function showWork(myWork) {    
+    return; 
+}
+
+function showChapter(myWork,myQuote) {    
+    return; 
+}
+
+function showVerse(myWork,myQuote) {    
+    return; 
+}
+
+function showQuoteInContext(myWork,myQuote) {    
+    return; 
+}
 
 </script>
 </body>
