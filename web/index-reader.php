@@ -400,11 +400,10 @@ main {
 
 
 <main>
-          <div id="selection">
-            <p id="quote"></p>
-             <p id="citation">
-             </p>
-          </div>
+    <div id="selection">
+        <p id="quote"></p>
+        <p id="citation"></p>
+    </div>
 </main>
 
 <!-- Modal Structure -->
@@ -424,26 +423,35 @@ main {
         <div id="modal-body">
             <img src="" alt="Author Image" id="modal-image" style="display: none;">
             <p id="modal-text" >Details about the selection...</p>
-            <!-- Additional content can go here and will scroll if too long -->
         </div>
     </div>
 </div>
 
 <footer>
-<div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
+    <div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
     <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
     Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
 </footer>
 
 <script>
+
+// State and Data Globals - consider replacing with object later
+let state = {
+        currentQuote: null,
+        currentView: 'quote'
+    };
+
+let myData;
+
 document.addEventListener('DOMContentLoaded', function() {
 
       /*
       /* App Lifecycle 
-      */  
-       
+      */ 
+      // restoreState();  
+      // fetchData(); 
       newQuote(); // Maybe later let's go back to using PHP to show quote on initial load
-      
+
 });
 
 function newQuote(selectionMethod) {
@@ -466,7 +474,7 @@ fetch('stoic-data.json')
     `<a href="#"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
     
     document.getElementById('citation').innerHTML = // citation
-    `~<a href="#" onclick="showBiography();"><label for="modal-toggle">${myWork.author}</label></a>, 
+    `~<a href="#" onclick="showBiography();"><label for="modal-toggle">${myAuthor.name}</label></a>, 
     <a href="#"><label for="modal-toggle">${myWork.title}</a>, 
     <a href="#"><label for="modal-toggle">Book ${myQuote.chapter}</a>, 
     <a href="#"><label for="modal-toggle">Verse ${myQuote.verse}</a>`;
