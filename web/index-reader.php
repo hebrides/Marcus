@@ -446,7 +446,8 @@ let myData;
 document.addEventListener('DOMContentLoaded', function() {
     fetchData().then(data => {
         myData = data;
-        showNewQuote(myData);
+        showNewQuote("random");
+        loadWorks(); // load the works into the page
         // restoreState();
         // attachEventListeners();
     }).catch(error => {
@@ -540,6 +541,30 @@ function showVerse(myWork,myQuote) {
 
 function showQuoteInContext(myWork,myQuote) {    
     return; 
+}
+
+function loadWorks() {
+    const modalBody = document.getElementById('modal-body');
+       // Preload work content
+       myData.works.forEach(work => {
+        fetch(work.textUri)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was *not* ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                const workContainer = document.createElement('div');
+                workContainer.id = `work-${work.id}`;
+                workContainer.classList.add('hidden');
+                workContainer.innerHTML = html;
+                modalBody.appendChild(workContainer);
+            })
+            .catch(error => {
+                console.error('Derp. Error fetching or parsing data:', error);
+            });
+    });
 }
 
 </script>
