@@ -242,6 +242,7 @@ main {
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     overflow-y: hidden;
     z-index: 51;
+    max-width: 600px;
 }
 
 #modal-header {
@@ -266,9 +267,8 @@ main {
 
 #modal-body {
     overflow-y: auto;
-    padding: 20px;
+    padding: 30px;
     flex-grow: 1;
-    max-width: 600px;
     line-height: 38px;
     letter-spacing: 1px;
 }
@@ -444,29 +444,95 @@ let state = {
 let myData;
 
 document.addEventListener('DOMContentLoaded', function() {
-    fetchData().then(data => {
-        myData = data;
-        showNewQuote("random");
-        loadWorks(); // load the works into the page
-        // restoreState();
-        // attachEventListeners();
-    }).catch(error => {
-        console.error('Initialization error:', error);
+    const worker = new Worker('stoic-works-worker.js');
+
+    worker.postMessage({ action: 'loadData' });
+
+    worker.addEventListener('message', function(event) {
+        const { status } = event.data;
+        if (status === 'stoicDataLoaded') {
+            console.log('Stoic data loaded');
+            fetchData().then(data => {
+                myData = data;
+                showNewQuote("random");
+                loadWorks(); // load the works into the page
+                lazyLoadStoicWorks(data.works); // Lazy load stoic works
+            }).catch(error => {
+                console.error('Initialization error:', error);
+            });
+        } else if (status === 'error') {
+            console.error('Error:', event.data.error);
+        }
     });
 });
 
+function lazyLoadStoicWorks(works) {
+    const worker = new Worker('stoic-works-worker.js');
+    const missingWorks = works.filter(work => !isWorkInIndexedDB(work.id));
+
+    if (missingWorks.length > 0) {
+        worker.postMessage({ action: 'loadWorks', works: missingWorks });
+
+        worker.addEventListener('message', function(event) {
+            const { id, status, error } = event.data;
+            if (status === 'stored') {
+                console.log(`Work ${id} stored in IndexedDB`);
+            } else if (status === 'error') {
+                console.error(`Error storing work ${id}: ${error}`);
+            }
+        });
+    }
+}
+
+function isWorkInIndexedDB(id) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('StoicWorksDB', 1);
+
+        request.onsuccess = function(event) {
+            const db = event.target.result;
+            const transaction = db.transaction('works', 'readonly');
+            const store = transaction.objectStore('works');
+            const getRequest = store.get(`stoicWork_${id}`);
+
+            getRequest.onsuccess = function() {
+                console.log(`Checked IndexedDB for work ${id}:`, !!getRequest.result);
+                resolve(!!getRequest.result);
+            };
+
+            getRequest.onerror = function() {
+                reject(getRequest.error);
+            };
+        };
+
+        request.onerror = function(event) {
+            reject(event.target.errorCode);
+        };
+    });
+}
 
 function fetchData() {
-    return fetch('stoic-data.json')
-    .then(response => {
-        if (!response.ok) { throw new Error('Dang. Network response was *not* okay'); }
-        return response.json();
-        })
-    .catch(error => {
-        console.error('Error fetching Stoic Reader data:', error);
-        document.getElementById('quote').innerHTML = 'Derp. Failed to load quote! <a href=".">Try again?</a>';
-        document.getElementById('citation').innerHTML = '';
-        throw error; // Re-throw the error to handle it in the caller function if needed
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('StoicWorksDB', 1);
+
+        request.onsuccess = function(event) {
+            const db = event.target.result;
+            const transaction = db.transaction('works', 'readonly');
+            const store = transaction.objectStore('works');
+            const getRequest = store.get('stoicData');
+
+            getRequest.onsuccess = function() {
+                console.log('Fetched stoicData from IndexedDB:', getRequest.result);
+                resolve(getRequest.result);
+            };
+
+            getRequest.onerror = function() {
+                reject(getRequest.error);
+            };
+        };
+
+        request.onerror = function(event) {
+            reject(event.target.errorCode);
+        };
     });
 }
 
@@ -545,26 +611,7 @@ function showQuoteInContext(myWork,myQuote) {
 
 function loadWorks() {
     const modalBody = document.getElementById('modal-body');
-       // Preload work content
-       myData.works.forEach(work => {
-        fetch(work.textUri)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was *not* ok');
-                }
-                return response.text();
-            })
-            .then(html => {
-                const workContainer = document.createElement('div');
-                workContainer.id = `work-${work.id}`;
-                workContainer.classList.add('hidden');
-                workContainer.innerHTML = html;
-                modalBody.appendChild(workContainer);
-            })
-            .catch(error => {
-                console.error('Derp. Error fetching or parsing data:', error);
-            });
-    });
+ 
 }
 
 </script>
@@ -620,7 +667,7 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
                 longing for nothing more, nor desiring anything."
 
 
-                                 --Chapter X, Verse I.
+                                 --Chapter X, Verse I
 
 
 
@@ -636,5 +683,44 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
 
 
 !-->
+
+<!--
+
+                      ';olclkxkOxkdkxkOxdOOOK0Okx;                    
+                 ..cl;:c;cxxdodkckdoddccoxOkOO00x,                  
+               .;cl:ck:do.;ol''lxodoxddo;;coOkdddk:.                
+.  ..         .occc,cxc;;llkk;..,l,ldlc::';ddoOkkkkd;.              
+......       .odlxkl'.';..,,loc,',;:coxxxxxkxcc:cld0Ok.             
+.......... .,cc;,,,ol,,;;;,,;oO0O000KXXXK0kdll;',:dOOx:.            
+...........cc,;;'...;:loddkkO0000KKXNNXK0000Oxk0xdOkkO0x'           
+...........;:'loxl;,;;cldxkkkO0000XXXXXK0O00OkO0xxOxdO0kk,          
+...........,'.loxo;',;clodddxkOOkkOOkO0KO000Okxkcoxxxxccc'          
+..........,dc,;;;l,.';lddolllllodolcc:::;codxxdxc;,,:ldooo.         
+...........,,;''cl,..',,.......;odc,''''','';ldOkoc,clooo'          
+.............,coc;,......,;;,,.,x0xdollodddodxkOkxdc;.';c.          
+...............,::,.';;;;:cldo:;k0k0K0Okkkk0KK0Okddol;.'.           
+...............;c:,',coxxxkOkl;;kKxk0KXXKKK00OOkkkxdo;;c.           
+............... ',;.';lodxxkk:':OKkdk0K00OOOOkxkO0d;;:l'            
+..................;,',;clodxx:,l0KOkkxkOOOOkkxkO0Okol;....          
+...................,'',;:lddo'.':c:,cOOxxkkxxxkkxoxd'.......        
+.................';';;;;,cllc,...'lxO000kxkkOkkxkdd;........        
+.................,;.';::;cco;''.'c:ccllxOOOOkkxkood...........      
+..................:;,lc:llcl;'',:codooo:oxkOO0Oxxd:............     
+...................'.,c:c::cc:::oxkOOO0kldxxdddddo.............     
+.......................'::cdlldllxxOO000kddxxllc:...................
+........................;,cxdxOkkO0000000Okllc;;:...................
+.........................',:;cdoxxkkkxxkOxoo:',co...................
+...........................''::;llcoooolc:'',:oxx::;'...............
+.................................',',''...';lkOOkxxxkkdl,...........
+...................    .................',cdkO0Okk0OOOOkdl;'........
+..................     ..............'',:oxkOOOOkkO00OOkxOOkc...;'..
+...................    ..........''',,;ldkOOOOOkkO000OOkO0Oxxl:dOko,
+........';;;;.....  .  ......''''''',:ldkkOOOOkOKK000OOOkxkOOdlO0Okk
+......,loxxdo;''..........''''''''',:ldxxkkkkOKKKKK0OxdoxO0Oklx0Okkk
+.....;:dxOkdo;;'..,'......',,,,,,,;:clodxxxkKKKK00OdlldOOOkOxcxxkO0O
+.....,coxxdo;;,,';;''.....'',;;;;;::clodxxOKKK0Odccok0OOOk0Occdk0OOk
+..'''';cdxc',::,'c,',,''''',;:ccccccloddxO000Ol,;dOK0OO0kO0k;;lO0Okk
+
+-->
 
 </html>

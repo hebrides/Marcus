@@ -9,7 +9,7 @@
 
   "works": 
   [ 
-    { "id": "1", "authorId": "1", "title": "Meditations", "textUri": "stoics/aurelius/meditations-book-lang-english-modern.html" },
+    { "id": "1", "authorId": "1", "title": "Meditations", "textUri": "stoics/aurelius/meditations.json" },
     { "id": "2", "authorId": "2", "title": "The Enchirideon", "textUri": "stoics/epictetus/the_enchiridion.html" },
     { "id": "3", "authorId": "2", "title": "The Discourses", "textUri": "stoics/epictetus/the_discourses.html" },
     { "id": "4", "authorId": "2", "title": "The Golden Sayings", "textUri": "stoics/epictetus/golden_sayings.html" },
