@@ -262,6 +262,7 @@ main {
     font-weight: normal;
     letter-spacing: 4px;
     font-size: 14px;
+    width: 100%;
     text-transform: uppercase; /* maybe */
 }
 
@@ -387,7 +388,16 @@ main {
                     </ul>
                 </li>
                 <li><a href="#" onclick="showNewQuote('random'); dismissMenu();" >Random Quote</a></li>
-                <li><a href="#">Stoic Chat</a></li>
+                <li>
+                    <input type="checkbox" id="chat-toggle" hidden/>
+                    <label for="chat-toggle">Stoic Chat</label>
+                    <ul>
+                        <li><a href="#">Marcus Aurelius</a></li>
+                        <li><a href="#">Marcus Tullius Cicero</a></li>
+                        <li><a href="#">Epictetus</a></li>
+                        <li><a href="#">Lucius Annaeus Seneca</a></li>
+                    </ul>
+                </li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Settings</a></li>
             </ul>
@@ -421,14 +431,17 @@ main {
             </label>
         </div>
         <div id="modal-body">
-            <img src="" alt="Author Image" id="modal-image" style="display: none;">
-            <p id="modal-text" >Details about the selection...</p>
+            <!-- MODAL CONTENT GOES HERE -->
         </div>
     </div>
 </div>
 
 <footer>
-    <div id="data-protection" alt="Data Protection Policy"><a href="/data-protection-policy">Data Protection Policy</a></div>
+    <div id="data-protection" alt="Data Protection Policy">
+        <a href="#" onclick="showDataProtectionPolicy();">
+            <label for="modal-toggle">Data Protection Policy</label>
+        </a>
+    </div>
     <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
     Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
 </footer>
@@ -467,21 +480,39 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function lazyLoadStoicWorks(works) {
+    console.log('Starting lazyLoadStoicWorks');
     const worker = new Worker('stoic-works-worker.js');
-    const missingWorks = works.filter(work => !isWorkInIndexedDB(work.id));
-
-    if (missingWorks.length > 0) {
-        worker.postMessage({ action: 'loadWorks', works: missingWorks });
-
-        worker.addEventListener('message', function(event) {
-            const { id, status, error } = event.data;
-            if (status === 'stored') {
-                console.log(`Work ${id} stored in IndexedDB`);
-            } else if (status === 'error') {
-                console.error(`Error storing work ${id}: ${error}`);
+    const missingWorksPromises = works.map(work => {
+        return isWorkInIndexedDB(work.id).then(isInDB => {
+            if (!isInDB) {
+                console.log(`Work ${work.id} is missing in IndexedDB`);
+                return work;
+            } else {
+                return null;
             }
         });
-    }
+    });
+
+    Promise.all(missingWorksPromises).then(missingWorks => {
+        missingWorks = missingWorks.filter(work => work !== null);
+        if (missingWorks.length > 0) {
+            console.log('Missing works:', missingWorks.map(work => work.id));
+            worker.postMessage({ action: 'loadWorks', works: missingWorks });
+
+            worker.addEventListener('message', function(event) {
+                const { id, status, error } = event.data;
+                if (status === 'stored') {
+                    console.log(`Work ${id} stored in IndexedDB`);
+                } else if (status === 'error') {
+                    console.error(`Error storing work ${id}: ${error}`);
+                }
+            });
+        } else {
+            console.log('No missing works to load');
+        }
+    }).catch(error => {
+        console.error('Error checking works in IndexedDB:', error);
+    });
 }
 
 function isWorkInIndexedDB(id) {
@@ -495,7 +526,6 @@ function isWorkInIndexedDB(id) {
             const getRequest = store.get(`stoicWork_${id}`);
 
             getRequest.onsuccess = function() {
-                console.log(`Checked IndexedDB for work ${id}:`, !!getRequest.result);
                 resolve(!!getRequest.result);
             };
 
@@ -521,7 +551,6 @@ function fetchData() {
             const getRequest = store.get('stoicData');
 
             getRequest.onsuccess = function() {
-                console.log('Fetched stoicData from IndexedDB:', getRequest.result);
                 resolve(getRequest.result);
             };
 
@@ -587,10 +616,10 @@ function dismissMenu() {
 }
 
 function showBiography(myAuthor) {    
-    document.getElementById('modal-title').innerHTML = `${myAuthor.name}`; 
-    document.getElementById('modal-image').src = `${myAuthor.image}`;
-    document.getElementById('modal-image').style.display = `block`;
-    document.getElementById('modal-text').innerHTML = `${myAuthor.biography}`;  
+    document.getElementById('modal-title').innerHTML = myAuthor.name;
+    document.getElementById('modal-body').innerHTML = 
+    `<img id="modal-image" src=${myAuthor.image}" alt="${myAuthor.name} Image">
+    <p id="modal-text" >${myAuthor.biography}</p>`;
 }
 
 function showWork(myWork) {    
@@ -608,6 +637,21 @@ function showVerse(myWork,myQuote) {
 function showQuoteInContext(myWork,myQuote) {    
     return; 
 }
+
+function showChat(myAuthor) {    
+    return; 
+}
+function showDataProtectionPolicy() {
+    document.getElementById('modal-title').innerHTML = `<div style="text-align:center">Stoic Reader Data Protection</div>`;
+    document.getElementById('modal-body').innerHTML = 
+    `<div id="modal-text" style="text-align:center" ><p>The Stoic Reader will never sell your data. Period.</p>
+    <br /><br /><br />
+    <p>"Let us try to persuade them. But act even against their will, when the principles of justice lead that way."</p>
+    <p>~Marcus Aurelius, Medidations, Book 6, Verse 50</p>
+    </div>`;
+    return; 
+}
+
 
 function loadWorks() {
     const modalBody = document.getElementById('modal-body');
@@ -667,17 +711,12 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
                 longing for nothing more, nor desiring anything."
 
 
-                                 --Chapter X, Verse I
+                --Chapter X, Verse I, Meditationes, Marcus Aurelius
 
 
 
 
-        “Every man always has handy a dozen glib little reasons
 
-               why he is right not to sacrifice himself."
-
-
-                  ―-Aleksandr Solzhenitsyn, The Gulag Archipelago
 
 
 
@@ -721,6 +760,13 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
 .....,coxxdo;;,,';;''.....'',;;;;;::clodxxOKKK0Odccok0OOOk0Occdk0OOk
 ..'''';cdxc',::,'c,',,''''',;:ccccccloddxO000Ol,;dOK0OO0kO0k;;lO0Okk
 
+
+        “Every man always has handy a dozen glib little reasons
+
+               why he is right not to sacrifice himself."
+
+
+                  ―-Aleksandr Solzhenitsyn, The Gulag Archipelago
 -->
 
 </html>
