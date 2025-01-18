@@ -646,11 +646,11 @@ function showDataProtectionPolicy() {
     `<div style="text-align:center; letter-spacing: 8px; margin-left: 30px;">Data Protection Policy</div>`;
     document.getElementById('modal-body').innerHTML = 
     `<div id="modal-text" style="text-align:center" >
-    <img src="brand.svg" style="width: 50%;" />
+    <img src="brand.svg" style="width: 50%; opacity: 60%;" />
     <br />
     <p style="font-size:18px;">The Stoic Reader will never sell your data. </p>
     <br />
-    <p style="font-size:15px; line-height: 24px;">&#8220;Let us try to persuade them. But act even against their will, when the principles of justice lead that way.&#8221;</p>
+    <p style="font-size:15px; line-height: 24px; letter-spacing: 1.3px;">&#8220;Let us try to persuade them. But act even against their will, when the principles of justice lead that way.&#8221;</p>
     <p>~Marcus Aurelius, Medidations, Book 6, Verse 50</p>
     </div>`;
     return; 
