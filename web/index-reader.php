@@ -642,11 +642,15 @@ function showChat(myAuthor) {
     return; 
 }
 function showDataProtectionPolicy() {
-    document.getElementById('modal-title').innerHTML = `<div style="text-align:center">Stoic Reader Data Protection</div>`;
+    document.getElementById('modal-title').innerHTML = 
+    `<div style="text-align:center; letter-spacing: 8px; margin-left: 30px;">Data Protection Policy</div>`;
     document.getElementById('modal-body').innerHTML = 
-    `<div id="modal-text" style="text-align:center" ><p>The Stoic Reader will never sell your data. Period.</p>
-    <br /><br /><br />
-    <p>"Let us try to persuade them. But act even against their will, when the principles of justice lead that way."</p>
+    `<div id="modal-text" style="text-align:center" >
+    <img src="brand.svg" style="width: 50%;" />
+    <br />
+    <p style="font-size:18px;">The Stoic Reader will never sell your data. </p>
+    <br />
+    <p style="font-size:15px; line-height: 24px;">&#8220;Let us try to persuade them. But act even against their will, when the principles of justice lead that way.&#8221;</p>
     <p>~Marcus Aurelius, Medidations, Book 6, Verse 50</p>
     </div>`;
     return; 
