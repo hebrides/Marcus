@@ -275,8 +275,12 @@ main {
 }
 
 #modal-close {
+    opacity: 40%;
     cursor: pointer;
     border: none;
+}
+#modal-close:hover {
+    opacity: 80%;
 }
 
 #modal-image {
@@ -468,7 +472,6 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchData().then(data => {
                 myData = data;
                 showNewQuote("random");
-                loadWorks(); // load the works into the page
                 lazyLoadStoicWorks(data.works); // Lazy load stoic works
             }).catch(error => {
                 console.error('Initialization error:', error);
@@ -584,7 +587,7 @@ function showNewQuote(selectionMethod) {
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     const myAuthor = authors.find(author => author.id === myWork.authorId);
-    
+  
     // display quote, citation
     document.getElementById('quote').innerHTML =  // quote
         `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
@@ -618,12 +621,11 @@ function dismissMenu() {
 function showBiography(myAuthor) {    
     document.getElementById('modal-title').innerHTML = myAuthor.name;
     document.getElementById('modal-body').innerHTML = 
-    `<img id="modal-image" src=${myAuthor.image}" alt="${myAuthor.name} Image">
+    `<img id="modal-image" src="${myAuthor.image}" alt="${myAuthor.name} Image">
     <p id="modal-text" >${myAuthor.biography}</p>`;
 }
 
-function showWork(myWork) {    
-    return; 
+function showWork(workId) {
 }
 
 function showChapter(myWork,myQuote) {    
@@ -656,11 +658,6 @@ function showDataProtectionPolicy() {
     return; 
 }
 
-
-function loadWorks() {
-    const modalBody = document.getElementById('modal-body');
- 
-}
 
 </script>
 </body>
