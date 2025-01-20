@@ -10,6 +10,11 @@ let appState = {
 let appData = {
 };
 
+// Global modal vars
+const modalLoading = document.getElementById('modal-data-loading');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+
 document.addEventListener('DOMContentLoaded', function() {
     fetch('data-meta.json')
     .then(response => response.json())
@@ -20,10 +25,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // TODO: if no updates, try indexDB
 
-            // load quotes and display a random quote
+            // no indexDB data? load quotes, display a random quote, load data
             loadQuotes().then(() => {
                 showNewQuote('random');
-                loadAppData();
+                loadAuthorBiosAddWorks();
+                //
+                // TODO: Store new data in IndexDB
+                //
             });
         })
         .catch(error => {
@@ -43,7 +51,8 @@ function loadQuotes() {
         });
 }
 
-function loadAppData() {
+function loadAuthorBiosAddWorks() {
+    // Start with the current quote's author and work
     const { currentAuthor, currentWork } = appState;
 
     // Fetch author bio
@@ -59,7 +68,7 @@ function loadAppData() {
 
     // Fetch work text
     fetch(currentWork.textUri)
-        .then(response => response.json())
+        .then(response => response.text())
         .then(workText => {
             currentWork.text = workText;
             console.log('Loaded work text:', workText);
@@ -67,6 +76,36 @@ function loadAppData() {
         })
         .catch(error => {
             console.error('Error loading work text:', error);
+        });
+    
+    // Load remaing author bios and work texts
+    const { authors, works } = appData;
+    const authorPromises = authors
+        .filter(author => author.id !== currentAuthor.id)
+        .map(author => {
+            return fetch(author.bioUri)
+                .then(response => response.text())
+                .then(bio => {
+                    author.bio = bio;
+                    console.log(`Loaded author ${author.id} bio:`, bio);
+                })
+                .catch(error => {
+                    console.error(`Error loading author ${author.id} bio:`, error);
+                });
+        });
+
+    const workPromises = works
+        .filter(work => work.id !== currentWork.id)
+        .map(work => {
+            return fetch(work.textUri)
+                .then(response => response.text())
+                .then(workText => {
+                    work.text = workText;
+                    console.log(`Loaded work ${work.id} text:`, workText);
+                })
+                .catch(error => {
+                    console.error(`Error loading work ${work.id} text:`, error);
+                });
         });
 }
 
@@ -128,13 +167,24 @@ function showBiography(myAuthor) {
         console.error('No author biography data available!');
         myAuthor.bio = 'ERROR LOADING BIO. ¯\\_(ツ)_/¯';
     }
-    document.getElementById('modal-title').innerHTML = myAuthor.name;
-    document.getElementById('modal-body').innerHTML = 
+    modalLoading.style.display = 'block';
+
+    modalTitle.innerHTML = myAuthor.name;
+    modalBody.innerHTML = 
     `<img id="modal-image" src="${myAuthor.imgUri}" alt="${myAuthor.name} Image" />
     <p id="modal-text" >${myAuthor.bio}</p>`;
+    modalLoading.style.display = 'none';
 }
 
-function showWork(workId) {
+function showWork(myWork) {   
+    if (!myWork.text) {
+        console.error('No work text data available!'); 
+        return;
+    }
+    modalLoading.style.display = 'block';
+    modalTitle.innerHTML = myWork.title;
+    modalBody.innerHTML = `<p>${myWork.text}</p>`;
+    modalLoading.style.display = 'none';
 }
 
 function showChapter(myWork,myQuote) {    

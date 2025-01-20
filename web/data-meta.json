@@ -14,7 +14,7 @@
 
   "works": 
   [ 
-    { "id": "1", "authorId": "1", "title": "Meditations", "textUri": "stoics/aurelius/meditations.json", "text": null, "version": "1.0.0" },
+    { "id": "1", "authorId": "1", "title": "Meditations", "textUri": "stoics/aurelius/meditations.html", "text": null, "version": "1.0.0" },
     { "id": "5", "authorId": "2", "title": "The Enchirideon", "textUri": "stoics/epictetus/enchiridion.json", "text": null, "version": "1.0.0" },
     { "id": "3", "authorId": "2", "title": "The Discourses", "textUri": "stoics/epictetus/discourses.json", "text": null, "version": "1.0.0" },
     { "id": "4", "authorId": "2", "title": "The Golden Sayings", "textUri": "stoics/epictetus/gold.json", "text": null, "version": "1.0.0" },
