@@ -27,7 +27,7 @@
                     <input type="checkbox" id="marcus-toggle" hidden />
                     <label for="marcus-toggle">Marcus Aurelius</label>
                     <ul>
-                        <li><a href="#">Meditations</a></li>
+                        <li><a href="#" onclick="showWork('1');"><label for="modal-toggle">Meditations</label></a></li>
                     </ul>
                 </li>
                 <li>
@@ -56,7 +56,7 @@
                         <li><a href="#">On Duties</a></li>
                     </ul>
                 </li>
-                <li><a href="#" onclick="showNewQuote('random'); dismissMenu();" >Random Quote</a></li>
+                <li><a href="#" onclick="showNewQuote('random');" >Random Quote</a></li>
                 <li>
                     <input type="checkbox" id="chat-toggle" hidden/>
                     <label for="chat-toggle">Stoic Chat</label>

@@ -15,7 +15,9 @@ const modalLoading = document.getElementById('modal-data-loading');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {  
+    attachEventListeners();
+      
     fetch('data-meta.json')
     .then(response => response.json())
         .then(metaData => {
@@ -112,6 +114,7 @@ function loadAuthorBiosAddWorks() {
 function showNewQuote(selectionMethod) {
     if (!appData.quotes.allQuotes) {
         console.error('Ummm... ¯\_(ツ)_/¯ No quote data available!');
+        document.getElementById('quote').innerHTML = 'DERP! ERROR LOADING QUOTE. ¯\\_(ツ)_/¯';
         return;
     }
     const { authors, works, quotes: { allQuotes } } = appData;
@@ -162,7 +165,9 @@ function dismissMenu() {
   document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
 }
 
-function showBiography() {    
+function showBiography() {
+    appState.currentView = 'bio';
+
     const myAuthor = appState.currentAuthor;
     if (!myAuthor.bio) {
         console.error('No author biography data available!');
@@ -170,8 +175,6 @@ function showBiography() {
         modalBody.innerHTML = 'ERROR LOADING BIO. ¯\\_(ツ)_/¯';
         return;
     }
-
-    appState.currentView = 'quote';
 
     modalLoading.style.display = 'block';
     modalTitle.innerHTML = myAuthor.name;
@@ -182,7 +185,23 @@ function showBiography() {
 
 }
 
-function showWork() {   
+function showWork(workId = null) {   
+    appState.currentView = 'work';
+
+    if (workId) {
+        console.log(`Showing work ${workId}`);
+        const myWork = appData.works.find(work => work.id === workId);
+        if (myWork) {
+            appState.currentWork = myWork;
+            appState.currentAuthor = appData.authors.find(author => author.id === myWork.authorId);
+        } else {
+            console.error('Work not found!');
+            modalTitle.innerHTML = 'Error';
+            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+            return;
+        }
+    }
+
     const myWork = appState.currentWork;
     if (!myWork.text) {
         console.error('No work text data available!'); 
@@ -232,5 +251,9 @@ function restoreState() {
 }
 
 function attachEventListeners() {
+    // attach dismissMenu() to all a href links in menu
+    document.querySelectorAll('#menu a').forEach(link => {
+        link.addEventListener('click', dismissMenu);
+    });
     return;
 }
