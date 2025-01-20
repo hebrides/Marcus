@@ -6,6 +6,7 @@ let appState = {
         currentView: 'quote'
     };
 
+// Stores app data in memory for quick access
 let appData = {
 };
 
@@ -15,8 +16,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(metaData => {
             appData = metaData;
             console.log('Fetched metadata:', metaData);
+            // check metadata for updates & load if necessary
+            
+            // TODO: if no updates, try indexDB
+
             // load quotes and display a random quote
-            loadQuotes();
+            loadQuotes().then(() => {
+                showNewQuote('random');
+                loadAppData();
+            });
         })
         .catch(error => {
             console.error('Error initializing app data:', error);
@@ -24,15 +32,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadQuotes() {
-    fetch(appData.quotes.allQuotesUri)
+    return fetch(appData.quotes.allQuotesUri)
         .then(response => response.json())
         .then(quotesData => {
             appData.quotes.allQuotes = quotesData;
             console.log('Fetched quotes:', quotesData);
-            showNewQuote('random');
         })
         .catch(error => {
             console.error('Error loading quotes:', error);
+        });
+}
+
+function loadAppData() {
+    const { currentAuthor, currentWork } = appState;
+
+    // Fetch author bio
+    fetch(currentAuthor.bioUri)
+        .then(response => response.text())
+        .then(bio => {
+            currentAuthor.bio = bio;
+            console.log('Loaded author bio:', bio);
+        })
+        .catch(error => {
+            console.error('Error loading author bio:', error);
+        });
+
+    // Fetch work text
+    fetch(currentWork.textUri)
+        .then(response => response.json())
+        .then(workText => {
+            currentWork.text = workText;
+            console.log('Loaded work text:', workText);
+            // Additional parsing can be done here if needed
+        })
+        .catch(error => {
+            console.error('Error loading work text:', error);
         });
 }
 
@@ -51,7 +85,13 @@ function showNewQuote(selectionMethod) {
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     const myAuthor = authors.find(author => author.id === myWork.authorId);
-  
+    
+    // update app state
+    appState.currentQuote = myQuote;
+    appState.currentAuthor = myAuthor;
+    appState.currentWork = myWork;
+    appState.currentView = 'quote';
+
     // display quote, citation
     document.getElementById('quote').innerHTML =  // quote
         `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
@@ -74,12 +114,6 @@ function showNewQuote(selectionMethod) {
     links.forEach(link => {
         document.getElementById(link.id).addEventListener('click', link.handler);
     });
-
-    // update app state
-    appState.currentQuote = myQuote;
-    appState.currentAuthor = myAuthor;
-    appState.currentWork = myWork;
-    appState.currentView = 'quote';
 
     console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}`);
 }

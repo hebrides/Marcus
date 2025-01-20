@@ -101,6 +101,7 @@
         </div>
         <div id="modal-body">
             <!-- MODAL CONTENT GOES HERE -->
+            <div id="loading-indicator" class="activty">Loading...</div>
         </div>
     </div>
 </div>

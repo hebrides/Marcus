@@ -8,7 +8,7 @@
   "authors": [
     { "id":"1", "name": "Marcus Aurelius", "imgUri": "stoics/aurelius/marcus.jpg", "image": null, "bioUri": "stoics/aurelius/bio-marcus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
     { "id":"2", "name": "Epictetus", "imgUri": "stoics/epictetus/epictetus.jpg", "image": null, "bioUri": "stoics/epictetus/bio-epictetus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
-    { "id":"3", "name": "Seneca", "imgUri": "stoics/seneca/seneca.png", "image": null, "bioUri": "stoics/seneca/bio-seneca.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
+    { "id":"3", "name": "Seneca", "imgUri": "stoics/seneca/seneca.jpg", "image": null, "bioUri": "stoics/seneca/bio-seneca.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
     { "id":"4", "name": "Cicero", "imgUri": "stoics/cicero/cicero.jpg", "image": null, "bioUri": "stoics/cicero/bio-cicero.html", "bio": null, "quotesUri": null, "version": "1.0.0"}
   ],
 
