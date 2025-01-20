@@ -148,7 +148,7 @@ function showNewQuote(selectionMethod) {
     const links = [
         { id: 'quoteLink', handler: () => showQuoteInContext(myWork, myQuote) },
         { id: 'authorLink', handler: () => showBiography(myAuthor) },
-        { id: 'workLink', handler: () => showWork(myWork) },
+        { id: 'workLink', handler: () => showWork(myWork.id) },
         { id: 'chapterLink', handler: () => showChapter(myWork, myQuote) },
         { id: 'verseLink', handler: () => showVerse(myWork, myQuote) }
     ];
