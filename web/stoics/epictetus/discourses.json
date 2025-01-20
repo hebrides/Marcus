@@ -1,20 +1,19 @@
-<html>
-<body>
+[
+  {
+    "title": "The Discourses",
+    "author": "Epictetus",
+    "source":  "The Internet Classics Archive",
+    "translator": "Unknown",
+    "translationDate": "Unknown",
+    "license": "Public Domain",
+    "language": "English",
+    "wikipedia": "https://en.wikipedia.org/wiki/Meditations",
+    "source-uri": "http://classics.mit.edu/Antoninus/meditations.html",
+    "structure": ["Book", "Chapter", "Paragraph", "Verse"],
 
-    <p>Provided by The Internet Classics Archive.
-</p>
+  },
 
-<p>See bottom for copyright. Available online at http://classics.mit.edu//Epictetus/discourses.html
-</p>
-
-<p>The Discourses
-</p>
-
-<p>By Epictetus
-</p>
-
-<p>----------------------------------------------------------------------
-</p>
+{
 
 <p>BOOK ONE
 </p>
@@ -1428,5 +1427,5 @@ Against or to those who readily tell their own affairs
 <p>
     When a man has seemed to us to have talked with simplicity about his ownaffairs, how is it that at last we are ourselves also induced to discover tohim our own secrets and we think this to be candid behavior? In the firstplace, because it seems unfair for a man to have listened to the affairs of hisneighbour, and not to communicate to him also in turn our own affairs: next,because we think that we shall not present to them the appearance of candid menwhen we are silent about our own affairs. Indeed men are often accustomed tosay, "I have told you all my affairs, will you tell me nothing of your own?where is this done?" Besides, we have also this opinion that we can safelytrust him who has already told us his own affairs; for the notion rises in ourmind that this man could never divulge our affairs because he would be cautiousthat we also should not divulge his. In this way also the incautious are caughtby the soldiers at Rome. A soldier sits by you in a common dress and begins tospeak ill of Caesar; then you, as if you had received a pledge of his fidelityby his having begun the abuse, utter yourself also what you think, and then youare carried off in chains.    Something of this kind happens to us generally. Now as this man hasconfidently intrusted his affairs to me, shall I also do so to any man whom Imeet? For when I have heard, I keep silence, if I am of such a disposition; buthe goes forth and tells all men what he has heard. Then if I hear what has beendone, if I be a man like him, I resolve to be revenged, I divulge what he hastold me; I both disturb others and am disturbed myself. But if I remember thatone man does not injure another, and that every man's acts injure and profithim, I secure this, that I do not anything like him, but still I suffer what Ido suffer through my own silly talk.    "True: but it is unfair when you have heard the secrets of your neighbourfor you in turn to communicate nothing to him." Did I ask you for your secrets,my man? did you communicate your affairs on certain terms, that you should inreturn hear mine also? If you are a babbler and think that all who meet you arefriends, do you wish me also to be like you? But why, if you did well inentrusting your affairs to me, and it is not well for me to intrust mine toyou, do you wish me to be so rash? It is just the same as if I had a cask whichis water-tight, and you one with a hole in it, and you should come and depositwith me your wine that I might put it into my cask, and then should complainthat I also did not intrust my wine to you, for you have a cask with a hole init. How then is there any equality here? You intrusted your affairs to a manwho is faithful and modest, to a man who thinks that his own actions alone areinjurious and useful, and that nothing external is. Would you have me intrustmine to you, a man who has dishonoured his own faculty of will, and who wishesto gain some small bit of money or some office or promotion in the court, evenif you should be going to murder your own children, like Medea? Where is thisequality? But show yourself to me to be faithful, modest, and steady: show methat you have friendly opinions; show that your cask has no hole in it; and youwill see how I shall not wait for you to trust me with your affairs, but Imyself shall come to you and ask you to hear mine. For who does not choose tomake use of a good vessel? Who does not value a benevolent and faithfuladviser? who will not willingly receive a man who is ready to bear a share, aswe may say, of the difficulty of his circumstances, and by this very act toease the burden, by taking a part of it.    "True: but I trust you; you do not trust me." In the first place, not evendo you trust me, but you are a babbler, and for this reason you cannot holdanything; for indeed, if it is true that you trust me, trust your affairs to meonly; but now, whenever you see a man at leisure, you seat yourself by him andsay: "Brother, I have no friend more benevolent than you nor dearer; I requestyou to listen to my affairs." And you do this even to those who are not knownto you at all. But if you really trust me, it is plain that you trust mebecause I am faithful and modest, not because I have told my affairs to you.Allow me, then, to have the same opinion about you. Show me that, if one mantells his affairs to another, he who tells them is faithful and modest. For ifthis were so, I would go about and tell my affairs to every man, if that wouldmake me faithful and modest. But the thing is not so, and it requires no commonopinions. If, then, you see a man who is busy about things not dependent on hiswill and subjecting his will to them, you must know that this man has tenthousand persons to compel and hinder him. He has no need of pitch or the wheelto compel him to declare what he knows: but a little girl's nod, if it shouldso happen, will move him, the blandishment of one who belongs to Caesar'scourt, desire of a magistracy or of an inheritance, and things without end ofthat sort. You must remember, then, among general principles that secretdiscourses require fidelity and corresponding opinions. But where can we nowfind these easily? Or if you cannot answer that question, let some one pointout to me a man who can say: "I care only about the things which are my own,the things which are not subject to hindrance, the things which are by naturefree." This I hold to be the nature of the good: but let all other things be asthey are allowed; I do not concern myself.
 </p>
-</body>
-</html>
+}
+]

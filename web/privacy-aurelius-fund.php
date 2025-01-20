@@ -6,8 +6,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <title>Aurelius Fund Privacy Policy</title>
-<link rel="icon" type="image/png" href="favicon.png"  />
-<link rel="stylesheet" href="../style.css" />
+<link rel="icon" type="image/png" href="/favicon.png"  />
+<link rel="stylesheet" href="/style.css" />
 </head>
 
 <body>

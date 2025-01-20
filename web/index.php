@@ -1,141 +1,123 @@
-<?php
-
-// Quote of the Day Generator For Marcus Aurelius Page
-
-exec("cd ". getcwd(). " && /usr/local/bin/node get_quote.js rotated 2>&1", $output, $error);
-if ($error){ echo $error;}
-else {
-  $quote = $output[0];
-  $book = $output[1];
-  $verse = $output[2];
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
-
-
 <head>
-
   <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-
-
-  <title>The Aurelius Fund | Read The Stoics, Donate to Veterans</title>
-
-
-
-  <link rel="icon" type="image/png" href="favicon.png"  />
+  <title>The Stoic Reader | Read The Stoics, Donate to Veterans</title>
 
   <link rel="stylesheet" href="style.css" />
 
 </head>
 
-
-
-
-
 <body>
-<div id="content">
 
-<div>
-  <img id="brand" src="marcus.png" />
-</div>
+    <header>
+        <img id="logo" src="img/logo.svg" alt="The Stoic Reader" />
 
-<div id="quote">
-“<?php
-  echo $quote;
-?>”
-</div>
-
-<div id="text"><a href="#">—Marcus Aurelius, Meditations, Book <?php echo $book; ?>, Verse <?php echo $verse; ?></a>
-  <br/>
-  <span id="title">M e d i t a t i o n s</span>
-  <br/>
-  <span id="subtitle">Adapted from the 1862 George Long book via <a href="http://classics.mit.edu/Antoninus/meditations.html">The Internet Classics Archive</a></span>
-  <br/>
-  © <?php echo date("Y"); ?> Marcus Skye Lewis. All Rights Reserved.
-  <br/>
-  <br/>
-  <span id="footer-links"><a href="https://www.smgmobile.com/apps/marcus/privacy/">Privacy Policy</a> | <a href="https://www.smgmobile.com/">About Marcus</a></span>
-  <br/>
-  <br/>
-  <br/>
-</div>
-</div>
-
-<script>
-/*
-$(document).ready( 
-function() {
+        <!-- Menu toggle button -->
+        <input type="checkbox" id="toggle-menu" hidden onchange="if(!this.checked) document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);"/>
                   
-      updateDay ();
+        <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
 
-      function updateDay () {
-            var quotation = document.getElementById('quotation');
-            var citation = document.getElementById('citation');
-            quoteOfTheDay = getQuoteOfTheDay();
-            quotation.innerHTML = quoteOfTheDay.quote;
-            citation.innerHTML = "Book " + quoteOfTheDay.book + ", Verse " + quoteOfTheDay.verse;
-      }
+        <!-- Navigation menu -->
+        <nav id="menu">
+            <ul>
+                <li>
+                    <input type="checkbox" id="marcus-toggle" hidden />
+                    <label for="marcus-toggle">Marcus Aurelius</label>
+                    <ul>
+                        <li><a href="#">Meditations</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="epictetus-toggle" hidden />
+                    <label for="epictetus-toggle">Epictetus</label>
+                    <ul>
+                        <li><a href="#">The Discourses</a></li>
+                        <li><a href="#">The Enchiridion</a></li>
+                        <li><a href="#">The Golden Sayings</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="seneca-toggle" hidden />
+                    <label for="seneca-toggle">Seneca</label>
+                    <ul>
+                        <li><a href="#">Letters from a Stoic</a></li>
+                        <li><a href="#">On the Shortness of Life</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="checkbox" id="cicero-toggle" hidden />
+                    <label for="cicero-toggle">Cicero</label>
+                    <ul>
+                        <li><a href="#">On the Ends of Good and Evil</a></li>
+                        <li><a href="#">Tuscan Disputations</a></li>
+                        <li><a href="#">On Duties</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" onclick="showNewQuote('random'); dismissMenu();" >Random Quote</a></li>
+                <li>
+                    <input type="checkbox" id="chat-toggle" hidden/>
+                    <label for="chat-toggle">Stoic Chat</label>
+                    <ul>
+                        <li><a href="#">Marcus Aurelius</a></li>
+                        <li><a href="#">Marcus Tullius Cicero</a></li>
+                        <li><a href="#">Epictetus</a></li>
+                        <li><a href="#">Lucius Annaeus Seneca</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </nav>
 
-      function getQuoteOfTheDay(selectionMethod) {
-            var quotesArray = loadJSON("meditations-quotes.json");
+        <!-- Overlay label for closing menu when clicked outside -->
+        <label for="toggle-menu" id="overlay"></label>
 
-            // Rotate through quotes by day, default behavior
-            var now = new Date();
-            // Index is number of days since 1/1/1970 % number of quotes
-            var quoteIndex = ( Math.ceil(now.getTime() / (1000 * 3600 * 24)) % quotesArray.length);
+    </header>
 
-            // Or get random
-            if (selectionMethod == 'random') {
-                  quoteIndex = Math.floor( Math.random() * quotesArray.length );
-            }
 
-            return quotesArray[quoteIndex];
-      }
+<main>
+    <div id="selection">
+        <p id="quote"></p>
+        <p id="citation"></p>
+    </div>
+</main>
 
-      function getDayOfCurrentYear() {
-            var now = new Date();
-            var start = new Date(now.getFullYear(), 0, 0);
-            var diff = now - start;
-            var oneDay = 1000 * 60 * 60 * 24;
-            var dayOfYear = Math.floor(diff / oneDay);
-            return dayOfYear;
-      }
+<!-- Modal Structure -->
+<input type="checkbox" id="modal-toggle" hidden />
+<div id="modal">
+    <label for="modal-toggle" id="modal-overlay"></label>
+    <div id="modal-content">
+        <div id="modal-header">
+            <h2 id="modal-title">Modal Title</h2>
+            <label for="modal-toggle" id="modal-close">
+                <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
+                    <line x1="40" y1="10" x2="10" y2="40" stroke="#dedede" stroke-width="2"/>
+                </svg>
+            </label>
+        </div>
+        <div id="modal-body">
+            <!-- MODAL CONTENT GOES HERE -->
+        </div>
+    </div>
+</div>
 
-      // Load local JSON to Array
-      function loadJSON(file) {
-            $.ajaxSetup({'async': false}); // Want to make sure we get all the quotes
-            var objects = [];
-            $.getJSON(file, function(json) {
-                  $.each(json, function( key, val ) {
-                        objects.push( val );
-                  });
+<footer>
+    <div id="data-protection" alt="Data Protection Policy">
+        <a href="#" onclick="showDataProtectionPolicy();">
+            <label for="modal-toggle">Data Protection Policy</label>
+        </a>
+    </div>
+    <div id="copyright" alt="Copyright © <?php echo date("Y"); ?> The Aurelius Fund | All Rights Reserved">
+    Copyright © <?php echo date("Y"); ?> <a href="#">The Aurelius Fund</a> | All Rights Reserved</div>
+</footer>
 
-            });
-            return objects;
-      }
-
-});
-
-/* Remote?
-  var xobj = new XMLHttpRequest();
-  xobj.overrideMimeType("application/json");
-  xobj.open('GET', 'verses-english-classic.json', true);
-  xobj.onreadystatechange = function () {
-  if (xobj.readyState == 4 && xobj.status == "200") {
-  // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-  callback(xobj.responseText);
-  }
-  };
-  xobj.send(null); */
-
-</script>
+<script src="script.js"></script>
 </body>
+
 <!--
 
 
@@ -186,9 +168,54 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
                 longing for nothing more, nor desiring anything."
 
 
-                                 --Chapter X, Verse I.
+                --Chapter X, Verse I, Meditationes, Marcus Aurelius
 
 
+
+
+
+
+
+
+
+!-->
+
+<!--
+
+                      ';olclkxkOxkdkxkOxdOOOK0Okx;                    
+                 ..cl;:c;cxxdodkckdoddccoxOkOO00x,                  
+               .;cl:ck:do.;ol''lxodoxddo;;coOkdddk:.                
+.  ..         .occc,cxc;;llkk;..,l,ldlc::';ddoOkkkkd;.              
+......       .odlxkl'.';..,,loc,',;:coxxxxxkxcc:cld0Ok.             
+.......... .,cc;,,,ol,,;;;,,;oO0O000KXXXK0kdll;',:dOOx:.            
+...........cc,;;'...;:loddkkO0000KKXNNXK0000Oxk0xdOkkO0x'           
+...........;:'loxl;,;;cldxkkkO0000XXXXXK0O00OkO0xxOxdO0kk,          
+...........,'.loxo;',;clodddxkOOkkOOkO0KO000Okxkcoxxxxccc'          
+..........,dc,;;;l,.';lddolllllodolcc:::;codxxdxc;,,:ldooo.         
+...........,,;''cl,..',,.......;odc,''''','';ldOkoc,clooo'          
+.............,coc;,......,;;,,.,x0xdollodddodxkOkxdc;.';c.          
+...............,::,.';;;;:cldo:;k0k0K0Okkkk0KK0Okddol;.'.           
+...............;c:,',coxxxkOkl;;kKxk0KXXKKK00OOkkkxdo;;c.           
+............... ',;.';lodxxkk:':OKkdk0K00OOOOkxkO0d;;:l'            
+..................;,',;clodxx:,l0KOkkxkOOOOkkxkO0Okol;....          
+...................,'',;:lddo'.':c:,cOOxxkkxxxkkxoxd'.......        
+.................';';;;;,cllc,...'lxO000kxkkOkkxkdd;........        
+.................,;.';::;cco;''.'c:ccllxOOOOkkxkood...........      
+..................:;,lc:llcl;'',:codooo:oxkOO0Oxxd:............     
+...................'.,c:c::cc:::oxkOOO0kldxxdddddo.............     
+.......................'::cdlldllxxOO000kddxxllc:...................
+........................;,cxdxOkkO0000000Okllc;;:...................
+.........................',:;cdoxxkkkxxkOxoo:',co...................
+...........................''::;llcoooolc:'',:oxx::;'...............
+.................................',',''...';lkOOkxxxkkdl,...........
+...................    .................',cdkO0Okk0OOOOkdl;'........
+..................     ..............'',:oxkOOOOkkO00OOkxOOkc...;'..
+...................    ..........''',,;ldkOOOOOkkO000OOkO0Oxxl:dOko,
+........';;;;.....  .  ......''''''',:ldkkOOOOkOKK000OOOkxkOOdlO0Okk
+......,loxxdo;''..........''''''''',:ldxxkkkkOKKKKK0OxdoxO0Oklx0Okkk
+.....;:dxOkdo;;'..,'......',,,,,,,;:clodxxxkKKKK00OdlldOOOkOxcxxkO0O
+.....,coxxdo;;,,';;''.....'',;;;;;::clodxxOKKK0Odccok0OOOk0Occdk0OOk
+..'''';cdxc',::,'c,',,''''',;:ccccccloddxO000Ol,;dOK0OO0kO0k;;lO0Okk
 
 
         “Every man always has handy a dozen glib little reasons
@@ -197,10 +224,6 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
 
 
                   ―-Aleksandr Solzhenitsyn, The Gulag Archipelago
-
-
-
-
-!-->
+-->
 
 </html>
