@@ -55,7 +55,7 @@ function loadAuthorBiosAddWorks() {
     // Start with the current quote's author and work
     const { currentAuthor, currentWork } = appState;
 
-    // Fetch author bio
+    // Fetch current author bio
     fetch(currentAuthor.bioUri)
         .then(response => response.text())
         .then(bio => {
@@ -66,7 +66,7 @@ function loadAuthorBiosAddWorks() {
             console.error('Error loading author bio:', error);
         });
 
-    // Fetch work text
+    // Fetch current work text
     fetch(currentWork.textUri)
         .then(response => response.text())
         .then(workText => {
@@ -162,25 +162,35 @@ function dismissMenu() {
   document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
 }
 
-function showBiography(myAuthor) {    
+function showBiography() {    
+    const myAuthor = appState.currentAuthor;
     if (!myAuthor.bio) {
         console.error('No author biography data available!');
-        myAuthor.bio = 'ERROR LOADING BIO. ¯\\_(ツ)_/¯';
+        modalTitle.innerHTML = myAuthor.name;
+        modalBody.innerHTML = 'ERROR LOADING BIO. ¯\\_(ツ)_/¯';
+        return;
     }
-    modalLoading.style.display = 'block';
 
+    appState.currentView = 'quote';
+
+    modalLoading.style.display = 'block';
     modalTitle.innerHTML = myAuthor.name;
     modalBody.innerHTML = 
     `<img id="modal-image" src="${myAuthor.imgUri}" alt="${myAuthor.name} Image" />
     <p id="modal-text" >${myAuthor.bio}</p>`;
     modalLoading.style.display = 'none';
+
 }
 
-function showWork(myWork) {   
+function showWork() {   
+    const myWork = appState.currentWork;
     if (!myWork.text) {
         console.error('No work text data available!'); 
+        modalTitle.innerHTML = myWork.title;
+        modalBody.innerHTML = 'ERROR LOADING Work. ¯\\_(ツ)_/¯';
         return;
     }
+    
     modalLoading.style.display = 'block';
     modalTitle.innerHTML = myWork.title;
     modalBody.innerHTML = `<p>${myWork.text}</p>`;
