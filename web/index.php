@@ -33,7 +33,7 @@
                 <li>
                     <input type="checkbox" id="epictetus-toggle" hidden />
                     <label for="epictetus-toggle">Epictetus</label>
-                    <ul>
+                  <ul>
                         <li><a href="#">The Discourses</a></li>
                         <li><a href="#">The Enchiridion</a></li>
                         <li><a href="#">The Golden Sayings</a></li>
@@ -101,7 +101,7 @@
         </div>
 
         <!-- MODAL CONTENT GOES HERE -->
-            <div id="modal-data-loading" class="activity">Loading...</div>
+            <div id="modal-data-loading" class="activity">Loading Book...</div>
 
             <div id="modal-body"></div>
 

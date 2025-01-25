@@ -185,35 +185,45 @@ function showBiography() {
 
 }
 
-function showWork(workId = null) {   
+function showWork(workId) {   
     appState.currentView = 'work';
 
-    if (workId) {
-        console.log(`Showing work ${workId}`);
-        const myWork = appData.works.find(work => work.id === workId);
-        if (myWork) {
-            appState.currentWork = myWork;
-            appState.currentAuthor = appData.authors.find(author => author.id === myWork.authorId);
-        } else {
-            console.error('Work not found!');
-            modalTitle.innerHTML = 'Error';
-            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-            return;
-        }
-    }
+    if (!workId) { console.error('No work ID provided!'); return;}
 
-    const myWork = appState.currentWork;
-    if (!myWork.text) {
-        console.error('No work text data available!'); 
-        modalTitle.innerHTML = myWork.title;
-        modalBody.innerHTML = 'ERROR LOADING Work. ¯\\_(ツ)_/¯';
+    console.log(`Showing work ${workId}`);
+
+    console.log('Current view:', appState.currentView);
+
+    const myWork = appData.works.find(work => work.id === workId);
+
+    if (myWork) {
+        appState.currentWork = myWork;
+        appState.currentAuthor = appData.authors.find(author => author.id === myWork.authorId);
+
+    } else {
+        console.error('Work not found!');
+        modalTitle.innerHTML = 'Error';
+        modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
         return;
     }
-    
-    modalLoading.style.display = 'block';
+
+    // update modal title and display loading activity indicator    
     modalTitle.innerHTML = myWork.title;
-    modalBody.innerHTML = `<p>${myWork.text}</p>`;
-    modalLoading.style.display = 'none';
+    modalBody.innerHTML = '';
+    modalLoading.style.display = 'block';
+
+    // Load the work text asynchronously - hack necessary to make sure the 
+    //   modal displays instantly and the loading indicator is shown
+    
+    setTimeout(() => {
+        if (!myWork.text) {
+            console.error('No work text data available!');
+            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+        } else {
+            modalBody.innerHTML = `<p>${myWork.text}</p>`;
+        }
+        modalLoading.style.display = 'none';
+    }, 100);
 }
 
 function showChapter(myWork,myQuote) {    
@@ -255,5 +265,13 @@ function attachEventListeners() {
     document.querySelectorAll('#menu a').forEach(link => {
         link.addEventListener('click', dismissMenu);
     });
+    // make sure when modal toggle is unchecked, currentView is set to 'quote'
+    document.getElementById('modal-toggle').addEventListener('change', function() {
+        if (!this.checked) {
+            appState.currentView = 'quote';
+            console.log('Modal closed. Current view:', appState.currentView);
+        }
+    });
+    
     return;
 }
