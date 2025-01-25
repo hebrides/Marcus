@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // no indexDB data? load quotes, display a random quote, load data
             loadQuotes().then(() => {
                 showNewQuote('random');
-                loadAuthorBiosAddWorks();
+                loadApplicationData();
                 //
                 // TODO: Store new data in IndexDB
                 //
@@ -53,9 +53,14 @@ function loadQuotes() {
         });
 }
 
-function loadAuthorBiosAddWorks() {
+function loadApplicationData() {
     // Start with the current quote's author and work
-    const { currentAuthor, currentWork } = appState;
+    // Catch errors here to prevent the app from crashing if the data is not available
+    const { currentAuthor, currentWork } = appState || {};
+    if (!currentAuthor || !currentWork) {
+        console.error('Error: Current author or work is not defined in appState.');
+        return;
+    }
 
     // Fetch current author bio
     fetch(currentAuthor.bioUri)
@@ -80,8 +85,14 @@ function loadAuthorBiosAddWorks() {
             console.error('Error loading work text:', error);
         });
     
-    // Load remaing author bios and work texts
-    const { authors, works } = appData;
+    // Load remaining author bios and work texts
+    // Catch errors here to prevent the app from crashing if the data is not available
+    const { authors, works } = appData || {};
+    if (!authors || !works) {
+        console.error('Error: Authors or works data is not defined in appData.');
+        return;
+    }
+
     const authorPromises = authors
         .filter(author => author.id !== currentAuthor.id)
         .map(author => {
@@ -167,6 +178,7 @@ function dismissMenu() {
 
 function showBiography() {
     appState.currentView = 'bio';
+    console.log('Current view:', appState.currentView);
 
     const myAuthor = appState.currentAuthor;
     if (!myAuthor.bio) {
@@ -213,8 +225,9 @@ function showWork(workId) {
     modalLoading.style.display = 'block';
 
     // Load the work text asynchronously - hack necessary to make sure the 
-    //   modal displays instantly and the loading indicator is shown
-    
+    // modal displays instantly and the loading indicator is shown, otherwise
+    // webkit will wait until all the text is ready to display before showing
+    // the modal, which is weird, non-intuitive, and not user-friendly.   
     setTimeout(() => {
         if (!myWork.text) {
             console.error('No work text data available!');
