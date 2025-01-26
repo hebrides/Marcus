@@ -181,6 +181,7 @@ function showBiography() {
     console.log('Current view:', appState.currentView);
 
     const myAuthor = appState.currentAuthor;
+    
     if (!myAuthor.bio) {
         console.error('No author biography data available!');
         modalTitle.innerHTML = myAuthor.name;

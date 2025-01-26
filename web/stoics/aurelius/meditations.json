@@ -1,7 +1,10 @@
 [
   {
+    "id": 1,
+    "version": "1.0.0",
     "title":"Meditations",
     "author":"Marcus Aurelius",
+    "authorId": 1,
     "source":"The Internet Classics Archive",
     "translator":"George Long",
     "translationDate":"1862",

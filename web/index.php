@@ -86,6 +86,10 @@
 </main>
 
 <!-- Modal Structure -->
+ <!-- NOTE: 
+  This modal looks better / more readable zoomed in 125% on desktop (use Safari and Zoom one time).
+  Consider updating CSS to match default font sizes and spacings at 100% to 125% zoom
+ -->
 <input type="checkbox" id="modal-toggle" hidden />
 <div id="modal">
     <label for="modal-toggle" id="modal-overlay"></label>
@@ -94,20 +98,21 @@
             <h2 id="modal-title">Modal Title</h2>
             <label id="modal-fullscreen">
                 <svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="7" y1="15" x2="23" y2="15" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="7" y1="22" x2="23" y2="22" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="7" y1="29" x2="23" y2="29" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="7" y1="36" x2="23" y2="36" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="27" y1="15" x2="43" y2="15" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="27" y1="22" x2="43" y2="22" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="27" y1="29" x2="43" y2="29" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="27" y1="36" x2="43" y2="36" stroke="#dedede" stroke-width="2"></line>
+                    <g stroke="#dedede" stroke-width="2">
+                        <line x1="7" y1="15" x2="23" y2="15"></line><line x1="7" y1="22" x2="23" y2="22"></line>
+                        <line x1="7" y1="29" x2="23" y2="29"></line><line x1="7" y1="36" x2="23" y2="36"></line>
+                        <line x1="27" y1="15" x2="43" y2="15"></line><line x1="27" y1="22" x2="43" y2="22"></line>
+                        <line x1="27" y1="29" x2="43" y2="29"></line><line x1="27" y1="36" x2="43" y2="36"></line>
+                    </g>
                 </svg>
                 <svg id="single-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="16" y1="15" x2="32" y2="15" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="16" y1="22" x2="32" y2="22" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="16" y1="29" x2="32" y2="29" stroke="#dedede" stroke-width="2"></line>
-                    <line x1="16" y1="36" x2="32" y2="36" stroke="#dedede" stroke-width="2"></line>        
+                    <g stroke="#dedede" stroke-width="2">
+                        <!-- NOTE: Make this 2 px wider at some point, will look better -->
+                        <line x1="15" y1="15" x2="34" y2="15"></line>
+                        <line x1="15" y1="22" x2="34" y2="22"></line>
+                        <line x1="15" y1="29" x2="34" y2="29"></line>
+                        <line x1="15" y1="36" x2="34" y2="36"></line>
+                    </g>   
                 </svg>
     
             </label>
