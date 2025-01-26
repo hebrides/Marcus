@@ -92,12 +92,31 @@
     <div id="modal-content">
         <div id="modal-header">
             <h2 id="modal-title">Modal Title</h2>
+            <label id="modal-fullscreen">
+                <svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="7" y1="15" x2="23" y2="15" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="7" y1="22" x2="23" y2="22" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="7" y1="29" x2="23" y2="29" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="7" y1="36" x2="23" y2="36" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="27" y1="15" x2="43" y2="15" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="27" y1="22" x2="43" y2="22" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="27" y1="29" x2="43" y2="29" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="27" y1="36" x2="43" y2="36" stroke="#dedede" stroke-width="2"></line>
+                </svg>
+                <svg id="single-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="16" y1="15" x2="32" y2="15" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="16" y1="22" x2="32" y2="22" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="16" y1="29" x2="32" y2="29" stroke="#dedede" stroke-width="2"></line>
+                    <line x1="16" y1="36" x2="32" y2="36" stroke="#dedede" stroke-width="2"></line>        
+                </svg>
+    
+            </label>
             <label for="modal-toggle" id="modal-close">
                 <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
                     <line x1="40" y1="10" x2="10" y2="40" stroke="#dedede" stroke-width="2"/>
                 </svg>
-            </label>
+            </label>            
         </div>
 
         <!-- MODAL CONTENT GOES HERE -->

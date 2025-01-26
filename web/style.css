@@ -213,6 +213,7 @@ background-color: #1a2c45;
     z-index: 50;
 }
 
+
 #modal-overlay {
     position: absolute;
     top: 0;
@@ -275,13 +276,17 @@ background-color: #1a2c45;
     transform: translate(-50%, -50%);
 }
 
-#modal-close {
+#modal-close, #modal-fullscreen {
     opacity: 40%;
     cursor: pointer;
     border: none;
 }
-#modal-close:hover {
+#modal-close:hover, #modal-fullscreen:hover  {
     opacity: 80%;
+}
+
+#modal-fullscreen {
+    margin-right: 8px;
 }
 
 #modal-image {
@@ -296,7 +301,34 @@ background-color: #1a2c45;
     display: flex;
 }
 
+/* Modal full-screen styles */
+#modal-content.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+}
 
+#modal-content.fullscreen > #modal-body {
+    column-count: 2;
+    column-gap: 20px;
+}
+
+#modal-content #double-column-icon {
+    display: inline-block;
+}
+
+#modal-content #single-column-icon {
+    display: none;
+}
+
+#modal-content.fullscreen #single-column-icon {
+    display: inline-block;
+}
+
+#modal-content.fullscreen #double-column-icon {
+    display: none;
+}
 
 
 /* Responsive */

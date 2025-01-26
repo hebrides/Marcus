@@ -285,6 +285,10 @@ function attachEventListeners() {
             console.log('Modal closed. Current view:', appState.currentView);
         }
     });
+    // modal content fullscreen toggle
+    document.getElementById('modal-fullscreen').addEventListener('click', function() {
+        document.getElementById('modal-content').classList.toggle('fullscreen');
+    });
     
     return;
 }
