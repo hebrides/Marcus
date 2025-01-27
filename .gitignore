@@ -22,3 +22,5 @@ DerivedData
 #CocoaPods
 Pods
 Pods-Classes-Maybe
+
+*.pdf

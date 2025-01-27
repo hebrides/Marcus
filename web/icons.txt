@@ -1,0 +1,114 @@
+// double column lines
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+  <line x1="7" y1="14" x2="23" y2="14" stroke="#dedede" stroke-width="2"></line>
+  <line x1="7" y1="21" x2="23" y2="21" stroke="#dedede" stroke-width="2"></line>
+  <line x1="7" y1="28" x2="23" y2="28" stroke="#dedede" stroke-width="2"></line>
+  <line x1="7" y1="35" x2="23" y2="35" stroke="#dedede" stroke-width="2"></line>
+  <line x1="27" y1="14" x2="43" y2="14" stroke="#dedede" stroke-width="2"></line>
+  <line x1="27" y1="21" x2="43" y2="21" stroke="#dedede" stroke-width="2"></line>
+  <line x1="27" y1="28" x2="43" y2="28" stroke="#dedede" stroke-width="2"></line>
+  <line x1="27" y1="35" x2="43" y2="35" stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+
+                    
+
+<svg id="single-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<line x1="10" y1="10" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="20" x2="40" y2="20" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="30" x2="40" y2="30" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="40" x2="40" y2="40" stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// double arrow
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<line x1="20" y1="10" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+<line x1="40" y1="10" x2="40" y2="30" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="40" x2="30" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="20" x2="10" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="40" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// single arrow
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+
+<line x1="10" y1="10" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+<line x1="40" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="40" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// 4 corners
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<line x1="30" y1="10" x2="40" y2="10" stroke="#dedede" stroke-width="2"></line>
+<line x1="40" y1="10" x2="40" y2="20" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="40" x2="20" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="30" x2="10" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="10" x2="20" y2="10" stroke="#dedede" stroke-width="2"></line>
+<line x1="10" y1="10" x2="10" y2="20" stroke="#dedede" stroke-width="2"></line>
+<line x1="30" y1="40" x2="40" y2="40" stroke="#dedede" stroke-width="2"></line>
+<line x1="40" y1="30" x2="40" y2="40" stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// maximize
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<rect x="10" y="10" width="30" height="28" stroke="#dedede" stroke-width="2" fill="none"></rect>
+<line x1="10" y1="20" x2="40" y2="20"  stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// single top line
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<!-- <rect x="10" y="10" width="30" height="28" stroke="#dedede" stroke-width="2" fill="none"></rect> -->
+<line x1="10" y1="11" x2="40" y2="11"  stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// single bottom line
+<svg id="single-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" >
+<line x1="10" y1="39" x2="40" y2="39"  stroke="#dedede" stroke-width="2"></line>
+</svg>
+
+// two rects side by side
+<svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+<rect x="10" y="11" width="10" height="26" stroke="#dedede" stroke-width="2" fill="none"></rect>
+<rect x="30" y="11" width="10" height="26" stroke="#dedede" stroke-width="2" fill="none"></rect>
+</svg>
+
+
+//save icon
+<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 5H8.25C7.55964 5 7 5.58763 7 6.3125V19L12 15.5L17 19V6.3125C17 5.58763 16.4404 5 15.75 5Z" stroke="#464455" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+
+// readability notes
+
+
+Yes, I am familiar with the principles of readability and the factors that contribute to optimal reading experiences. Readability is influenced by several factors, including font size, line length (number of words per line), line height (leading), and letter spacing (tracking).
+
+Key Principles of Readability
+Font Size: Generally, a font size between 16px and 18px is considered optimal for body text on screens. However, this can vary based on the typeface used and the user's preferences.
+
+Line Length: The optimal line length for readability is typically between 45 and 75 characters per line, including spaces. This translates to about 8 to 12 words per line. Lines that are too short or too long can make reading more difficult.
+
+Line Height (Leading): Line height should be about 1.5 times the font size. This provides enough space between lines to make text easier to read without causing the lines to blend together.
+
+Letter Spacing (Tracking): Letter spacing should be adjusted to ensure that characters are neither too close together nor too far apart. For most body text, the default letter spacing is usually sufficient.
+
+Dynamic Column Count
+To dynamically adjust the number of columns based on screen width and readability principles, you can use JavaScript to calculate the optimal number of columns. This involves:
+
+Measuring the available screen width.
+Calculating the optimal line length based on the font size and desired characters per line.
+Determining how many columns can fit within the available width while maintaining the optimal line length.
+User Adjustable Font Size
+Allowing users to adjust the font size can enhance readability and accessibility. You can provide a simple UI control (e.g., a slider or buttons) to let users increase or decrease the font size. The application can then recalculate the column count and layout based on the new font size.
+
+Paging and Column Mode
+For paging in column mode, you can implement a smooth scrolling or snapping animation. This can be achieved using CSS scroll snapping or JavaScript to control the scroll behavior. A dividing line between columns can help users visually separate the content and understand the pagination.
+
+Summary
+Font Size: 16px to 18px for body text.
+Line Length: 45 to 75 characters per line.
+Line Height: 1.5 times the font size.
+Letter Spacing: Default or slightly adjusted for readability.
+Dynamic Columns: Calculate based on screen width and optimal line length.
+User Adjustable Font Size: Provide controls for users to adjust font size.
+Paging in Column Mode: Implement smooth scrolling or snapping animations.
+By following these principles and implementing dynamic adjustments, you can create a more readable and user-friendly reading experience in your application.

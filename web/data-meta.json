@@ -1,0 +1,35 @@
+{
+  "title": "The Stoic Reader",
+  "version": "1.0.0",
+  "description": "An AI-powered, interactive collection of meditations by the ancient Stoics",
+  "license": "CC BY-SA 4.0",
+  "licenseUri": "https://creativecommons.org/licenses/by-sa/4.0/",
+  
+  "authors": [
+    { "id":"1", "name": "Marcus Aurelius", "imgUri": "stoics/aurelius/marcus.jpg", "image": null, "bioUri": "stoics/aurelius/bio-marcus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
+    { "id":"2", "name": "Epictetus", "imgUri": "stoics/epictetus/epictetus.jpg", "image": null, "bioUri": "stoics/epictetus/bio-epictetus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
+    { "id":"3", "name": "Seneca", "imgUri": "stoics/seneca/seneca.jpg", "image": null, "bioUri": "stoics/seneca/bio-seneca.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
+    { "id":"4", "name": "Cicero", "imgUri": "stoics/cicero/cicero.jpg", "image": null, "bioUri": "stoics/cicero/bio-cicero.html", "bio": null, "quotesUri": null, "version": "1.0.0"}
+  ],
+
+  "works": 
+  [ 
+    { "id": "1", "authorId": "1", "title": "Meditations", "textUri": "stoics/aurelius/meditations.html", "text": null, "version": "1.0.0" },
+    { "id": "5", "authorId": "2", "title": "The Enchirideon", "textUri": "stoics/epictetus/enchiridion.json", "text": null, "version": "1.0.0" },
+    { "id": "3", "authorId": "2", "title": "The Discourses", "textUri": "stoics/epictetus/discourses.json", "text": null, "version": "1.0.0" },
+    { "id": "4", "authorId": "2", "title": "The Golden Sayings", "textUri": "stoics/epictetus/gold.json", "text": null, "version": "1.0.0" },
+    { "id": "2", "authorId": "3", "title": "Letters from a Stoic", "textUri": "stoics/seneca/letters.json", "text": null, "version": "1.0.0" },
+    { "id": "6", "authorId": "3", "title": "On the Shortness of Life", "textUri": "stoics/seneca/life.json", "text": null, "version": "1.0.0" },
+    { "id": "7", "authorId": "4", "title": "On the Ends of Good and Evil", "textUri": "stoics/cicero/goodevil.json", "text": null, "version": "1.0.0" },
+    { "id": "8", "authorId": "4", "title": "Tuscan Disputations", "textUri": "stoics/cicero/tuscan.json", "text": null, "version": "1.0.0" },
+    { "id": "9", "authorId": "4", "title": "On Duties", "textUri": "stoics/cicero/duties.json", "text": null, "version": "1.0.0" }
+  ],
+
+  "quotes": {
+    "version": "1.0.0",
+    "allQuotesUri": "data-all-quotes.json",
+    "allQuotes": null,
+    "favorites": null
+  }
+
+}
