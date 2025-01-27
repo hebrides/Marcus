@@ -268,6 +268,18 @@ background-color: #1a2c45;
     letter-spacing: 1px;
 }
 
+#modal-body h2 {
+    text-align: center;
+    padding: 50px 0 30px 0
+}
+
+#modal-body p {
+    line-height: 28px;
+    text-indent: 20px;
+    margin: 10px 0 10px 0;
+    font-size: 17px;
+}
+
 .activity {
     position: absolute;
     letter-spacing: 1.5px;

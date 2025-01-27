@@ -6,7 +6,7 @@ const [,, inputFile, charLimit] = process.argv;
 
 // Validate arguments
 if (!inputFile || !charLimit) {
-  console.error('Usage: node partition.js <inputFile> <charLimit>');
+  console.error('Usage: node partitionJSON.js <inputFile> <charLimit>');
   process.exit(1);
 }
 
@@ -18,7 +18,7 @@ if (isNaN(charLimitNum) || charLimitNum <= 0) {
 }
 
 // Output file path
-const outputFile = path.join(path.dirname(inputFile), `${path.basename(inputFile, path.extname(inputFile))}_partitions.js`);
+const outputFile = path.join(path.dirname(inputFile), `${path.basename(inputFile, path.extname(inputFile))}_partitions.json`);
 
 // Read the input file
 fs.readFile(inputFile, 'utf8', (err, data) => {
@@ -67,11 +67,11 @@ fs.readFile(inputFile, 'utf8', (err, data) => {
     parts.push(currentPart);
   }
 
-  // Create the JavaScript content
-  const jsContent = `const partitions = [\n${parts.map(part => `\`${part}\``).join(',\n')}\n];\n\nexport default partitions;`;
+  // Create the JSON content
+  const jsonContent = JSON.stringify(parts, null, 2);
 
-  // Write the output file as a JavaScript file
-  fs.writeFile(outputFile, jsContent, 'utf8', err => {
+  // Write the output file as a JSON file
+  fs.writeFile(outputFile, jsonContent, 'utf8', err => {
     if (err) {
       console.error('Error writing the output file:', err);
       return;
