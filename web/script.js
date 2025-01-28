@@ -145,25 +145,30 @@ function showNewQuote(selectionMethod) {
     appState.currentWork = myWork;
     appState.currentView = 'quote';
 
-    // display quote, citation
+    // display quote
     document.getElementById('quote').innerHTML =  // quote
         `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
     
+    // display citation
+    let citationHTML = `~<a href="#" id="authorLink"><label for="modal-toggle">${myAuthor.name}</label></a>, 
+        <a href="#" id="workLink"><label for="modal-toggle">${myWork.title}</a>`;         
     // get quote location
     const  myQuoteLocation = myQuote.location.split(".");
-    document.getElementById('citation').innerHTML = // citation
-        `~<a href="#" id="authorLink"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-        <a href="#" id="workLink"><label for="modal-toggle">${myWork.title}</a>, 
-        <a href="#" id="loc1Link"><label for="modal-toggle">Book ${myQuoteLocation[0]}</a>, 
-        <a href="#" id="loc2Link"><label for="modal-toggle">Verse ${myQuoteLocation[1]}</a>`;
+    
+    for(i=0; i<myQuoteLocation.length; i++) {
+        citationHTML += `, <a href="#" id="loc${i}Link"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</a>`;
+    }
+
+    
+    document.getElementById('citation').innerHTML =  citationHTML;// citation
     
     // link quote, citation data to click event listeners for modal update functions
     const links = [
         { id: 'quoteLink', handler: () => showWork(myQuote.location) },
         { id: 'authorLink', handler: () => showBiography() },
         { id: 'workLink', handler: () => showWork() },
-        { id: 'loc1Link', handler: () => showWork(myQuoteLocation[0]) },
-        { id: 'loc2Link', handler: () => showWork(myQuote.location) }
+        { id: 'loc0Link', handler: () => showWork(myQuoteLocation[0]) },
+        { id: 'loc0Link', handler: () => showWork(myQuote.location) }
     ];
 
     links.forEach(link => {
