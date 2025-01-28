@@ -1,0 +1,5 @@
+# Ignore all files in the FAKE_DATA folder
+FAKE_DATA/*
+
+# But do not ignore fakedata.js
+!FAKE_DATA/fakedata.js

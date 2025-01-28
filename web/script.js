@@ -195,6 +195,16 @@ function showBiography() {
 
 }
 
+// We use version compare to find which partition has our quote / index location
+function versionCompare(v1, v2) {
+    for (let i = 0, j = 0, n1 = 0, n2 = 0; (i < v1.length || j < v2.length); n1 = n2 = 0, i++, j++) {
+        while (i < v1.length && v1[i] !== '.') n1 = n1 * 10 + (v1[i++] - '0');
+        while (j < v2.length && v2[j] !== '.') n2 = n2 * 10 + (v2[j++] - '0');
+        if (n1 !== n2) return n1 > n2 ? 1 : -1;
+    }
+    return 0;
+}
+
 function showWork(location = 0) {   
     appState.currentView = 'work';
     console.log('Current view:', appState.currentView);
@@ -206,19 +216,44 @@ function showWork(location = 0) {
     modalBody.innerHTML = '';
     modalLoading.style.display = 'block';
 
+    // Computer data chunks to display
+    const indexList = appState.currentWork.data[0];
+    const partitions = appState.currentWork.data[1];
+    let partitionIndex = indexList.findIndex((id, idx) => {
+        const nextId = indexList[idx + 1];
+        return versionCompare(location, id) >= 0 && (!nextId || versionCompare(location, nextId) < 0);
+    });
+
+    if (partitionIndex === -1) {
+        console.error('Location not found in index list!');
+        modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+        modalLoading.style.display = 'none';
+        return;
+    }
+
+     // Display the partition and n partitions forward and back
+     const n = 1; // Number of partitions to show before and after
+     let content = '';
+     for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
+         content += partitions[i];
+     }
+     modalBody.innerHTML = content;
+     modalLoading.style.display = 'none';
+ 
+
     // Load the work text asynchronously - hack necessary to make sure the 
     // modal displays instantly and the loading indicator is shown, otherwise
     // webkit will wait until all the text is ready to display before showing
     // the modal, which is weird, non-intuitive, and not user-friendly.   
-    setTimeout(() => {
-        if (!appState.currentWork.data) {
-            console.error('No work text data available!');
-            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-        } else {
-            modalBody.innerHTML = `<p>${appState.currentWork.data}</p>`;
-        }
-        modalLoading.style.display = 'none';
-    }, 100);
+    // setTimeout(() => {
+    //     if (!appState.currentWork.data) {
+    //         console.error('No work text data available!');
+    //         modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+    //     } else {
+    //         modalBody.innerHTML = `<p>${appState.currentWork.data[1]}</p>`;
+    //     }
+    //     modalLoading.style.display = 'none';
+    // }, 100);
 }
 
 function showChat(myAuthor) {    
