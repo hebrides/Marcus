@@ -145,36 +145,25 @@ function showNewQuote(selectionMethod) {
     appState.currentWork = myWork;
     appState.currentView = 'quote';
 
-    // display quote
+    // Display quote
     document.getElementById('quote').innerHTML =  // quote
-        `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
-    
-    // display citation
-    let citationHTML = `~<a href="#" id="authorLink"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-        <a href="#" id="workLink"><label for="modal-toggle">${myWork.title}</a>`;         
-    // get quote location
+    `<a href="#" id="quoteLink" onclick="showWork('${myQuote.location}')"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
+
+    // Display author, work
+    let citationHTML = `~<a href="#" id="authorLink" onclick="showBiography()"><label for="modal-toggle">${myAuthor.name}</label></a>, 
+    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</a>`;         
+
+    // get quote location for citation
     const  myQuoteLocation = myQuote.location.split(".");
     
-    for(i=0; i<myQuoteLocation.length; i++) {
-        citationHTML += `, <a href="#" id="loc${i}Link"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</a>`;
-    }
-
-    
+    // Compute and display citation chain
+    let cumulativeLocation = '';
+    for (let i = 0; i < myQuoteLocation.length; i++) {
+        cumulativeLocation += (i > 0 ? '.' : '') + myQuoteLocation[i];
+        citationHTML += `, <a href="#" id="loc${i}Link" onclick="showWork('${cumulativeLocation}')"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</label></a>`;
+    }   
     document.getElementById('citation').innerHTML =  citationHTML;// citation
     
-    // link quote, citation data to click event listeners for modal update functions
-    const links = [
-        { id: 'quoteLink', handler: () => showWork(myQuote.location) },
-        { id: 'authorLink', handler: () => showBiography() },
-        { id: 'workLink', handler: () => showWork() },
-        { id: 'loc0Link', handler: () => showWork(myQuoteLocation[0]) },
-        { id: 'loc0Link', handler: () => showWork(myQuote.location) }
-    ];
-
-    links.forEach(link => {
-        document.getElementById(link.id).addEventListener('click', link.handler);
-    });
-
     console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, Book ${myQuote.location[0]}, Verse ${myQuote.location[1]}`);
     console.log(`At location: ${myQuote.location}`); 
 }
