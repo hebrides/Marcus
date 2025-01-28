@@ -62,7 +62,7 @@ function loadApplicationData() {
         return;
     }
 
-    // Fetch current author bio
+    // Fetch current author bio as text HTML and store it 
     fetch(currentAuthor.bioUri)
         .then(response => response.text())
         .then(bio => {
@@ -73,19 +73,19 @@ function loadApplicationData() {
             console.error('Error loading author bio:', error);
         });
 
-    // Fetch current work text
-    fetch(currentWork.textUri)
-        .then(response => response.text())
-        .then(workText => {
-            currentWork.text = workText;
-            console.log('Loaded work text:', workText);
+    // Fetch current work indexed JSON data and store it 
+    fetch(currentWork.dataUri)
+        .then(response => response.json())
+        .then(workData => {
+            currentWork.data = workData;
+            console.log('Loaded work text:', workData);
             // Additional parsing can be done here if needed
         })
         .catch(error => {
             console.error('Error loading work text:', error);
         });
     
-    // Load remaining author bios and work texts
+    // Load remaining author bio text and indexed work data asynchronously
     // Catch errors here to prevent the app from crashing if the data is not available
     const { authors, works } = appData || {};
     if (!authors || !works) {
@@ -110,21 +110,21 @@ function loadApplicationData() {
     const workPromises = works
         .filter(work => work.id !== currentWork.id)
         .map(work => {
-            return fetch(work.textUri)
-                .then(response => response.text())
-                .then(workText => {
-                    work.text = workText;
-                    console.log(`Loaded work ${work.id} text:`, workText);
+            return fetch(work.dataUri)
+                .then(response => response.json()) // Changed to response.json() to handle JSON response
+                .then(workData => {
+                    work.data = workData;
+                    console.log(`Loaded work ${work.id} data:`, workData);
                 })
                 .catch(error => {
-                    console.error(`Error loading work ${work.id} text:`, error);
+                    console.error(`Error loading work ${work.id} data:`, error);
                 });
         });
 }
 
 function showNewQuote(selectionMethod) {
     if (!appData.quotes.allQuotes) {
-        console.error('Ummm... ¯\_(ツ)_/¯ No quote data available!');
+        console.error(`Ummm... ¯\\_(ツ)_/¯ No quote data available!`);
         document.getElementById('quote').innerHTML = 'DERP! ERROR LOADING QUOTE. ¯\\_(ツ)_/¯';
         return;
     }
@@ -138,7 +138,7 @@ function showNewQuote(selectionMethod) {
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     const myAuthor = authors.find(author => author.id === myWork.authorId);
-    
+
     // update app state
     appState.currentQuote = myQuote;
     appState.currentAuthor = myAuthor;
@@ -149,26 +149,29 @@ function showNewQuote(selectionMethod) {
     document.getElementById('quote').innerHTML =  // quote
         `<a href="#" id="quoteLink"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
     
+    // get quote location
+    const  myQuoteLocation = myQuote.location.split(".");
     document.getElementById('citation').innerHTML = // citation
         `~<a href="#" id="authorLink"><label for="modal-toggle">${myAuthor.name}</label></a>, 
         <a href="#" id="workLink"><label for="modal-toggle">${myWork.title}</a>, 
-        <a href="#" id="chapterLink"><label for="modal-toggle">Book ${myQuote.chapter}</a>, 
-        <a href="#" id="verseLink"><label for="modal-toggle">Verse ${myQuote.verse}</a>`;
+        <a href="#" id="loc1Link"><label for="modal-toggle">Book ${myQuoteLocation[0]}</a>, 
+        <a href="#" id="loc2Link"><label for="modal-toggle">Verse ${myQuoteLocation[1]}</a>`;
     
     // link quote, citation data to click event listeners for modal update functions
     const links = [
-        { id: 'quoteLink', handler: () => showQuoteInContext(myWork, myQuote) },
-        { id: 'authorLink', handler: () => showBiography(myAuthor) },
-        { id: 'workLink', handler: () => showWork(myWork.id) },
-        { id: 'chapterLink', handler: () => showChapter(myWork, myQuote) },
-        { id: 'verseLink', handler: () => showVerse(myWork, myQuote) }
+        { id: 'quoteLink', handler: () => showWork(myQuote.location) },
+        { id: 'authorLink', handler: () => showBiography() },
+        { id: 'workLink', handler: () => showWork() },
+        { id: 'loc1Link', handler: () => showWork(myQuoteLocation[0]) },
+        { id: 'loc2Link', handler: () => showWork(myQuote.location) }
     ];
 
     links.forEach(link => {
         document.getElementById(link.id).addEventListener('click', link.handler);
     });
 
-    console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, Book ${myQuote.chapter}, Verse ${myQuote.verse}`);
+    console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, Book ${myQuote.location[0]}, Verse ${myQuote.location[1]}`);
+    console.log(`At location: ${myQuote.location}`); 
 }
 
 function dismissMenu() {
@@ -185,7 +188,7 @@ function showBiography() {
     if (!myAuthor.bio) {
         console.error('No author biography data available!');
         modalTitle.innerHTML = myAuthor.name;
-        modalBody.innerHTML = 'ERROR LOADING BIO. ¯\\_(ツ)_/¯';
+        modalBody.innerHTML = `ERROR LOADING BIO. ¯\\_(ツ)_/¯`;
         return;
     }
 
@@ -198,30 +201,14 @@ function showBiography() {
 
 }
 
-function showWork(workId) {   
+function showWork(location = 0) {   
     appState.currentView = 'work';
-
-    if (!workId) { console.error('No work ID provided!'); return;}
-
-    console.log(`Showing work ${workId}`);
-
     console.log('Current view:', appState.currentView);
-
-    const myWork = appData.works.find(work => work.id === workId);
-
-    if (myWork) {
-        appState.currentWork = myWork;
-        appState.currentAuthor = appData.authors.find(author => author.id === myWork.authorId);
-
-    } else {
-        console.error('Work not found!');
-        modalTitle.innerHTML = 'Error';
-        modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-        return;
-    }
+    console.log(`Showing work ${appState.currentWork.title}, at location ${location}`);
+    
 
     // update modal title and display loading activity indicator    
-    modalTitle.innerHTML = myWork.title;
+    modalTitle.innerHTML = appState.currentWork.title;
     modalBody.innerHTML = '';
     modalLoading.style.display = 'block';
 
@@ -230,26 +217,14 @@ function showWork(workId) {
     // webkit will wait until all the text is ready to display before showing
     // the modal, which is weird, non-intuitive, and not user-friendly.   
     setTimeout(() => {
-        if (!myWork.text) {
+        if (!appState.currentWork.data) {
             console.error('No work text data available!');
             modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
         } else {
-            modalBody.innerHTML = `<p>${myWork.text}</p>`;
+            modalBody.innerHTML = `<p>${appState.currentWork.data}</p>`;
         }
         modalLoading.style.display = 'none';
     }, 100);
-}
-
-function showChapter(myWork,myQuote) {    
-    return; 
-}
-
-function showVerse(myWork,myQuote) {    
-    return; 
-}
-
-function showQuoteInContext(myWork,myQuote) {    
-    return; 
 }
 
 function showChat(myAuthor) {    
