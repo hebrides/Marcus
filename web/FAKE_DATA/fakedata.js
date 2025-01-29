@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Simple lorem ipsum generator
+// Constants
 const loremIpsumWords = [
     "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do",
     "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua", "ut",
@@ -12,16 +12,20 @@ const loremIpsumWords = [
     "in", "culpa", "qui", "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"
 ];
 
-const locationSyntaxes = [
-    ["Book", "Chapter", "Section"],
-    ["Part", "Paragraph"],
-    ["Volume", "Chapter", "Verse"],
-    ["Section", "Subsection", "Paragraph"],
-    ["Book", "Chapter", "Section", "Paragraph"],
-    ["Volume", "Part", "Chapter", "Section"],
-    ["Book", "Chapter", "Section", "Subsection", "Paragraph"]
-];
+const SIZES = {
+    header: 30,    // h1-h6 tags
+    paragraph: 600, // p tags
+    span: 100      // span tags (sentences)
+};
 
+const termGroups = {
+    top: {tags: ['h1','h2','h3'], terms: ['Volume','Book','Part']},
+    mid: {tags: ['h4','h5','h6'], terms: ['Chapter','Section','Subsection']},
+    low: {tags: ['p','p'], terms: ['Passage','Paragraph']},
+    final: {tags: ['p','span'], terms: ['Verse','Sentence']}
+};
+
+// Helper functions
 function generateLoremIpsumSentence() {
     const sentenceLength = Math.floor(Math.random() * 10) + 5;
     let sentence = [];
@@ -51,100 +55,260 @@ function generateLoremIpsumTitle() {
     return title.join(' ');
 }
 
-// Generate fake stoic works data
-async function generateTestData(numAuthors, numWorks, minSizeKB, maxSizeKB) {
-    console.log(`Generating data for ${numAuthors} authors and ${numWorks} works...`);
-
-    const authors = [];
-    for (let i = 0; i < numAuthors; i++) {
-        authors.push({
-            id: (i + 1).toString(),
-            name: `Fake Stoic Author ${i + 1}`,
-            bioUri: `fakeStoicAuthorBio${i + 1}.txt`,
-            imgUri: `fakeStoicAuthor${i + 1}.jpg`
-        });
-    }
-
-    const works = [];
-    for (let i = 0; i < numWorks; i++) {
-        works.push({
-            id: (i + 1).toString(),
-            authorId: (Math.floor(Math.random() * numAuthors) + 1).toString(),
-            title: `Fake Stoic Work ${i + 1}`,
-            dataUri: `fakeStoicWork${i + 1}.json`,
-            locationSyntax: locationSyntaxes[Math.floor(Math.random() * locationSyntaxes.length)]
-        });
-    }
-
-    const metaData = { authors, works };
-
-    // Generate fake content for works
-    function generateWorkData(locationSyntax, targetSizeKB) {
-        const indexList = [];
-        const partitions = [];
-        let currentId = [];
-        const partitionSize = 5; // Number of sections per partition
-        let currentSizeKB = 0;
-
-        while (currentSizeKB < targetSizeKB) {
-            const i = indexList.length * partitionSize;
-            currentId = [...currentId.slice(0, locationSyntax.length - 1), i + 1];
-            if (i % partitionSize === 0) {
-                indexList.push(currentId.join('.'));
-            }
-            const tag = currentId.length < 6 ? `h${currentId.length + 1}` : 'p';
-            const content = tag.startsWith('h') ? generateLoremIpsumTitle() : generateLoremIpsumParagraph();
-            const partition = `<${tag} id='${currentId.join('.')}'>${content}</${tag}>`;
-            partitions.push(partition);
-            currentSizeKB = Buffer.byteLength(JSON.stringify(partitions), 'utf8') / 1024;
-        }
-
-        return [indexList, partitions];
-    }
-
-    const fakeWorksData = works.map(work => {
-        const targetSizeKB = Math.random() * (maxSizeKB - minSizeKB) + minSizeKB;
-        console.log(`Generating work "${work.title}" with target size ${targetSizeKB.toFixed(2)} KB...`);
-        return generateWorkData(work.locationSyntax, targetSizeKB);
-    });
-
-    // Generate fake quotes
-    const fakeQuotes = [];
-    for (let i = 0; i < numWorks; i++) {
-        fakeQuotes.push({
-            quote: generateLoremIpsumSentence(),
-            location: "1.1.1",
-            workId: (i + 1).toString()
-        });
-    }
-
-    // Write data to files
-    console.log('Writing data to files...');
-    fs.writeFileSync(path.join(__dirname, 'data-meta.json'), JSON.stringify(metaData, null, 2));
-    fakeWorksData.forEach((workData, index) => {
-        fs.writeFileSync(path.join(__dirname, `fakeStoicWork${index + 1}.json`), JSON.stringify(workData, null, 2));
-    });
-    fs.writeFileSync(path.join(__dirname, 'data-all-quotes.json'), JSON.stringify(fakeQuotes, null, 2));
-
-    // Generate and write author bios
-    authors.forEach((author, index) => {
-        const authorBio = generateLoremIpsumParagraph();
-        fs.writeFileSync(path.join(__dirname, `fakeStoicAuthorBio${index + 1}.txt`), authorBio);
-    });
-
-    // Calculate and log the rough size of each work in KB
-    fakeWorksData.forEach((workData, index) => {
-        const workSize = Buffer.byteLength(JSON.stringify(workData), 'utf8') / 1024;
-        console.log(`Size of Fake Stoic Work ${index + 1}: ${workSize.toFixed(2)} KB`);
-    });
-
-    console.log('Test data generated successfully.');
+function getElementSize(tag) {
+    if (tag.startsWith('h')) return SIZES.header;
+    if (tag === 'p') return SIZES.paragraph;
+    return SIZES.span;
 }
 
-// Get user input for number of authors, works, min size, and max size
-const numAuthors = parseInt(process.argv[2], 10) || 1;
-const numWorks = parseInt(process.argv[3], 10) || 1;
-const minSizeKB = parseFloat(process.argv[4]) || 10;
-const maxSizeKB = parseFloat(process.argv[5]) || 50;
+// Core functions
+function selectRandomTerms(group, min = 1) {
+    const count = Math.floor(Math.random() * (group.terms.length - min + 1)) + min;
+    const indices = [...Array(group.terms.length).keys()];
+    return Array(count).fill().map(() => {
+        const idx = indices.splice(Math.floor(Math.random() * indices.length), 1)[0];
+        return {term: group.terms[idx], tag: group.tags[idx]};
+    });
+}
 
-generateTestData(numAuthors, numWorks, minSizeKB, maxSizeKB);
+function buildHierarchy() {
+    return [
+        ...selectRandomTerms(termGroups.top),
+        ...selectRandomTerms(termGroups.mid),
+        ...selectRandomTerms(termGroups.low),
+        ...selectRandomTerms(termGroups.final, 1)
+    ];
+}
+
+function pruneHierarchy(hierarchy) {
+    const targetLength = Math.floor(Math.random() * 5) + 2; // 2-6 levels
+    while (hierarchy.length > targetLength) {
+        const idx = Math.floor(Math.random() * (hierarchy.length - 1));
+        hierarchy.splice(idx, 1);
+    }
+    return hierarchy;
+}
+
+function generateStructure(hierarchy, targetKB) {
+    const structure = [];
+    const targetBytes = targetKB * 1024;
+    const levels = hierarchy.length;
+    let currentBytes = 0;
+    
+    function generateLevel(currentId = [], depth = 0) {
+        if (depth >= levels || currentBytes >= targetBytes) return;
+        
+        const isTop = depth === 0;
+        const isBottom = depth === levels - 1;
+        const numDivisions = isTop ? 2 + Math.floor(Math.random() * 3) :
+                           isBottom ? 4 + Math.floor(Math.random() * 5) :
+                           3 + Math.floor(Math.random() * 4);
+        
+        for (let i = 1; i <= numDivisions && currentBytes < targetBytes; i++) {
+            const newId = [...currentId, i];
+            const elementSize = getElementSize(hierarchy[depth].tag);
+            
+            if (currentBytes + elementSize <= targetBytes) {
+                structure.push({
+                    id: newId.join('.'),
+                    tag: hierarchy[depth].tag,
+                    term: hierarchy[depth].term,
+                    depth: depth
+                });
+                currentBytes += elementSize;
+                
+                if (!isBottom) {
+                    generateLevel(newId, depth + 1);
+                }
+            }
+        }
+    }
+    
+    generateLevel();
+    return structure;
+}
+
+function generateContent(tag) {
+    switch(tag) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+            return generateLoremIpsumTitle();
+        case 'p':
+            return generateLoremIpsumParagraph();
+        case 'span':
+            return generateLoremIpsumSentence();
+    }
+}
+
+function addHTML(structure) {
+    return structure.map(element => {
+        const content = generateContent(element.tag);
+        const innerHTML = `<${element.tag} id="${element.id}">${content}</${element.tag}>`;
+        return { ...element, innerHTML, content };
+    });
+}
+
+function partitionContent(content, partitionSize = 16) {
+    const indexList = [];
+    const partitions = [];
+    let currentPartition = [];
+    let currentSize = 0;
+
+    content.forEach((element) => {
+        const elementSize = Buffer.byteLength(element.innerHTML, 'utf8') / 1024;
+        
+        if (currentSize + elementSize > partitionSize && currentPartition.length > 0) {
+            partitions.push(currentPartition);
+            currentPartition = [];
+            currentSize = 0;
+            indexList.push(element.id);
+        }
+        
+        currentPartition.push(element.innerHTML);
+        currentSize += elementSize;
+    });
+    
+    if (currentPartition.length) {
+        partitions.push(currentPartition);
+    }
+
+    return [indexList, partitions];
+}
+
+function generateAuthors(count) {
+    return Array(count).fill().map((_, i) => ({
+        id: (i + 1).toString(),
+        name: `Fake Stoic Author ${i + 1}`,
+        imgUri: `stoics/author${i + 1}/author${i + 1}.jpg`,
+        image: null,
+        bioUri: `stoics/author${i + 1}/bio${i + 1}.html`,
+        bio: null,
+        quotesUri: null,
+        version: "1.0.0"
+    }));
+}
+
+function generateWorks(count, authors) {
+    return Array(count).fill().map((_, i) => ({
+        id: (i + 1).toString(),
+        authorId: authors[i % authors.length].id,
+        title: `Fake Stoic Work ${i + 1}`,
+        locationSyntax: [], // Will be filled from pruned hierarchy
+        dataUri: `stoics/author${Math.floor(i / authors.length) + 1}/work${i + 1}.json`,
+        data: null,
+        version: "1.0.0"
+    }));
+}
+
+function generateWorkData(work, targetKB) {
+    console.log(`\nGenerating work ${work.id} (${targetKB}KB):`);
+    
+    const initial = buildHierarchy();
+    console.log('Initial hierarchy:', initial.map(x => x.term).join(' → '));
+    
+    const pruned = pruneHierarchy([...initial]);
+    console.log('Pruned hierarchy:', pruned.map(x => x.term).join(' → '));
+    work.locationSyntax = pruned.map(x => x.term);
+    
+    const structure = generateStructure(pruned, targetKB);
+    console.log(`Generated structure: ${structure.length} elements`);
+    
+    const withHTML = addHTML(structure);
+    console.log('Sample HTML:', withHTML[0].innerHTML.substring(0, 100) + '...');
+    
+    const [indexList, partitions] = partitionContent(withHTML);
+    
+    return {
+        content: withHTML,
+        indexList,
+        partitions
+    };
+}
+
+function extractQuotes(work, content) {
+    console.log(`\nExtracting quotes for work ${work.id}:`);
+    
+    const bottomElements = content.filter(el => 
+        el.tag === 'span' || (el.tag === 'p' && el.term === 'Verse'));
+    
+    console.log(`Found ${bottomElements.length} bottom elements`);
+    console.log('Sample element:', bottomElements[0]);
+    
+    const numQuotes = 5 + Math.floor(Math.random() * 10);
+    const quotes = [];
+    
+    for (let i = 0; i < numQuotes; i++) {
+        const element = bottomElements[Math.floor(Math.random() * bottomElements.length)];
+        if (!element || !element.id || !element.content) {
+            console.log('Invalid element found, skipping...');
+            continue;
+        }
+        
+        quotes.push({
+            workId: work.id,
+            location: element.id,
+            quote: element.content.trim()
+        });
+    }
+    
+    console.log(`Generated ${quotes.length} quotes`);
+    return quotes;
+}
+
+
+function generateTestData() {
+    const authors = generateAuthors(3);
+    const works = generateWorks(5, authors);
+    const quotes = [];
+    
+    console.log('Generating work content...');
+    works.forEach(work => {
+        const targetKB = Math.floor(Math.random() * 200) + 100;
+        const {content, indexList, partitions} = generateWorkData(work, targetKB);
+        
+        quotes.push(...extractQuotes(work, content));
+        
+        fs.writeFileSync(
+            path.join(__dirname, `stoicwork${work.id}.json`),
+            JSON.stringify({indexList, partitions}, null, 2)
+        );
+        
+        console.log(`Generated work ${work.id}: ${partitions.length} partitions`);
+    });
+    
+    // Write author bios
+    authors.forEach((author, i) => {
+        const bio = generateLoremIpsumParagraph();
+        fs.writeFileSync(path.join(__dirname, `stoicbio${i + 1}.txt`), bio);
+    });
+    
+    // Write meta data
+    const metaData = {
+        description: "Generated Stoic Works",
+        license: "CC BY-SA 4.0",
+        licenseUri: "https://creativecommons.org/licenses/by-sa/4.0/",
+        authors,
+        works,
+        quotes: {
+            version: "1.0.0",
+            allQuotesUri: "data-all-quotes.json",
+            allQuotes: null,
+            favorites: null
+        }
+    };
+    
+    fs.writeFileSync(path.join(__dirname, 'data-meta.json'), 
+        JSON.stringify(metaData, null, 2));
+    fs.writeFileSync(path.join(__dirname, 'data-all-quotes.json'), 
+        JSON.stringify(quotes, null, 2));
+    
+    console.log(`\nGenerated ${works.length} works for ${authors.length} authors`);
+    console.log(`Extracted ${quotes.length} quotes`);
+}
+
+// Run generator
+generateTestData();
