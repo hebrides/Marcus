@@ -3,3 +3,7 @@ FAKE_DATA/*
 
 # But do not ignore fakedata.js
 !FAKE_DATA/fakedata.js
+!FAKE_DATA/test.sh
+!FAKE_DATA/makedata.js
+!FAKE_DATA/clean.sh
+
