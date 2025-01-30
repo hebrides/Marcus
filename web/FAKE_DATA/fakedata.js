@@ -297,7 +297,7 @@ function partitionContent(content, partitionSize = CONFIG.partitionKB) {
     
     const indexList = [];
     const partitions = [];
-    let currentPartition = [];
+    let currentPartition = '';
     let currentSize = 0;
 
     // Process each complete element
