@@ -192,16 +192,21 @@ function generateStructure(hierarchy, targetKB) {
     const targetBytes = targetKB * 1024;
     const levels = hierarchy.length;
     let currentBytes = 0;
+    let topLevelCount = 0;
+    const MAX_TOP_LEVEL = 3;
     
     function generateLevel(currentId = [], depth = 0) {
-        if (currentBytes >= targetBytes) return;
         if (depth >= levels) depth = levels - 1;
+        if (currentBytes >= targetBytes) return;
+        if (depth === 0 && topLevelCount >= MAX_TOP_LEVEL) return;
         
         const isTop = depth === 0;
         const isBottom = depth === levels - 1;
         const numDivisions = isTop ? 2 + Math.floor(Math.random() * 2) :
                            isBottom ? 4 + Math.floor(Math.random() * 3) :
                            3 + Math.floor(Math.random() * 2);
+        
+        if (isTop) topLevelCount++;
         
         for (let i = 1; i <= numDivisions && currentBytes < targetBytes; i++) {
             const newId = [...currentId, i];
@@ -227,8 +232,12 @@ function generateStructure(hierarchy, targetKB) {
         }
     }
     
-    generateLevel();
-    console.log(`Generated ${structure.length} elements, ${currentBytes/1024}KB / ${targetKB}KB`);
+    // Generate initial structure
+    while (currentBytes < targetBytes && topLevelCount < MAX_TOP_LEVEL) {
+        generateLevel();
+    }
+    
+    console.log(`Generated ${structure.length} elements, ${Math.round(currentBytes/1024)}KB / ${targetKB}KB`);
     return structure;
 }
 
@@ -423,7 +432,7 @@ function generateTestData() {
             console.error('Error writing data-all-quotes.json:', err);
             process.exit(1);
         }
-        
+
         // Output final statistics
         console.log(`\nGeneration complete:`);
         console.log(`- ${authors.length} authors`);
