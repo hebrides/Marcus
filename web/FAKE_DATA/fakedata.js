@@ -189,52 +189,58 @@ function generateContent(tag) {
 function generateStructure(hierarchy, targetKB) {
     console.log(`\nGenerating structure targeting ${targetKB}KB...`);
     const structure = [];
+    const minBytes = CONFIG.minKB * 1024;
     const targetBytes = targetKB * 1024;
-    const levels = hierarchy.length;
     let currentBytes = 0;
-    let topLevelCount = 0;
-    const MAX_TOP_LEVEL = 3;
+    let currentId = [1];
+    let depth = 0;
     
-    function generateLevel(currentId = [], depth = 0) {
-        if (depth >= levels) depth = levels - 1;
-        if (currentBytes >= targetBytes) return;
-        if (depth === 0 && topLevelCount >= MAX_TOP_LEVEL) return;
-        
-        const isTop = depth === 0;
-        const isBottom = depth === levels - 1;
-        const numDivisions = isTop ? 2 + Math.floor(Math.random() * 2) :
-                           isBottom ? 4 + Math.floor(Math.random() * 3) :
-                           3 + Math.floor(Math.random() * 2);
-        
-        if (isTop) topLevelCount++;
-        
-        for (let i = 1; i <= numDivisions && currentBytes < targetBytes; i++) {
-            const newId = [...currentId, i];
-            const content = generateContent(hierarchy[depth].tag);
-            const innerHTML = `<${hierarchy[depth].tag} id="${newId.join('.')}">${content}</${hierarchy[depth].tag}>`;
-            const elementSize = Buffer.byteLength(innerHTML, 'utf8');
+    while (currentBytes < targetBytes) {
+        // Generate header first
+        if (depth < hierarchy.length - 2) {  // Skip headers for bottom two levels
+            const headerContent = generateContent(hierarchy[depth].tag);
+            const headerHTML = `<${hierarchy[depth].tag} id="${currentId.join('.')}">${headerContent}</${hierarchy[depth].tag}>`;
             
-            if (currentBytes + elementSize <= targetBytes) {
-                structure.push({
-                    id: newId.join('.'),
-                    tag: hierarchy[depth].tag,
-                    term: hierarchy[depth].term,
-                    depth: depth,
-                    content,
-                    innerHTML
-                });
-                currentBytes += elementSize;
-                
-                if (!isBottom) {
-                    generateLevel(newId, depth + 1);
-                }
-            }
+            structure.push({
+                id: currentId.join('.'),
+                tag: hierarchy[depth].tag,
+                term: hierarchy[depth].term,
+                depth: depth,
+                content: headerContent,
+                innerHTML: headerHTML
+            });
+            
+            currentBytes += Buffer.byteLength(headerHTML, 'utf8');
         }
-    }
-    
-    // Generate initial structure
-    while (currentBytes < targetBytes && topLevelCount < MAX_TOP_LEVEL) {
-        generateLevel();
+        
+        // Generate content (p/span)
+        const contentCount = 4 + Math.floor(Math.random() * 3);
+        for (let i = 1; i <= contentCount && currentBytes < targetBytes; i++) {
+            const contentId = [...currentId, i];
+            const tag = hierarchy[hierarchy.length - 1].tag;
+            const content = generateContent(tag);
+            const innerHTML = `<${tag} id="${contentId.join('.')}">${content}</${tag}>`;
+            
+            structure.push({
+                id: contentId.join('.'),
+                tag: tag,
+                term: hierarchy[hierarchy.length - 1].term,
+                depth: hierarchy.length - 1,
+                content,
+                innerHTML
+            });
+            
+            currentBytes += Buffer.byteLength(innerHTML, 'utf8');
+        }
+        
+        // Move to next section
+        currentId[0]++;
+        
+        if (currentBytes < minBytes) {
+            console.log(`Current size ${Math.round(currentBytes/1024)}KB is below minimum, generating more...`);
+        } else {
+            console.log(`Reached ${Math.round(currentBytes/1024)}KB, filling to target...`);
+        }
     }
     
     console.log(`Generated ${structure.length} elements, ${Math.round(currentBytes/1024)}KB / ${targetKB}KB`);
@@ -293,45 +299,26 @@ function partitionContent(content, partitionSize = CONFIG.partitionKB) {
     const partitions = [];
     let currentPartition = [];
     let currentSize = 0;
-    let openTags = [];
 
+    // Process each complete element
     content.forEach((element) => {
-        const openTag = `<${element.tag} id="${element.id}">`;
-        const closeTag = `</${element.tag}>`;
-        const fullElement = openTag + element.content + closeTag;
-        const elementSize = Buffer.byteLength(fullElement, 'utf8') / 1024;
+        const elementHTML = element.innerHTML;
+        const elementSize = Buffer.byteLength(elementHTML, 'utf8') / 1024;
         
+        // Start new partition if current would exceed size
         if (currentSize + elementSize > partitionSize && currentPartition.length > 0) {
-            while (openTags.length > 0) {
-                currentPartition.push(openTags.pop());
-            }
-            
             partitions.push(currentPartition);
             currentPartition = [];
             currentSize = 0;
             indexList.push(element.id);
-            
-            if (element.depth > 0) {
-                const parentElements = content.filter(e => 
-                    element.id.startsWith(e.id + '.') && e.depth < element.depth
-                );
-                parentElements.forEach(parent => {
-                    const parentOpen = `<${parent.tag} id="${parent.id}">`;
-                    currentPartition.push(parentOpen);
-                    openTags.unshift(`</${parent.tag}>`);
-                    currentSize += Buffer.byteLength(parentOpen, 'utf8') / 1024;
-                });
-            }
         }
         
-        currentPartition.push(fullElement);
+        currentPartition += elementHTML;
         currentSize += elementSize;
     });
     
+    // Add final partition
     if (currentPartition.length) {
-        while (openTags.length > 0) {
-            currentPartition.push(openTags.pop());
-        }
         partitions.push(currentPartition);
     }
 
