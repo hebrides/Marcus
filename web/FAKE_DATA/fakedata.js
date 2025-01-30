@@ -1,23 +1,39 @@
 const fs = require('fs');
 const path = require('path');
 
-// Constants
-const loremIpsumWords = [
-    "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do",
-    "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua", "ut",
-    "enim", "ad", "minim", "veniam", "quis", "nostrud", "exercitation", "ullamco", "laboris",
-    "nisi", "ut", "aliquip", "ex", "ea", "commodo", "consequat", "duis", "aute", "irure", "dolor",
-    "in", "reprehenderit", "in", "voluptate", "velit", "esse", "cillum", "dolore", "eu", "fugiat",
-    "nulla", "pariatur", "excepteur", "sint", "occaecat", "cupidatat", "non", "proident", "sunt",
-    "in", "culpa", "qui", "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"
-];
-
-const SIZES = {
-    header: 30,    // h1-h6 tags
-    paragraph: 600, // p tags
-    span: 100      // span tags (sentences)
+// Command line configuration with validation
+const args = process.argv.slice(2);
+const CONFIG = {
+    numAuthors: Math.max(1, Math.min(10, parseInt(args[0]) || 3)),
+    numWorks: Math.max(1, Math.min(20, parseInt(args[1]) || 5)),
+    minKB: Math.max(100, Math.min(1000, parseInt(args[2]) || 100)),
+    maxKB: Math.max(200, Math.min(2000, parseInt(args[3]) || 500)),
+    partitionKB: Math.max(8, Math.min(64, parseInt(args[4]) || 16)),
+    bioSizeKB: Math.max(2, Math.min(5, parseInt(args[5]) || 3)),
 };
 
+// Validate ranges with logging
+if (CONFIG.maxKB <= CONFIG.minKB) {
+    console.log('Warning: Adjusting maxKB to ensure valid range');
+    CONFIG.maxKB = CONFIG.minKB + 100;
+}
+
+console.log('Configuration:', CONFIG);
+
+// Content generation constants
+const loremIpsumWords = [
+    "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", 
+    // ... existing words array ...
+];
+
+// Size constraints for different content types
+const SIZES = {
+    header: {min: 30, max: 60},    // h1-h6 tags
+    paragraph: {min: 600, max: 2400}, // p tags
+    span: {min: 100, max: 300}     // span tags (sentences)
+};
+
+// Term hierarchy definition
 const termGroups = {
     top: {tags: ['h1','h2','h3'], terms: ['Volume','Book','Part']},
     mid: {tags: ['h4','h5','h6'], terms: ['Chapter','Section','Subsection']},
@@ -25,7 +41,45 @@ const termGroups = {
     final: {tags: ['p','span'], terms: ['Verse','Sentence']}
 };
 
-// Helper functions
+/**
+ * Generate author metadata
+ * @param {number} count Number of authors to generate
+ * @returns {Array} Array of author objects
+ */
+function generateAuthors(count) {
+    console.log(`\nGenerating ${count} authors...`);
+    return Array(count).fill().map((_, i) => ({
+        id: (i + 1).toString(),
+        name: `Fake Stoic Author ${i + 1}`,
+        imgUri: `stoics/author${i + 1}/author${i + 1}.jpg`,
+        image: null,
+        bioUri: `stoics/author${i + 1}/bio${i + 1}.html`,
+        bio: null,
+        quotesUri: null,
+        version: "1.0.0"
+    }));
+}
+
+/**
+ * Generate work metadata
+ * @param {number} count Number of works to generate
+ * @param {Array} authors Array of author objects
+ * @returns {Array} Array of work objects
+ */
+function generateWorks(count, authors) {
+    console.log(`\nGenerating ${count} works...`);
+    return Array(count).fill().map((_, i) => ({
+        id: (i + 1).toString(),
+        authorId: authors[i % authors.length].id,
+        title: `Fake Stoic Work ${i + 1}`,
+        locationSyntax: [],
+        dataUri: `stoics/author${Math.floor(i / authors.length) + 1}/work${i + 1}.json`,
+        data: null,
+        version: "1.0.0"
+    }));
+}
+
+// Content generation helpers with enhanced logging
 function generateLoremIpsumSentence() {
     const sentenceLength = Math.floor(Math.random() * 10) + 5;
     let sentence = [];
@@ -37,9 +91,9 @@ function generateLoremIpsumSentence() {
 }
 
 function generateLoremIpsumParagraph() {
-    const paragraphLength = Math.floor(Math.random() * 5) + 3;
-    let paragraph = [];
-    for (let i = 0; i < paragraphLength; i++) {
+    const sentenceCount = Math.floor(Math.random() * 7) + 5; // 5-11 sentences
+    const paragraph = [];
+    for (let i = 0; i < sentenceCount; i++) {
         paragraph.push(generateLoremIpsumSentence());
     }
     return paragraph.join(' ');
@@ -47,7 +101,7 @@ function generateLoremIpsumParagraph() {
 
 function generateLoremIpsumTitle() {
     const titleLength = Math.floor(Math.random() * 3) + 2;
-    let title = [];
+    const title = [];
     for (let i = 0; i < titleLength; i++) {
         title.push(loremIpsumWords[Math.floor(Math.random() * loremIpsumWords.length)]);
     }
@@ -55,13 +109,21 @@ function generateLoremIpsumTitle() {
     return title.join(' ');
 }
 
-function getElementSize(tag) {
-    if (tag.startsWith('h')) return SIZES.header;
-    if (tag === 'p') return SIZES.paragraph;
-    return SIZES.span;
+/**
+ * Build initial hierarchy from term groups
+ * @returns {Array} Array of hierarchy objects
+ */
+function buildHierarchy() {
+    const hierarchy = [
+        ...selectRandomTerms(termGroups.top),
+        ...selectRandomTerms(termGroups.mid),
+        ...selectRandomTerms(termGroups.low),
+        ...selectRandomTerms(termGroups.final, 1)
+    ];
+    console.log('Built hierarchy:', hierarchy.map(x => x.term).join(' → '));
+    return hierarchy;
 }
 
-// Core functions
 function selectRandomTerms(group, min = 1) {
     const count = Math.floor(Math.random() * (group.terms.length - min + 1)) + min;
     const indices = [...Array(group.terms.length).keys()];
@@ -71,61 +133,32 @@ function selectRandomTerms(group, min = 1) {
     });
 }
 
-function buildHierarchy() {
-    return [
-        ...selectRandomTerms(termGroups.top),
-        ...selectRandomTerms(termGroups.mid),
-        ...selectRandomTerms(termGroups.low),
-        ...selectRandomTerms(termGroups.final, 1)
-    ];
-}
-
+/**
+ * Prune hierarchy to target depth with safety check
+ * @param {Array} hierarchy Initial hierarchy
+ * @returns {Array} Pruned hierarchy
+ */
 function pruneHierarchy(hierarchy) {
-    const targetLength = Math.floor(Math.random() * 5) + 2; // 2-6 levels
-    while (hierarchy.length > targetLength) {
+    const targetLength = Math.min(
+        Math.floor(Math.random() * 3) + 3,
+        hierarchy.length
+    );
+    const maxIterations = hierarchy.length * 2;
+    let iterations = 0;
+    
+    while (hierarchy.length > targetLength && iterations < maxIterations) {
         const idx = Math.floor(Math.random() * (hierarchy.length - 1));
         hierarchy.splice(idx, 1);
+        iterations++;
     }
+    
+    if (iterations >= maxIterations) {
+        console.warn('Warning: Max iterations reached in pruneHierarchy');
+        return hierarchy.slice(0, targetLength);
+    }
+    
+    console.log('Pruned hierarchy:', hierarchy.map(x => x.term).join(' → '));
     return hierarchy;
-}
-
-function generateStructure(hierarchy, targetKB) {
-    const structure = [];
-    const targetBytes = targetKB * 1024;
-    const levels = hierarchy.length;
-    let currentBytes = 0;
-    
-    function generateLevel(currentId = [], depth = 0) {
-        if (depth >= levels || currentBytes >= targetBytes) return;
-        
-        const isTop = depth === 0;
-        const isBottom = depth === levels - 1;
-        const numDivisions = isTop ? 2 + Math.floor(Math.random() * 3) :
-                           isBottom ? 4 + Math.floor(Math.random() * 5) :
-                           3 + Math.floor(Math.random() * 4);
-        
-        for (let i = 1; i <= numDivisions && currentBytes < targetBytes; i++) {
-            const newId = [...currentId, i];
-            const elementSize = getElementSize(hierarchy[depth].tag);
-            
-            if (currentBytes + elementSize <= targetBytes) {
-                structure.push({
-                    id: newId.join('.'),
-                    tag: hierarchy[depth].tag,
-                    term: hierarchy[depth].term,
-                    depth: depth
-                });
-                currentBytes += elementSize;
-                
-                if (!isBottom) {
-                    generateLevel(newId, depth + 1);
-                }
-            }
-        }
-    }
-    
-    generateLevel();
-    return structure;
 }
 
 function generateContent(tag) {
@@ -141,113 +174,92 @@ function generateContent(tag) {
             return generateLoremIpsumParagraph();
         case 'span':
             return generateLoremIpsumSentence();
+        default:
+            console.warn(`Warning: Unknown tag type ${tag}`);
+            return generateLoremIpsumSentence();
     }
 }
 
-function addHTML(structure) {
-    return structure.map(element => {
-        const content = generateContent(element.tag);
-        const innerHTML = `<${element.tag} id="${element.id}">${content}</${element.tag}>`;
-        return { ...element, innerHTML, content };
-    });
-}
-
-function partitionContent(content, partitionSize = 16) {
-    const indexList = [];
-    const partitions = [];
-    let currentPartition = [];
-    let currentSize = 0;
-
-    content.forEach((element) => {
-        const elementSize = Buffer.byteLength(element.innerHTML, 'utf8') / 1024;
+/**
+ * Generate content structure with inline HTML
+ * @param {Array} hierarchy Term hierarchy
+ * @param {number} targetKB Target size in KB
+ * @returns {Array} Structure with content and HTML
+ */
+function generateStructure(hierarchy, targetKB) {
+    console.log(`\nGenerating structure targeting ${targetKB}KB...`);
+    const structure = [];
+    const targetBytes = targetKB * 1024;
+    const levels = hierarchy.length;
+    let currentBytes = 0;
+    
+    function generateLevel(currentId = [], depth = 0) {
+        if (currentBytes >= targetBytes) return;
+        if (depth >= levels) depth = levels - 1;
         
-        if (currentSize + elementSize > partitionSize && currentPartition.length > 0) {
-            partitions.push(currentPartition);
-            currentPartition = [];
-            currentSize = 0;
-            indexList.push(element.id);
+        const isTop = depth === 0;
+        const isBottom = depth === levels - 1;
+        const numDivisions = isTop ? 2 + Math.floor(Math.random() * 2) :
+                           isBottom ? 4 + Math.floor(Math.random() * 3) :
+                           3 + Math.floor(Math.random() * 2);
+        
+        for (let i = 1; i <= numDivisions && currentBytes < targetBytes; i++) {
+            const newId = [...currentId, i];
+            const content = generateContent(hierarchy[depth].tag);
+            const innerHTML = `<${hierarchy[depth].tag} id="${newId.join('.')}">${content}</${hierarchy[depth].tag}>`;
+            const elementSize = Buffer.byteLength(innerHTML, 'utf8');
+            
+            if (currentBytes + elementSize <= targetBytes) {
+                structure.push({
+                    id: newId.join('.'),
+                    tag: hierarchy[depth].tag,
+                    term: hierarchy[depth].term,
+                    depth: depth,
+                    content,
+                    innerHTML
+                });
+                currentBytes += elementSize;
+                
+                if (!isBottom) {
+                    generateLevel(newId, depth + 1);
+                }
+            }
         }
-        
-        currentPartition.push(element.innerHTML);
-        currentSize += elementSize;
-    });
-    
-    if (currentPartition.length) {
-        partitions.push(currentPartition);
     }
-
-    return [indexList, partitions];
+    
+    generateLevel();
+    console.log(`Generated ${structure.length} elements, ${currentBytes/1024}KB / ${targetKB}KB`);
+    return structure;
 }
 
-function generateAuthors(count) {
-    return Array(count).fill().map((_, i) => ({
-        id: (i + 1).toString(),
-        name: `Fake Stoic Author ${i + 1}`,
-        imgUri: `stoics/author${i + 1}/author${i + 1}.jpg`,
-        image: null,
-        bioUri: `stoics/author${i + 1}/bio${i + 1}.html`,
-        bio: null,
-        quotesUri: null,
-        version: "1.0.0"
-    }));
-}
-
-function generateWorks(count, authors) {
-    return Array(count).fill().map((_, i) => ({
-        id: (i + 1).toString(),
-        authorId: authors[i % authors.length].id,
-        title: `Fake Stoic Work ${i + 1}`,
-        locationSyntax: [], // Will be filled from pruned hierarchy
-        dataUri: `stoics/author${Math.floor(i / authors.length) + 1}/work${i + 1}.json`,
-        data: null,
-        version: "1.0.0"
-    }));
-}
-
-function generateWorkData(work, targetKB) {
-    console.log(`\nGenerating work ${work.id} (${targetKB}KB):`);
-    
-    const initial = buildHierarchy();
-    console.log('Initial hierarchy:', initial.map(x => x.term).join(' → '));
-    
-    const pruned = pruneHierarchy([...initial]);
-    console.log('Pruned hierarchy:', pruned.map(x => x.term).join(' → '));
-    work.locationSyntax = pruned.map(x => x.term);
-    
-    const structure = generateStructure(pruned, targetKB);
-    console.log(`Generated structure: ${structure.length} elements`);
-    
-    const withHTML = addHTML(structure);
-    console.log('Sample HTML:', withHTML[0].innerHTML.substring(0, 100) + '...');
-    
-    const [indexList, partitions] = partitionContent(withHTML);
-    
-    return {
-        content: withHTML,
-        indexList,
-        partitions
-    };
-}
-
+/**
+ * Extract quotes from bottom-level elements
+ * @param {Object} work Work metadata
+ * @param {Array} content Content structure
+ * @returns {Array} Extracted quotes
+ */
 function extractQuotes(work, content) {
     console.log(`\nExtracting quotes for work ${work.id}:`);
     
     const bottomElements = content.filter(el => 
-        el.tag === 'span' || (el.tag === 'p' && el.term === 'Verse'));
+        el && ((el.tag === 'span') || (el.tag === 'p' && el.term === 'Verse'))
+    );
+    
+    if (bottomElements.length === 0) {
+        console.warn('Warning: No bottom elements found for quotes');
+        return [];
+    }
     
     console.log(`Found ${bottomElements.length} bottom elements`);
-    console.log('Sample element:', bottomElements[0]);
-    
     const numQuotes = 5 + Math.floor(Math.random() * 10);
     const quotes = [];
     
-    for (let i = 0; i < numQuotes; i++) {
+    for (let i = 0; i < numQuotes && bottomElements.length > 0; i++) {
         const element = bottomElements[Math.floor(Math.random() * bottomElements.length)];
         if (!element || !element.id || !element.content) {
-            console.log('Invalid element found, skipping...');
+            console.warn('Warning: Invalid element found, skipping...');
             continue;
         }
-        
         quotes.push({
             workId: work.id,
             location: element.id,
@@ -259,56 +271,182 @@ function extractQuotes(work, content) {
     return quotes;
 }
 
+/**
+ * Partition content into chunks with size tracking
+ * @param {Array} content Content structure
+ * @param {number} partitionSize Max partition size in KB
+ * @returns {Array} [indexList, partitions]
+ */
+function partitionContent(content, partitionSize = CONFIG.partitionKB) {
+    console.log(`\nPartitioning content (max ${partitionSize}KB per partition)...`);
+    
+    const indexList = [];
+    const partitions = [];
+    let currentPartition = [];
+    let currentSize = 0;
+    let openTags = [];
 
-function generateTestData() {
-    const authors = generateAuthors(3);
-    const works = generateWorks(5, authors);
-    const quotes = [];
-    
-    console.log('Generating work content...');
-    works.forEach(work => {
-        const targetKB = Math.floor(Math.random() * 200) + 100;
-        const {content, indexList, partitions} = generateWorkData(work, targetKB);
+    content.forEach((element) => {
+        const openTag = `<${element.tag} id="${element.id}">`;
+        const closeTag = `</${element.tag}>`;
+        const fullElement = openTag + element.content + closeTag;
+        const elementSize = Buffer.byteLength(fullElement, 'utf8') / 1024;
         
-        quotes.push(...extractQuotes(work, content));
-        
-        fs.writeFileSync(
-            path.join(__dirname, `stoicwork${work.id}.json`),
-            JSON.stringify({indexList, partitions}, null, 2)
-        );
-        
-        console.log(`Generated work ${work.id}: ${partitions.length} partitions`);
-    });
-    
-    // Write author bios
-    authors.forEach((author, i) => {
-        const bio = generateLoremIpsumParagraph();
-        fs.writeFileSync(path.join(__dirname, `stoicbio${i + 1}.txt`), bio);
-    });
-    
-    // Write meta data
-    const metaData = {
-        description: "Generated Stoic Works",
-        license: "CC BY-SA 4.0",
-        licenseUri: "https://creativecommons.org/licenses/by-sa/4.0/",
-        authors,
-        works,
-        quotes: {
-            version: "1.0.0",
-            allQuotesUri: "data-all-quotes.json",
-            allQuotes: null,
-            favorites: null
+        if (currentSize + elementSize > partitionSize && currentPartition.length > 0) {
+            while (openTags.length > 0) {
+                currentPartition.push(openTags.pop());
+            }
+            
+            partitions.push(currentPartition);
+            currentPartition = [];
+            currentSize = 0;
+            indexList.push(element.id);
+            
+            if (element.depth > 0) {
+                const parentElements = content.filter(e => 
+                    element.id.startsWith(e.id + '.') && e.depth < element.depth
+                );
+                parentElements.forEach(parent => {
+                    const parentOpen = `<${parent.tag} id="${parent.id}">`;
+                    currentPartition.push(parentOpen);
+                    openTags.unshift(`</${parent.tag}>`);
+                    currentSize += Buffer.byteLength(parentOpen, 'utf8') / 1024;
+                });
+            }
         }
-    };
+        
+        currentPartition.push(fullElement);
+        currentSize += elementSize;
+    });
     
-    fs.writeFileSync(path.join(__dirname, 'data-meta.json'), 
-        JSON.stringify(metaData, null, 2));
-    fs.writeFileSync(path.join(__dirname, 'data-all-quotes.json'), 
-        JSON.stringify(quotes, null, 2));
-    
-    console.log(`\nGenerated ${works.length} works for ${authors.length} authors`);
-    console.log(`Extracted ${quotes.length} quotes`);
+    if (currentPartition.length) {
+        while (openTags.length > 0) {
+            currentPartition.push(openTags.pop());
+        }
+        partitions.push(currentPartition);
+    }
+
+    console.log(`Created ${partitions.length} partitions`);
+    return [indexList, partitions];
 }
 
-// Run generator
-generateTestData();
+/**
+ * Generate complete test data set
+ */
+function generateTestData() {
+    try {
+        const authors = generateAuthors(CONFIG.numAuthors);
+        const works = generateWorks(CONFIG.numWorks, authors);
+        const quotes = [];
+        
+        console.log('\nGenerating work content...');
+        
+        for (const work of works) {
+            try {
+                const range = CONFIG.maxKB - CONFIG.minKB;
+                const targetKB = CONFIG.minKB + Math.floor(Math.random() * range);
+                console.log(`\nProcessing work ${work.id} (target: ${targetKB}KB):`);
+                
+                const initial = buildHierarchy();
+                const pruned = pruneHierarchy([...initial]);
+                work.locationSyntax = pruned.map(x => x.term);
+                
+                const structure = generateStructure(pruned, targetKB);
+                const workQuotes = extractQuotes(work, structure);
+                quotes.push(...workQuotes);
+                
+                const [indexList, partitions] = partitionContent(structure);
+                
+                fs.writeFileSync(
+                    path.join(__dirname, `work${work.id}.json`),
+                    JSON.stringify({indexList, partitions}, null, 2)
+                );
+                console.log(`Wrote work${work.id}.json (${partitions.length} partitions)`);
+            } catch (err) {
+                console.error(`Error processing work ${work.id}:`, err);
+            }
+        }
+        
+        // Generate enhanced bios
+        for (const author of authors) {
+            try {
+                const paragraphs = [];
+                // Generate 4-5 paragraphs for 2-3KB total
+                const numParagraphs = 4 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < numParagraphs; i++) {
+                    paragraphs.push(`<p>${generateLoremIpsumParagraph()}</p>`);
+                }
+                
+                fs.writeFileSync(
+                    path.join(__dirname, `bio${author.id}.html`),
+                    paragraphs.join('\n\n')
+                );
+                console.log(`Wrote bio${author.id}.html`);
+            } catch (err) {
+                console.error(`Error writing bio for author ${author.id}:`, err);
+            }
+        } 
+    
+        const metaData = {
+            description: "Generated Stoic Works",
+            license: "CC BY-SA 4.0",
+            licenseUri: "https://creativecommons.org/licenses/by-sa/4.0/",
+            authors,
+            works,
+            quotes: {
+                version: "1.0.0",
+                allQuotesUri: "data-all-quotes.json",
+                allQuotes: null,
+                favorites: null
+            }
+        };
+        // Write metadata file with error handling
+        try {
+            fs.writeFileSync(
+                path.join(__dirname, 'data-meta.json'),
+                JSON.stringify(metaData, null, 2)
+            );
+            console.log('Wrote data-meta.json');
+        } catch (err) {
+            console.error('Error writing data-meta.json:', err);
+            process.exit(1);
+        }
+
+        // Write quotes file with error handling
+        try {
+            fs.writeFileSync(
+                path.join(__dirname, 'data-all-quotes.json'),
+                JSON.stringify(quotes, null, 2)
+            );
+            console.log('Wrote data-all-quotes.json');
+        } catch (err) {
+            console.error('Error writing data-all-quotes.json:', err);
+            process.exit(1);
+        }
+        
+        // Output final statistics
+        console.log(`\nGeneration complete:`);
+        console.log(`- ${authors.length} authors`);
+        console.log(`- ${works.length} works`);
+        console.log(`- ${quotes.length} quotes`);
+        console.log(`- Size range: ${CONFIG.minKB}-${CONFIG.maxKB}KB`);
+        console.log(`- Partition size: ${CONFIG.partitionKB}KB`);
+
+
+    } catch (err) {
+        console.error('Fatal error during data generation:', err);
+        process.exit(1);
+    } // End main try.. catch block for generateTestData
+
+} // End of generateTestData
+
+// Execute with error handling
+try {
+    generateTestData();
+} catch (err) {
+    console.error('Fatal error during data generation:', err);
+    process.exit(1);
+}
+
+
+
