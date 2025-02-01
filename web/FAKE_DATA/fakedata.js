@@ -109,7 +109,7 @@ function generateWorks(count, authors) {
 
 // Content generation helpers with enhanced logging
 function generateLoremIpsumSentence() {
-    const sentenceLength = Math.floor(Math.random() * 10) + 5;
+    const sentenceLength = Math.floor(Math.random() * 12) + 6; // 6-17 words
     let sentence = [];
     for (let i = 0; i < sentenceLength; i++) {
         sentence.push(loremIpsumWords[Math.floor(Math.random() * loremIpsumWords.length)]);
@@ -128,7 +128,7 @@ function generateLoremIpsumParagraph() {
 }
 
 function generateLoremIpsumTitle() {
-    const titleLength = Math.floor(Math.random() * 3) + 2;
+    const titleLength = Math.floor(Math.random() * 7) + 1; // 2-8 words
     const title = [];
     for (let i = 0; i < titleLength; i++) {
         title.push(loremIpsumWords[Math.floor(Math.random() * loremIpsumWords.length)]);
@@ -220,18 +220,28 @@ function generateStructure(hierarchy, targetKB) {
     const minBytes = CONFIG.minKB * 1024;
     const targetBytes = targetKB * 1024;
     let currentBytes = 0;
-    let currentId = [1];
-    let depth = 0;
+    let topLevelCount = 0;
+    const MIN_TOP_LEVEL = 2;
+    const MAX_TOP_LEVEL = 4;
     
-    while (currentBytes < targetBytes) {
-        // Generate header first
-        if (depth < hierarchy.length - 2) {  // Skip headers for bottom two levels
-            const headerContent = generateContent(hierarchy[depth].tag);
-            const headerHTML = `<${hierarchy[depth].tag} id="${currentId.join('.')}">${headerContent}</${hierarchy[depth].tag}>`;
+    function generateLevel(currentId = [], depth = 0) {
+        if (depth >= hierarchy.length) return;
+        
+        const isTop = depth === 0;
+        const isBottom = depth === hierarchy.length - 1;
+        const tag = hierarchy[depth].tag;
+        const isContent = tag === 'p' || tag === 'span';
+        
+        // Generate header if not content tag
+        if (!isContent) {
+            const headerContent = generateContent(tag);
+            const headerHTML = `<${tag} id="${currentId.join('.')}">${headerContent}</${tag}>`;
+            
+            if (isTop) topLevelCount++;
             
             structure.push({
                 id: currentId.join('.'),
-                tag: hierarchy[depth].tag,
+                tag: tag,
                 term: hierarchy[depth].term,
                 depth: depth,
                 content: headerContent,
@@ -241,34 +251,39 @@ function generateStructure(hierarchy, targetKB) {
             currentBytes += Buffer.byteLength(headerHTML, 'utf8');
         }
         
-        // Generate content (p/span)
-        const contentCount = 4 + Math.floor(Math.random() * 3);
-        for (let i = 1; i <= contentCount && currentBytes < targetBytes; i++) {
-            const contentId = [...currentId, i];
-            const tag = hierarchy[hierarchy.length - 1].tag;
-            const content = generateContent(tag);
-            const innerHTML = `<${tag} id="${contentId.join('.')}">${content}</${tag}>`;
-            
-            structure.push({
-                id: contentId.join('.'),
-                tag: tag,
-                term: hierarchy[hierarchy.length - 1].term,
-                depth: hierarchy.length - 1,
-                content,
-                innerHTML
-            });
-            
-            currentBytes += Buffer.byteLength(innerHTML, 'utf8');
-        }
+        // Generate content elements
+        const numElements = isContent ? 4 + Math.floor(Math.random() * 3) :
+                          isTop ? MIN_TOP_LEVEL + Math.floor(Math.random() * (MAX_TOP_LEVEL - MIN_TOP_LEVEL + 1)) :
+                          3 + Math.floor(Math.random() * 2);
         
-        // Move to next section
-        currentId[0]++;
-        
-        if (currentBytes < minBytes) {
-            console.log(`Current size ${Math.round(currentBytes/1024)}KB is below minimum, generating more...`);
-        } else {
-            console.log(`Reached ${Math.round(currentBytes/1024)}KB, filling to target...`);
+        for (let i = 1; i <= numElements && currentBytes < targetBytes; i++) {
+            if (isContent) {
+                const contentId = [...currentId, i];
+                const content = generateContent(tag);
+                const innerHTML = `<${tag} id="${contentId.join('.')}">${content}</${tag}>`;
+                
+                structure.push({
+                    id: contentId.join('.'),
+                    tag: tag,
+                    term: hierarchy[depth].term,
+                    depth: depth,
+                    content,
+                    innerHTML
+                });
+                
+                currentBytes += Buffer.byteLength(innerHTML, 'utf8');
+            } else {
+                generateLevel([...currentId, i], depth + 1);
+            }
         }
+    }
+    
+    while (currentBytes < targetBytes) {
+        generateLevel([topLevelCount + 1]);
+        
+        // if (currentBytes >= minBytes) {
+        //     console.log(`Reached ${Math.round(currentBytes/1024)}KB, filling to target...`);
+        // }
     }
     
     console.log(`Generated ${structure.length} elements, ${Math.round(currentBytes/1024)}KB / ${targetKB}KB`);
