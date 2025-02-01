@@ -221,69 +221,85 @@ function generateStructure(hierarchy, targetKB) {
     const targetBytes = targetKB * 1024;
     let currentBytes = 0;
     let topLevelCount = 0;
-    const MIN_TOP_LEVEL = 2;
-    const MAX_TOP_LEVEL = 4;
     
     function generateLevel(currentId = [], depth = 0) {
-        if (depth >= hierarchy.length) return;
-        
-        const isTop = depth === 0;
-        const isBottom = depth === hierarchy.length - 1;
-        const tag = hierarchy[depth].tag;
-        const isContent = tag === 'p' || tag === 'span';
-        
-        // Generate header if not content tag
-        if (!isContent) {
-            const headerContent = generateContent(tag);
-            const headerHTML = `<${tag} id="${currentId.join('.')}">${headerContent}</${tag}>`;
-            
-            if (isTop) topLevelCount++;
-            
+        if (depth >= hierarchy.length) return; // Stop if we exceed hierarchy
+      
+        // Get current hierarchy details
+        const currentInfo = hierarchy[depth];
+        const tag = currentInfo.tag;
+        const term = currentInfo.term;
+        // Use currentId.join('.') or default to "1" if empty
+        const idStr = currentId.length ? currentId.join('.') : "1";
+      
+        // If we're not at the bottom of the hierarchy, generate a header and then children.
+        if (depth < hierarchy.length - 1) {
+          // 1. Create a header element for the current level.
+          const headerContent = generateContent(tag);
+          const headerHTML = `<${tag} id="${idStr}">${headerContent}</${tag}>`;
+          structure.push({
+            id: idStr,
+            tag,
+            term,
+            depth,
+            content: headerContent,
+            innerHTML: headerHTML
+          });
+          currentBytes += Buffer.byteLength(headerHTML, 'utf8');
+      
+          // 2. Insert a random block of lower-level text immediately after the header.
+          const numParagraphs = 1 + Math.floor(Math.random() * 3);
+          // Use the next level's term so that at the bottom, it will eventually be "Verse".
+          const nextTerm = hierarchy[depth + 1].term;
+          for (let j = 1; j <= numParagraphs && currentBytes < targetBytes; j++) {
+            const paraId = [...currentId, j].join('.');
+            const paraContent = generateContent('p'); // use 'p' for these inserted paragraphs
+            const paraHTML = `<p id="${paraId}">${paraContent}</p>`;
             structure.push({
-                id: currentId.join('.'),
-                tag: tag,
-                term: hierarchy[depth].term,
-                depth: depth,
-                content: headerContent,
-                innerHTML: headerHTML
+              id: paraId,
+              tag: 'p',
+              term: nextTerm,  // This will be "Subsection", "Passage", etc. as defined
+              depth: depth + 1,
+              content: paraContent,
+              innerHTML: paraHTML
             });
-            
-            currentBytes += Buffer.byteLength(headerHTML, 'utf8');
-        }
-        
-        // Generate content elements
-        const numElements = isContent ? 4 + Math.floor(Math.random() * 3) :
-                          isTop ? MIN_TOP_LEVEL + Math.floor(Math.random() * (MAX_TOP_LEVEL - MIN_TOP_LEVEL + 1)) :
-                          3 + Math.floor(Math.random() * 2);
-        
-        for (let i = 1; i <= numElements && currentBytes < targetBytes; i++) {
-            if (isContent) {
-                const contentId = [...currentId, i];
-                const content = generateContent(tag);
-                const innerHTML = `<${tag} id="${contentId.join('.')}">${content}</${tag}>`;
-                
-                structure.push({
-                    id: contentId.join('.'),
-                    tag: tag,
-                    term: hierarchy[depth].term,
-                    depth: depth,
-                    content,
-                    innerHTML
-                });
-                
-                currentBytes += Buffer.byteLength(innerHTML, 'utf8');
-            } else {
-                generateLevel([...currentId, i], depth + 1);
+            currentBytes += Buffer.byteLength(paraHTML, 'utf8');
+          }
+      
+          // 3. Generate child nodes (further down the hierarchy).
+          const numChildren = 1 + Math.floor(Math.random() * 2);
+          // Start children numbering after the paragraphs we inserted.
+          for (let i = numParagraphs + 1; i <= numParagraphs + numChildren && currentBytes < targetBytes; i++) {
+            generateLevel([...currentId, i], depth + 1);
+          }
+        } else {
+          // At the bottom level, generate content elements.
+          const numElements = 4 + Math.floor(Math.random() * 3);
+          for (let i = 1; i <= numElements && currentBytes < targetBytes; i++) {
+            // Instead of appending a new level, update the last element of currentId
+            const contentIdParts = [...currentId];
+            if (i > 1) {
+              contentIdParts[contentIdParts.length - 1] = i;
             }
+            const contentId = contentIdParts.join('.');
+            const content = generateContent(tag); // tag should be from the final group (p or span)
+            const innerHTML = `<${tag} id="${contentId}">${content}</${tag}>`;
+            structure.push({
+              id: contentId,
+              tag,
+              term,  // Now term will be "Verse" as defined in your final group
+              depth,
+              content,
+              innerHTML
+            });
+            currentBytes += Buffer.byteLength(innerHTML, 'utf8');
+          }
         }
-    }
+      }
+      
     
     while (currentBytes < targetBytes) {
-        generateLevel([topLevelCount + 1]);
-        
-        // if (currentBytes >= minBytes) {
-        //     console.log(`Reached ${Math.round(currentBytes/1024)}KB, filling to target...`);
-        // }
+        generateLevel([topLevelCount + 1]);        
     }
     
     console.log(`Generated ${structure.length} elements, ${Math.round(currentBytes/1024)}KB / ${targetKB}KB`);
