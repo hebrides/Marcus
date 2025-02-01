@@ -216,19 +216,23 @@ function showWork(location = 0) {
     modalBody.innerHTML = '';
     modalLoading.style.display = 'block';
 
-    // Computer data chunks to display
+
     const indexList = appState.currentWork.data[0];
     const partitions = appState.currentWork.data[1];
-    let partitionIndex = indexList.findIndex((id, idx) => {
-        const nextId = indexList[idx + 1];
-        return versionCompare(location, id) >= 0 && (!nextId || versionCompare(location, nextId) < 0);
-    });
-
-    if (partitionIndex === -1) {
-        console.error('Location not found in index list!');
-        modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-        modalLoading.style.display = 'none';
-        return;
+    let partitionIndex = 0;
+    // skip indexing if location is zero, start at beginning
+    if (location !== 0) {
+        const foundIndex = indexList.findIndex((id, idx) => {
+            const nextId = indexList[idx + 1];
+            return versionCompare(location, id) >= 0 && (!nextId || versionCompare(location, nextId) < 0);
+        });
+        if (foundIndex === -1) {
+            console.error('Location not found in index list!');
+            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+            modalLoading.style.display = 'none';
+            return;
+        }
+        partitionIndex = foundIndex;
     }
 
      // Display the partition and n partitions forward and back
@@ -237,23 +241,27 @@ function showWork(location = 0) {
      for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
          content += partitions[i];
      }
-     modalBody.innerHTML = content;
-     modalLoading.style.display = 'none';
  
-
-    // Load the work text asynchronously - hack necessary to make sure the 
-    // modal displays instantly and the loading indicator is shown, otherwise
-    // webkit will wait until all the text is ready to display before showing
-    // the modal, which is weird, non-intuitive, and not user-friendly.   
-    // setTimeout(() => {
-    //     if (!appState.currentWork.data) {
-    //         console.error('No work text data available!');
-    //         modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-    //     } else {
-    //         modalBody.innerHTML = `<p>${appState.currentWork.data[1]}</p>`;
-    //     }
-    //     modalLoading.style.display = 'none';
-    // }, 100);
+    setTimeout(() => {
+        modalBody.innerHTML = content;
+        modalLoading.style.display = 'none';
+        console.log(`Scrolling to #${location}`);
+        if (location !== 0) {
+            // Escape dots in ID for querySelector
+            const escapedLocation = CSS.escape(location);
+            const element = modalBody.querySelector(`#${escapedLocation}`);
+            if (element) {
+                element.scrollIntoView({ 
+                    behavior: 'auto',
+                    block: 'start'
+                });
+                element.classList.add('highlight');
+                setTimeout(() => element.classList.remove('highlight'), 2000);
+            } else {
+                console.warn(`Element #${location} not found in content, starting at partition ${partitionIndex}`);
+            }
+        }
+    }, 100);
 }
 
 function showChat(myAuthor) {    
