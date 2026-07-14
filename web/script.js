@@ -10,6 +10,46 @@ let appState = {
 let appData = {
 };
 
+// ── IndexedDB helpers ────────────────────────────────────────────────────────
+const IDB_NAME    = 'StoicReaderDB';
+const IDB_VERSION = 1;
+const IDB_STORE   = 'cache';
+
+// Singleton DB connection promise – opened once and reused for all operations.
+let _dbPromise = null;
+
+function openDB() {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+        req.onupgradeneeded = function(e) {
+            e.target.result.createObjectStore(IDB_STORE);
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror   = e => { _dbPromise = null; reject(e.target.error); };
+    });
+    return _dbPromise;
+}
+
+function idbGet(key) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const req = db.transaction(IDB_STORE, 'readonly')
+                      .objectStore(IDB_STORE).get(key);
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror   = e => reject(e.target.error);
+    }));
+}
+
+function idbPut(key, value) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const req = db.transaction(IDB_STORE, 'readwrite')
+                      .objectStore(IDB_STORE).put(value, key);
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror   = e => reject(e.target.error);
+    }));
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 // Global modal vars
 const modalLoading = document.getElementById('modal-data-loading');
 const modalTitle = document.getElementById('modal-title');
@@ -18,23 +58,27 @@ const modalBody = document.getElementById('modal-body');
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyright-year').textContent = new Date().getFullYear();
     attachEventListeners();
-      
+
     fetch('data-meta.json')
-    .then(response => response.json())
+        .then(response => response.json())
         .then(metaData => {
             appData = metaData;
             console.log('Fetched metadata:', metaData);
-            // check metadata for updates & load if necessary
-            
-            // TODO: if no updates, try indexDB
 
-            // no indexDB data? load quotes, display a random quote, load data
-            loadQuotes().then(() => {
-                showNewQuote('random');
-                loadApplicationData();
-                //
-                // TODO: Store new data in IndexDB
-                //
+            // Check whether the cached version matches the current metadata version.
+            // If it does, serve quotes and work/bio data from IndexedDB (fast, works offline).
+            // Otherwise fall through to a full network fetch and repopulate the cache.
+            return idbGet('version').then(cachedVersion => {
+                if (cachedVersion && cachedVersion === metaData.version) {
+                    console.log('Cache hit – loading data from IndexedDB.');
+                    return loadFromCache();
+                }
+                console.log('Cache miss or version changed – fetching from network.');
+                return loadQuotes().then(() => {
+                    showNewQuote('random');
+                    loadApplicationData();
+                    persistToCache(metaData.version);
+                });
             });
         })
         .catch(error => {
@@ -121,6 +165,84 @@ function loadApplicationData() {
                     console.error(`Error loading work ${work.id} data:`, error);
                 });
         });
+}
+
+// Load all app data from IndexedDB (quotes, work text, author bios).
+function loadFromCache() {
+    return idbGet('quotes').then(cachedQuotes => {
+        if (!cachedQuotes) {
+            // Cache is incomplete – fall back to network and repopulate cache.
+            console.warn('Quotes missing from cache; falling back to network fetch.');
+            return loadQuotes().then(() => {
+                showNewQuote('random');
+                loadApplicationData();
+                persistToCache(appData.version);
+            });
+        }
+
+        appData.quotes.allQuotes = cachedQuotes;
+        showNewQuote('random');
+
+        // Populate author bios and work data from cache.
+        const { authors, works } = appData;
+        const promises = [];
+
+        if (authors) {
+            authors.forEach(author => {
+                promises.push(
+                    idbGet(`bio-${author.id}`).then(bio => {
+                        if (bio) { author.bio = bio; }
+                    })
+                );
+            });
+        }
+
+        if (works) {
+            works.forEach(work => {
+                promises.push(
+                    idbGet(`work-${work.id}`).then(data => {
+                        if (data) { work.data = data; }
+                    })
+                );
+            });
+        }
+
+        return Promise.all(promises).then(() => {
+            console.log('All data loaded from IndexedDB cache.');
+        });
+    });
+}
+
+// Persist the current version, quotes, work text, and author bios to IndexedDB.
+function persistToCache(version) {
+    const { authors, works, quotes } = appData;
+    const promises = [];
+
+    promises.push(idbPut('version', version));
+
+    if (quotes && quotes.allQuotes) {
+        promises.push(idbPut('quotes', quotes.allQuotes));
+    }
+
+    if (authors) {
+        authors.forEach(author => {
+            if (author.bio) {
+                promises.push(idbPut(`bio-${author.id}`, author.bio));
+            }
+        });
+    }
+
+    if (works) {
+        works.forEach(work => {
+            if (work.data) {
+                promises.push(idbPut(`work-${work.id}`, work.data));
+            }
+        });
+    }
+
+    return Promise.all(promises)
+        .then(() => console.log('App data persisted to IndexedDB cache.'))
+        .catch(err => console.error('Error persisting data to IndexedDB:', err));
 }
 
 function showNewQuote(selectionMethod) {
