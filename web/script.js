@@ -75,26 +75,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         return loadFromCache();
                     }
                     console.log('Cache miss or version changed – fetching from network.');
-                    return loadQuotes().then(() => {
-                        showNewQuote('random');
-                        loadApplicationData();
-                        persistToCache(metaData.version);
-                    });
+                    return fetchFromNetwork().then(() => persistToCache(metaData.version));
                 })
                 .catch(err => {
                     // IndexedDB unavailable (e.g. private mode, quota exceeded) or cache
                     // corruption detected – degrade gracefully to a plain network fetch.
                     console.warn('IndexedDB unavailable or cache error, falling back to network:', err);
-                    return loadQuotes().then(() => {
-                        showNewQuote('random');
-                        loadApplicationData();
-                    });
+                    return fetchFromNetwork();
                 });
         })
         .catch(error => {
             console.error('Error initializing app data:', error);
         });
 });
+
+// Fetch quotes and all application data from the network, then display a quote.
+function fetchFromNetwork() {
+    return loadQuotes().then(() => {
+        showNewQuote('random');
+        return loadApplicationData();
+    });
+}
 
 function loadQuotes() {
     return fetch(appData.quotes.allQuotesUri)
@@ -114,11 +115,17 @@ function loadApplicationData() {
     const { currentAuthor, currentWork } = appState || {};
     if (!currentAuthor || !currentWork) {
         console.error('Error: Current author or work is not defined in appState.');
-        return;
+        return Promise.resolve();
+    }
+
+    const { authors, works } = appData || {};
+    if (!authors || !works) {
+        console.error('Error: Authors or works data is not defined in appData.');
+        return Promise.resolve();
     }
 
     // Fetch current author bio as text HTML and store it 
-    fetch(currentAuthor.bioUri)
+    const currentAuthorPromise = fetch(currentAuthor.bioUri)
         .then(response => response.text())
         .then(bio => {
             currentAuthor.bio = bio;
@@ -129,25 +136,17 @@ function loadApplicationData() {
         });
 
     // Fetch current work indexed JSON data and store it 
-    fetch(currentWork.dataUri)
+    const currentWorkPromise = fetch(currentWork.dataUri)
         .then(response => response.json())
         .then(workData => {
             currentWork.data = workData;
             console.log('Loaded work text:', workData);
-            // Additional parsing can be done here if needed
         })
         .catch(error => {
             console.error('Error loading work text:', error);
         });
     
-    // Load remaining author bio text and indexed work data asynchronously
-    // Catch errors here to prevent the app from crashing if the data is not available
-    const { authors, works } = appData || {};
-    if (!authors || !works) {
-        console.error('Error: Authors or works data is not defined in appData.');
-        return;
-    }
-
+    // Load remaining author bios and work data asynchronously
     const authorPromises = authors
         .filter(author => author.id !== currentAuthor.id)
         .map(author => {
@@ -166,7 +165,7 @@ function loadApplicationData() {
         .filter(work => work.id !== currentWork.id)
         .map(work => {
             return fetch(work.dataUri)
-                .then(response => response.json()) // Changed to response.json() to handle JSON response
+                .then(response => response.json())
                 .then(workData => {
                     work.data = workData;
                     console.log(`Loaded work ${work.id} data:`, workData);
@@ -175,6 +174,8 @@ function loadApplicationData() {
                     console.error(`Error loading work ${work.id} data:`, error);
                 });
         });
+
+    return Promise.all([currentAuthorPromise, currentWorkPromise, ...authorPromises, ...workPromises]);
 }
 
 // Load all app data from IndexedDB (quotes, work text, author bios).
@@ -190,6 +191,9 @@ function loadFromCache() {
         showNewQuote('random');
 
         // Populate author bios and work data from cache.
+        // Partial cache misses for individual bios/works are acceptable: the app
+        // will show a "no bio/work" error message when the user tries to read them,
+        // consistent with how it handles network failures for the same resources.
         const { authors, works } = appData;
         const promises = [];
 
@@ -230,18 +234,22 @@ function loadFromCache() {
 // Persist the current version, quotes, work text, and author bios to IndexedDB.
 function persistToCache(version) {
     const { authors, works, quotes } = appData;
-    const promises = [];
 
-    promises.push(idbPut('version', version));
+    function safePut(key, value) {
+        return idbPut(key, value)
+            .catch(err => console.error(`Error persisting '${key}' to IndexedDB:`, err));
+    }
+
+    const promises = [safePut('version', version)];
 
     if (quotes && quotes.allQuotes) {
-        promises.push(idbPut('quotes', quotes.allQuotes));
+        promises.push(safePut('quotes', quotes.allQuotes));
     }
 
     if (authors) {
         authors.forEach(author => {
             if (author.bio) {
-                promises.push(idbPut(`bio-${author.id}`, author.bio));
+                promises.push(safePut(`bio-${author.id}`, author.bio));
             }
         });
     }
@@ -249,14 +257,13 @@ function persistToCache(version) {
     if (works) {
         works.forEach(work => {
             if (work.data) {
-                promises.push(idbPut(`work-${work.id}`, work.data));
+                promises.push(safePut(`work-${work.id}`, work.data));
             }
         });
     }
 
     return Promise.all(promises)
-        .then(() => console.log('App data persisted to IndexedDB cache.'))
-        .catch(err => console.error('Error persisting data to IndexedDB:', err));
+        .then(() => console.log('App data persisted to IndexedDB cache.'));
 }
 
 function showNewQuote(selectionMethod) {
