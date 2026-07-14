@@ -26,7 +26,7 @@ function openDB() {
             e.target.result.createObjectStore(IDB_STORE);
         };
         req.onsuccess = e => resolve(e.target.result);
-        req.onerror   = e => { _dbPromise = null; reject(e.target.error); };
+        req.onerror   = e => reject(e.target.error);
     });
     return _dbPromise;
 }
@@ -67,19 +67,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Check whether the cached version matches the current metadata version.
             // If it does, serve quotes and work/bio data from IndexedDB (fast, works offline).
-            // Otherwise fall through to a full network fetch and repopulate the cache.
-            return idbGet('version').then(cachedVersion => {
-                if (cachedVersion && cachedVersion === metaData.version) {
-                    console.log('Cache hit – loading data from IndexedDB.');
-                    return loadFromCache();
-                }
-                console.log('Cache miss or version changed – fetching from network.');
-                return loadQuotes().then(() => {
-                    showNewQuote('random');
-                    loadApplicationData();
-                    persistToCache(metaData.version);
+            // If IDB is unavailable or the cache is corrupt/outdated, fall back to network fetch.
+            return idbGet('version')
+                .then(cachedVersion => {
+                    if (cachedVersion && cachedVersion === metaData.version) {
+                        console.log('Cache hit – loading data from IndexedDB.');
+                        return loadFromCache();
+                    }
+                    console.log('Cache miss or version changed – fetching from network.');
+                    return loadQuotes().then(() => {
+                        showNewQuote('random');
+                        loadApplicationData();
+                        persistToCache(metaData.version);
+                    });
+                })
+                .catch(err => {
+                    // IndexedDB unavailable (e.g. private mode, quota exceeded) or cache
+                    // corruption detected – degrade gracefully to a plain network fetch.
+                    console.warn('IndexedDB unavailable or cache error, falling back to network:', err);
+                    return loadQuotes().then(() => {
+                        showNewQuote('random');
+                        loadApplicationData();
+                    });
                 });
-            });
         })
         .catch(error => {
             console.error('Error initializing app data:', error);
@@ -168,16 +178,12 @@ function loadApplicationData() {
 }
 
 // Load all app data from IndexedDB (quotes, work text, author bios).
+// Rejects if the cache is incomplete so the caller can fall back to network fetch.
 function loadFromCache() {
     return idbGet('quotes').then(cachedQuotes => {
         if (!cachedQuotes) {
-            // Cache is incomplete – fall back to network and repopulate cache.
-            console.warn('Quotes missing from cache; falling back to network fetch.');
-            return loadQuotes().then(() => {
-                showNewQuote('random');
-                loadApplicationData();
-                persistToCache(appData.version);
-            });
+            // Quotes are missing despite a version match – treat as cache corruption.
+            throw new Error('Cache integrity error: quotes missing from IndexedDB.');
         }
 
         appData.quotes.allQuotes = cachedQuotes;
@@ -191,7 +197,11 @@ function loadFromCache() {
             authors.forEach(author => {
                 promises.push(
                     idbGet(`bio-${author.id}`).then(bio => {
-                        if (bio) { author.bio = bio; }
+                        if (bio) {
+                            author.bio = bio;
+                        } else {
+                            console.warn(`Cache integrity warning: bio missing for author ${author.id}.`);
+                        }
                     })
                 );
             });
@@ -201,7 +211,11 @@ function loadFromCache() {
             works.forEach(work => {
                 promises.push(
                     idbGet(`work-${work.id}`).then(data => {
-                        if (data) { work.data = data; }
+                        if (data) {
+                            work.data = data;
+                        } else {
+                            console.warn(`Cache integrity warning: data missing for work ${work.id}.`);
+                        }
                     })
                 );
             });
