@@ -15,7 +15,8 @@ const modalLoading = document.getElementById('modal-data-loading');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 
-document.addEventListener('DOMContentLoaded', function() {  
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('copyright-year').textContent = new Date().getFullYear();
     attachEventListeners();
       
     fetch('data-meta.json')
@@ -151,7 +152,7 @@ function showNewQuote(selectionMethod) {
 
     // Display author, work
     let citationHTML = `~<a href="#" id="authorLink" onclick="showBiography()"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</a>`;         
+    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</label></a>`;         
 
     // get quote location for citation
     const  myQuoteLocation = myQuote.location.split(".");
