@@ -14,7 +14,7 @@
 ```
 Error: expect(page).toHaveScreenshot(expected) failed
 
-  25200 pixels (ratio 0.09 of all image pixels) are different.
+  22307 pixels (ratio 0.08 of all image pixels) are different.
 
   Snapshot: quote-mobile.png
 
@@ -25,14 +25,14 @@ Call log:
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
-  - 25200 pixels (ratio 0.09 of all image pixels) are different.
+  - 22307 pixels (ratio 0.08 of all image pixels) are different.
   - waiting 100ms before taking screenshot
   - taking page screenshot
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
   - captured a stable screenshot
-  - 25200 pixels (ratio 0.09 of all image pixels) are different.
+  - 22307 pixels (ratio 0.08 of all image pixels) are different.
 
 ```
 
@@ -46,20 +46,20 @@ Call log:
   - main [ref=e5]:
     - generic [ref=e6]:
       - paragraph [ref=e7]:
-        - link "Knowest thou what a speck thou art in comparison with the Universe?—-That is, with respect to the body; since with respect to Reason, thou art not inferior to the Gods, nor less than they. For the greatness of Reason is not measured by length or height, but by the resolves of..." [ref=e8] [cursor=pointer]:
+        - link "It is very possible to be a divine man and to be recognized as such by no one." [ref=e8] [cursor=pointer]:
           - /url: "#"
       - paragraph [ref=e9]:
         - text: ~
-        - link "Epictetus" [ref=e10] [cursor=pointer]:
+        - link "Marcus Aurelius" [ref=e10] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "The Golden Sayings" [ref=e11] [cursor=pointer]:
+        - link "Meditations" [ref=e11] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Section 33" [ref=e12] [cursor=pointer]:
+        - link "Book 7" [ref=e12] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Verse 1" [ref=e13] [cursor=pointer]:
+        - link "Verse 67" [ref=e13] [cursor=pointer]:
           - /url: "#"
   - contentinfo [ref=e14]:
     - generic [ref=e15]:

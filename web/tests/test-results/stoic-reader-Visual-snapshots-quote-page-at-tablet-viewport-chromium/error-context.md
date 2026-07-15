@@ -14,7 +14,7 @@
 ```
 Error: expect(page).toHaveScreenshot(expected) failed
 
-  43508 pixels (ratio 0.06 of all image pixels) are different.
+  40039 pixels (ratio 0.06 of all image pixels) are different.
 
   Snapshot: quote-tablet.png
 
@@ -25,14 +25,14 @@ Call log:
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
-  - 43508 pixels (ratio 0.06 of all image pixels) are different.
+  - 40039 pixels (ratio 0.06 of all image pixels) are different.
   - waiting 100ms before taking screenshot
   - taking page screenshot
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
   - captured a stable screenshot
-  - 43508 pixels (ratio 0.06 of all image pixels) are different.
+  - 40039 pixels (ratio 0.06 of all image pixels) are different.
 
 ```
 
@@ -46,17 +46,17 @@ Call log:
   - main [ref=e5]:
     - generic [ref=e6]:
       - paragraph [ref=e7]:
-        - 'link "Fortify thyself with contentment: that is an impregnable stronghold." [ref=e8] [cursor=pointer]':
+        - link "In what character dost thou now come forward?" [ref=e8] [cursor=pointer]:
           - /url: "#"
       - paragraph [ref=e9]:
         - text: ~
         - link "Epictetus" [ref=e10] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Fragments" [ref=e11] [cursor=pointer]:
+        - link "The Golden Sayings" [ref=e11] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Fragment 17" [ref=e12] [cursor=pointer]:
+        - link "Section 49" [ref=e12] [cursor=pointer]:
           - /url: "#"
         - text: ","
         - link "Verse 1" [ref=e13] [cursor=pointer]:

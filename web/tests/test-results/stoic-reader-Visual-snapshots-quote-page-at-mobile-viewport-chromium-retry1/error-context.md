@@ -14,7 +14,7 @@
 ```
 Error: expect(page).toHaveScreenshot(expected) failed
 
-  25163 pixels (ratio 0.09 of all image pixels) are different.
+  31759 pixels (ratio 0.11 of all image pixels) are different.
 
   Snapshot: quote-mobile.png
 
@@ -25,14 +25,14 @@ Call log:
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
-  - 25163 pixels (ratio 0.09 of all image pixels) are different.
+  - 31759 pixels (ratio 0.11 of all image pixels) are different.
   - waiting 100ms before taking screenshot
   - taking page screenshot
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
   - captured a stable screenshot
-  - 25163 pixels (ratio 0.09 of all image pixels) are different.
+  - 31759 pixels (ratio 0.11 of all image pixels) are different.
 
 ```
 
@@ -46,17 +46,17 @@ Call log:
   - main [ref=e5]:
     - generic [ref=e6]:
       - paragraph [ref=e7]:
-        - link "Never call yourself a Philosopher nor talk much among the unlearned about Principles, but do that which follows from them. Thus at a banquet, do not discuss how people ought to eat; but eat as you ought. Remember that Socrates thus entirely avoided ostentation. Men would come..." [ref=e8] [cursor=pointer]:
+        - link "Yesterday you were with us. You might complain if I said \"yesterday\" merely. This is why I have added \"with us.\" For, so far as I am concerned, you are always with me. Certain friends had happened in, on whose account a somewhat brighter fire was laid, – not the kind that gene..." [ref=e8] [cursor=pointer]:
           - /url: "#"
       - paragraph [ref=e9]:
         - text: ~
-        - link "Epictetus" [ref=e10] [cursor=pointer]:
+        - link "Seneca" [ref=e10] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "The Golden Sayings" [ref=e11] [cursor=pointer]:
+        - link "Letters from a Stoic" [ref=e11] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Section 175" [ref=e12] [cursor=pointer]:
+        - link "Letter 64" [ref=e12] [cursor=pointer]:
           - /url: "#"
         - text: ","
         - link "Verse 1" [ref=e13] [cursor=pointer]:

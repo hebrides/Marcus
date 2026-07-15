@@ -14,7 +14,7 @@
 ```
 Error: expect(page).toHaveScreenshot(expected) failed
 
-  58251 pixels (ratio 0.05 of all image pixels) are different.
+  33699 pixels (ratio 0.03 of all image pixels) are different.
 
   Snapshot: quote-desktop.png
 
@@ -25,14 +25,14 @@ Call log:
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
-  - 58251 pixels (ratio 0.05 of all image pixels) are different.
+  - 33699 pixels (ratio 0.03 of all image pixels) are different.
   - waiting 100ms before taking screenshot
   - taking page screenshot
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
   - captured a stable screenshot
-  - 58251 pixels (ratio 0.05 of all image pixels) are different.
+  - 33699 pixels (ratio 0.03 of all image pixels) are different.
 
 ```
 
@@ -46,7 +46,7 @@ Call log:
   - main [ref=e5]:
     - generic [ref=e6]:
       - paragraph [ref=e7]:
-        - link "You can be invincible, if you never enter on a contest where victory is not in your power. Beware then that when you see a man raised to honour or great power or high repute you do not let your impression carry you away. For if the reality of good lies in what is in our power,..." [ref=e8] [cursor=pointer]:
+        - link "As a mark is not set up for men to miss it, so there is nothing intrinsically evil in the world." [ref=e8] [cursor=pointer]:
           - /url: "#"
       - paragraph [ref=e9]:
         - text: ~
@@ -56,7 +56,7 @@ Call log:
         - link "The Enchiridion" [ref=e11] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Section 19" [ref=e12] [cursor=pointer]:
+        - link "Section 27" [ref=e12] [cursor=pointer]:
           - /url: "#"
         - text: ","
         - link "Verse 1" [ref=e13] [cursor=pointer]:

@@ -14,7 +14,7 @@
 ```
 Error: expect(page).toHaveScreenshot(expected) failed
 
-  39598 pixels (ratio 0.06 of all image pixels) are different.
+  37698 pixels (ratio 0.05 of all image pixels) are different.
 
   Snapshot: quote-tablet.png
 
@@ -25,14 +25,14 @@ Call log:
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
-  - 39598 pixels (ratio 0.06 of all image pixels) are different.
+  - 37698 pixels (ratio 0.05 of all image pixels) are different.
   - waiting 100ms before taking screenshot
   - taking page screenshot
     - disabled all CSS animations
   - waiting for fonts to load...
   - fonts loaded
   - captured a stable screenshot
-  - 39598 pixels (ratio 0.06 of all image pixels) are different.
+  - 37698 pixels (ratio 0.05 of all image pixels) are different.
 
 ```
 
@@ -46,17 +46,17 @@ Call log:
   - main [ref=e5]:
     - generic [ref=e6]:
       - paragraph [ref=e7]:
-        - link "We shall then be like Socrates, when we can indite hymns of praise to the Gods in prison." [ref=e8] [cursor=pointer]:
+        - link "Nature is named truth." [ref=e8] [cursor=pointer]:
           - /url: "#"
       - paragraph [ref=e9]:
         - text: ~
-        - link "Epictetus" [ref=e10] [cursor=pointer]:
+        - link "Marcus Aurelius" [ref=e10] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "The Golden Sayings" [ref=e11] [cursor=pointer]:
+        - link "Meditations" [ref=e11] [cursor=pointer]:
           - /url: "#"
         - text: ","
-        - link "Section 185" [ref=e12] [cursor=pointer]:
+        - link "Book 9" [ref=e12] [cursor=pointer]:
           - /url: "#"
         - text: ","
         - link "Verse 1" [ref=e13] [cursor=pointer]:
