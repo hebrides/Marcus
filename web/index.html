@@ -23,42 +23,23 @@
 
         <!-- Navigation menu -->
         <nav id="menu">
-            <ul>
-                <li>
-                    <input type="checkbox" id="marcus-toggle" hidden />
-                    <label for="marcus-toggle">Marcus Aurelius</label>
+            <ul id="menu-list">
+                <!-- Author/work items are injected here dynamically by buildMenu() in script.js -->
+                <li class="menu-static"><a href="#" onclick="showNewQuote('random');" >Random Quote</a></li>
+                <li class="menu-static" id="starter-paths-item">
+                    <input type="checkbox" id="starter-paths-toggle" hidden/>
+                    <label for="starter-paths-toggle">Starter Paths</label>
+                    <ul id="starter-paths-list"></ul>
+                </li>
+                <li class="menu-static">
+                    <input type="checkbox" id="library-toggle" hidden/>
+                    <label for="library-toggle">Library Scope</label>
                     <ul>
-                        <li><a href="#" onclick="showWork('1');"><label for="modal-toggle">Meditations</label></a></li>
+                        <li><a href="#" id="menu-toggle-extended">Enable Extended Library</a></li>
+                        <li><a href="#" id="menu-toggle-chat-scope">Chat Scope: Strict Stoic</a></li>
                     </ul>
                 </li>
-                <li>
-                    <input type="checkbox" id="epictetus-toggle" hidden />
-                    <label for="epictetus-toggle">Epictetus</label>
-                  <ul>
-                        <li><a href="#">The Discourses</a></li>
-                        <li><a href="#">The Enchiridion</a></li>
-                        <li><a href="#">The Golden Sayings</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <input type="checkbox" id="seneca-toggle" hidden />
-                    <label for="seneca-toggle">Seneca</label>
-                    <ul>
-                        <li><a href="#">Letters from a Stoic</a></li>
-                        <li><a href="#">On the Shortness of Life</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <input type="checkbox" id="cicero-toggle" hidden />
-                    <label for="cicero-toggle">Cicero</label>
-                    <ul>
-                        <li><a href="#">On the Ends of Good and Evil</a></li>
-                        <li><a href="#">Tuscan Disputations</a></li>
-                        <li><a href="#">On Duties</a></li>
-                    </ul>
-                </li>
-                <li><a href="#" onclick="showNewQuote('random');" >Random Quote</a></li>
-                <li>
+                <li class="menu-static">
                     <input type="checkbox" id="chat-toggle" hidden/>
                     <label for="chat-toggle">Stoic Chat</label>
                     <ul>
@@ -68,8 +49,8 @@
                         <li><a href="#">Lucius Annaeus Seneca</a></li>
                     </ul>
                 </li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Settings</a></li>
+                <li class="menu-static"><a href="#">About</a></li>
+                <li class="menu-static"><a href="#" id="settings-link">Settings</a></li>
             </ul>
         </nav>
 
@@ -87,10 +68,6 @@
 </main>
 
 <!-- Modal Structure -->
- <!-- NOTE: 
-  This modal looks better / more readable zoomed in 125% on desktop (use Safari and Zoom one time).
-  Consider updating CSS to match default font sizes and spacings at 100% to 125% zoom
- -->
 <input type="checkbox" id="modal-toggle" hidden />
 <div id="modal">
     <label for="modal-toggle" id="modal-overlay"></label>
@@ -108,7 +85,6 @@
                 </svg>
                 <svg id="single-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <g stroke="#dedede" stroke-width="2">
-                        <!-- NOTE: Make this 2 px wider at some point, will look better -->
                         <line x1="15" y1="15" x2="34" y2="15"></line>
                         <line x1="15" y1="22" x2="34" y2="22"></line>
                         <line x1="15" y1="29" x2="34" y2="29"></line>

@@ -1,0 +1,147 @@
+{
+  "version": "1.5.0",
+  "batchSize": "2-3 works per release",
+  "queue": [
+    {
+      "priority": 1,
+      "batch": "cicero-phase-1",
+      "status": "complete",
+      "note": "Work 7 ingested from Gutenberg ebook 29247 (Academic Questions + De Finibus + Tusculan Disputations). Work 8 ingested from Gutenberg ebook 14988. Work 9 (De Officiis) ingested from Gutenberg ebook 47001 (dual-language Loeb edition, Walter Miller 1913 translation). Parser profile gutenberg-bilingual extracts English from <div class=\"english\"> sections.",
+      "sourceFamily": "gutenberg",
+      "author": "Cicero",
+      "works": [
+        {
+          "title": "Academic Questions & De Finibus",
+          "workId": "7",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/29247/pg29247-images.html",
+          "sourceEbook": "29247",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/cicero/goodevil.json --quotes-output /tmp/quotes-7.json --work-id 7",
+          "status": "complete",
+          "sections": 18
+        },
+        {
+          "title": "On Moral Duties (De Officiis)",
+          "workId": "9",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/47001/pg47001-images.html",
+          "sourceEbook": "47001",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg-bilingual --url <sourceUrl> --output stoics/cicero/duties.json --quotes-output /tmp/quotes-9.json --work-id 9",
+          "status": "complete",
+          "sections": 226,
+          "note": "Dual-language Loeb edition (Walter Miller, 1913). English extracted from <div class='english'> sections using the gutenberg-bilingual profile."
+        },
+        {
+          "title": "Tusculan Disputations",
+          "workId": "8",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/14988/pg14988-images.html",
+          "sourceEbook": "14988",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/cicero/tuscan.json --quotes-output /tmp/quotes-8.json --work-id 8",
+          "status": "complete",
+          "sections": 30
+        }
+      ]
+    },
+    {
+      "priority": 1,
+      "batch": "seneca-dialogues-phase-1",
+      "status": "complete",
+      "note": "Work 6 ingested from Gutenberg ebook 64576 (Minor Dialogues — includes On Shortness of Life, On Tranquillity of Mind, and others). Old URL https://www.gutenberg.org/files/1303/1303-h/1303-h.htm was stale.",
+      "sourceFamily": "gutenberg",
+      "author": "Seneca",
+      "works": [
+        {
+          "title": "Minor Dialogues (incl. On the Shortness of Life)",
+          "workId": "6",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/64576/pg64576-images.html",
+          "sourceEbook": "64576",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/life.json --quotes-output /tmp/quotes-6.json --work-id 6",
+          "status": "complete",
+          "sections": 18
+        }
+      ]
+    },
+    {
+      "priority": 2,
+      "batch": "seneca-extended-phase-2",
+      "status": "complete",
+      "note": "Work 11 ingested from Gutenberg ebook 3794 (On Benefits, standalone). Work 12 ingested from Gutenberg ebook 56075 (Seneca's Morals — includes On Anger, On Benefits, On Clemency, and Happy Life). Some overlap between works 11 and 12 expected; comparison deferred.",
+      "sourceFamily": "gutenberg",
+      "author": "Seneca",
+      "works": [
+        {
+          "title": "On Benefits (De Beneficiis)",
+          "workId": "11",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/3794/pg3794-images.html",
+          "sourceEbook": "3794",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/benefits.json --quotes-output /tmp/quotes-11.json --work-id 11",
+          "status": "complete",
+          "sections": 12
+        },
+        {
+          "title": "Seneca's Morals (incl. On Anger)",
+          "workId": "12",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/56075/pg56075-images.html",
+          "sourceEbook": "56075",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/anger.json --quotes-output /tmp/quotes-12.json --work-id 12",
+          "status": "complete",
+          "sections": 64,
+          "note": "Contains On Happy Life, On Benefits, On Anger, and On Clemency. Overlaps with work 11."
+        }
+      ]
+    },
+    {
+      "priority": 2,
+      "batch": "additional-stoics-phase-3",
+      "status": "complete",
+      "sourceFamily": "gutenberg",
+      "note": "New authors and works added in v1.4.0 batch.",
+      "works": [
+        {
+          "title": "Plutarch's Morals",
+          "workId": "13",
+          "author": "Plutarch",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/23639/pg23639-images.html",
+          "sourceEbook": "23639",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/plutarch/morals.json --quotes-output /tmp/quotes-13.json --work-id 13",
+          "status": "complete",
+          "sections": 30
+        },
+        {
+          "title": "Lives and Opinions of Eminent Philosophers",
+          "workId": "14",
+          "author": "Diogenes Laertius",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/57342/pg57342-images.html",
+          "sourceEbook": "57342",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/diogenes/lives.json --quotes-output /tmp/quotes-14.json --work-id 14",
+          "status": "complete",
+          "sections": 117,
+          "note": "Full Lives of Philosophers (Book VII covers Zeno, Cleanthes, Chrysippus and other Stoics)."
+        },
+        {
+          "title": "Political Fragments (Hierocles, Stobaeus, & Pythagoreans)",
+          "workId": "15",
+          "author": "Hierocles & Stobaeus",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/75184/pg75184-images.html",
+          "sourceEbook": "75184",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/hierocles/fragments.json --quotes-output /tmp/quotes-15.json --work-id 15",
+          "status": "complete",
+          "sections": 36
+        }
+      ]
+    },
+    {
+      "priority": 3,
+      "batch": "additional-stoics-backlog",
+      "status": "backlog",
+      "sourceFamily": "mixed",
+      "note": "Pending curation decisions and source identification.",
+      "authors": [
+        "Musonius Rufus",
+        "Cleanthes (standalone Hymn — in Golden Sayings, ebook 871)",
+        "Chrysippus",
+        "Zeno",
+        "Arius Didymus",
+        "Cicero — Orations (dual-language Gutenberg source or Latin-only with AI translation fallback)"
+      ]
+    }
+  ]
+}

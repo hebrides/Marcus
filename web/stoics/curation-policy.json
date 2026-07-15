@@ -1,0 +1,47 @@
+{
+  "title": "Marcus Stoic Corpus Curation Policy",
+  "version": "1.0.0",
+  "libraryTiers": {
+    "core": {
+      "description": "Default visible canon for all users.",
+      "authors": [
+        "Marcus Aurelius",
+        "Epictetus",
+        "Seneca",
+        "Selected Cicero"
+      ]
+    },
+    "extended": {
+      "description": "Opt-in library shown only when enabled in settings.",
+      "eligibility": [
+        "public-domain",
+        "clean-structure",
+        "translation-quality"
+      ]
+    }
+  },
+  "chatPolicy": {
+    "defaultCorpus": "core",
+    "defaultScope": "strict-stoic",
+    "supportedScopes": [
+      "strict-stoic",
+      "broader-classical-ethics"
+    ],
+    "sourceAttributionRequired": true
+  },
+  "editorialControls": {
+    "requiredWorkTags": [
+      "tier",
+      "scope",
+      "genre",
+      "difficulty",
+      "estimatedReadingMinutes",
+      "sourceProfile"
+    ],
+    "starterPaths": [
+      "beginner",
+      "practical-ethics",
+      "advanced"
+    ]
+  }
+}

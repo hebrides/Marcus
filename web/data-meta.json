@@ -1,35 +1,411 @@
 {
   "title": "The Stoic Reader",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "An AI-powered, interactive collection of meditations by the ancient Stoics",
   "license": "CC BY-SA 4.0",
   "licenseUri": "https://creativecommons.org/licenses/by-sa/4.0/",
-  
   "authors": [
-    { "id":"1", "name": "Marcus Aurelius", "imgUri": "stoics/aurelius/marcus.jpg", "image": null, "bioUri": "stoics/aurelius/bio-marcus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
-    { "id":"2", "name": "Epictetus", "imgUri": "stoics/epictetus/epictetus.jpg", "image": null, "bioUri": "stoics/epictetus/bio-epictetus.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
-    { "id":"3", "name": "Seneca", "imgUri": "stoics/seneca/seneca.jpg", "image": null, "bioUri": "stoics/seneca/bio-seneca.html", "bio": null, "quotesUri": null, "version": "1.0.0"},
-    { "id":"4", "name": "Cicero", "imgUri": "stoics/cicero/cicero.jpg", "image": null, "bioUri": "stoics/cicero/bio-cicero.html", "bio": null, "quotesUri": null, "version": "1.0.0"}
+    {
+      "id": "1",
+      "name": "Marcus Aurelius",
+      "imgUri": "stoics/aurelius/marcus.jpg",
+      "image": null,
+      "bioUri": "stoics/aurelius/bio-marcus.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.0.0"
+    },
+    {
+      "id": "2",
+      "name": "Epictetus",
+      "imgUri": "stoics/epictetus/epictetus.jpg",
+      "image": null,
+      "bioUri": "stoics/epictetus/bio-epictetus.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.0.0"
+    },
+    {
+      "id": "3",
+      "name": "Seneca",
+      "imgUri": "stoics/seneca/seneca.jpg",
+      "image": null,
+      "bioUri": "stoics/seneca/bio-seneca.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.0.0"
+    },
+    {
+      "id": "4",
+      "name": "Cicero",
+      "imgUri": "stoics/cicero/cicero.jpg",
+      "image": null,
+      "bioUri": "stoics/cicero/bio-cicero.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.0.0"
+    },
+    {
+      "id": "5",
+      "name": "Plutarch",
+      "imgUri": "stoics/plutarch/plutarch.jpg",
+      "image": null,
+      "bioUri": "stoics/plutarch/bio-plutarch.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.4.0"
+    },
+    {
+      "id": "6",
+      "name": "Diogenes Laertius",
+      "imgUri": "stoics/diogenes/diogenes.jpg",
+      "image": null,
+      "bioUri": "stoics/diogenes/bio-diogenes.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.4.0"
+    },
+    {
+      "id": "7",
+      "name": "Hierocles & Stobaeus",
+      "imgUri": "stoics/hierocles/hierocles.jpg",
+      "image": null,
+      "bioUri": "stoics/hierocles/bio-hierocles.html",
+      "bio": null,
+      "quotesUri": null,
+      "version": "1.4.0"
+    }
   ],
-
-  "works": 
-  [ 
-    { "id": "1", "authorId": "1", "title": "Meditations", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/aurelius/meditations.json", "data": null, "version": "1.0.0" },
-    { "id": "5", "authorId": "2", "title": "The Enchirideon", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/epictetus/enchiridion.json", "data": null, "version": "1.0.0" },
-    { "id": "3", "authorId": "2", "title": "The Discourses", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/epictetus/discourses.json", "data": null, "version": "1.0.0" },
-    { "id": "4", "authorId": "2", "title": "The Golden Sayings", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/epictetus/gold.json", "data": null, "version": "1.0.0" },
-    { "id": "2", "authorId": "3", "title": "Letters from a Stoic", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/seneca/letters.json", "data": null, "version": "1.0.0" },
-    { "id": "6", "authorId": "3", "title": "On the Shortness of Life", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/seneca/life.json", "data": null, "version": "1.0.0" },
-    { "id": "7", "authorId": "4", "title": "On the Ends of Good and Evil", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/cicero/goodevil.json", "data": null, "version": "1.0.0" },
-    { "id": "8", "authorId": "4", "title": "Tuscan Disputations", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/cicero/tuscan.json", "data": null, "version": "1.0.0" },
-    { "id": "9", "authorId": "4", "title": "On Duties", "locationSyntax": ["Book","Verse"], "dataUri": "stoics/cicero/duties.json", "data": null, "version": "1.0.0" }
+  "works": [
+    {
+      "id": "1",
+      "authorId": "1",
+      "title": "Meditations",
+      "locationSyntax": [
+        "Book",
+        "Verse"
+      ],
+      "dataUri": "stoics/aurelius/meditations.json",
+      "data": null,
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "meditations",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 360,
+      "sourceProfile": "local-json"
+    },
+    {
+      "id": "6",
+      "authorId": "3",
+      "title": "Minor Dialogues",
+      "subtitle": "Includes: On the Shortness of Life, On Tranquillity of Mind, and other essays",
+      "locationSyntax": [
+        "Essay",
+        "Section"
+      ],
+      "dataUri": "stoics/seneca/life.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 300,
+      "sourceProfile": "gutenberg",
+      "sourceEbook": "64576"
+    },
+    {
+      "id": "7",
+      "authorId": "4",
+      "title": "Academic Questions & De Finibus",
+      "subtitle": "Includes: Academic Questions, On the Ends of Good and Evil (De Finibus), and Tusculan Disputations",
+      "locationSyntax": [
+        "Book",
+        "Section"
+      ],
+      "dataUri": "stoics/cicero/goodevil.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "dialogue",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 720,
+      "sourceProfile": "gutenberg",
+      "sourceEbook": "29247"
+    },
+    {
+      "id": "8",
+      "authorId": "4",
+      "title": "Tusculan Disputations",
+      "locationSyntax": [
+        "Book",
+        "Section"
+      ],
+      "dataUri": "stoics/cicero/tuscan.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "dialogue",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 620,
+      "sourceProfile": "gutenberg",
+      "sourceEbook": "14988"
+    },
+    {
+      "id": "9",
+      "authorId": "4",
+      "title": "On Duties",
+      "locationSyntax": [
+        "Book",
+        "Section"
+      ],
+      "dataUri": "stoics/cicero/duties.json",
+      "data": null,
+      "version": "1.5.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 420,
+      "sourceProfile": "gutenberg-bilingual",
+      "sourceEbook": "47001",
+      "sourceNote": "Walter Miller translation (1913). Dual-language Loeb edition; English extracted from <div class=\"english\"> sections."
+    },
+    {
+      "id": "5",
+      "authorId": "2",
+      "title": "The Enchiridion",
+      "locationSyntax": [
+        "Section",
+        "Verse"
+      ],
+      "dataUri": "stoics/epictetus/enchiridion.json",
+      "data": null,
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "manual",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 120,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "3",
+      "authorId": "2",
+      "title": "The Discourses",
+      "locationSyntax": [
+        "Chapter",
+        "Verse"
+      ],
+      "dataUri": "stoics/epictetus/discourses.json",
+      "data": null,
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "dialogue",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 960,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "4",
+      "authorId": "2",
+      "title": "The Golden Sayings",
+      "locationSyntax": [
+        "Section",
+        "Verse"
+      ],
+      "dataUri": "stoics/epictetus/gold.json",
+      "data": null,
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "sayings",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 200,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "10",
+      "authorId": "2",
+      "title": "Fragments",
+      "locationSyntax": [
+        "Fragment",
+        "Verse"
+      ],
+      "dataUri": "stoics/epictetus/fragments.json",
+      "data": null,
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "fragments",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 140,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "2",
+      "authorId": "3",
+      "title": "Letters from a Stoic",
+      "locationSyntax": [
+        "Letter",
+        "Verse"
+      ],
+      "dataUri": "stoics/seneca/letters.json",
+      "data": null,
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "letters",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 780,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "11",
+      "authorId": "3",
+      "title": "On Benefits",
+      "locationSyntax": [
+        "Book",
+        "Chapter"
+      ],
+      "dataUri": "stoics/seneca/benefits.json",
+      "data": null,
+      "version": "1.3.0",
+      "tier": "extended",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 540,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "12",
+      "authorId": "3",
+      "title": "On Anger",
+      "locationSyntax": [
+        "Book",
+        "Chapter"
+      ],
+      "dataUri": "stoics/seneca/anger.json",
+      "data": null,
+      "version": "1.3.0",
+      "tier": "extended",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 480,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "13",
+      "authorId": "5",
+      "title": "Plutarch's Morals",
+      "locationSyntax": [
+        "Essay",
+        "Section"
+      ],
+      "dataUri": "stoics/plutarch/morals.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "extended",
+      "scope": "related",
+      "genre": "essays",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 600,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "14",
+      "authorId": "6",
+      "title": "Lives and Opinions of Eminent Philosophers (Book VII — Stoics)",
+      "locationSyntax": [
+        "Chapter",
+        "Section"
+      ],
+      "dataUri": "stoics/diogenes/lives.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "extended",
+      "scope": "related",
+      "genre": "biography",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 480,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "15",
+      "authorId": "7",
+      "title": "Political Fragments (Hierocles, Stobaeus & Pythagoreans)",
+      "locationSyntax": [
+        "Fragment",
+        "Section"
+      ],
+      "dataUri": "stoics/hierocles/fragments.json",
+      "data": null,
+      "version": "1.4.0",
+      "tier": "extended",
+      "scope": "related",
+      "genre": "fragments",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 180,
+      "sourceProfile": "gutenberg"
+    }
   ],
-
   "quotes": {
-    "version": "1.0.0",
+    "version": "1.5.0",
     "allQuotesUri": "data-all-quotes.json",
     "allQuotes": null,
     "favorites": null
-  }
-
+  },
+  "curation": {
+    "defaultLibraryTier": "core",
+    "allowExtendedLibrary": false,
+    "defaultChatScope": "strict-stoic",
+    "supportedChatScopes": [
+      "strict-stoic",
+      "broader-classical-ethics"
+    ],
+    "inclusionChecks": [
+      "public-domain",
+      "clean-structure",
+      "translation-quality"
+    ]
+  },
+  "starterPaths": [
+    {
+      "id": "beginner",
+      "title": "Beginner",
+      "description": "Start with short, practical Stoic texts.",
+      "workIds": [
+        "5",
+        "4",
+        "6"
+      ]
+    },
+    {
+      "id": "practical-ethics",
+      "title": "Practical Ethics",
+      "description": "Focus on duty, action, and daily judgment.",
+      "workIds": [
+        "9",
+        "2",
+        "1"
+      ]
+    },
+    {
+      "id": "advanced",
+      "title": "Advanced",
+      "description": "Longer argumentative and fragmentary material.",
+      "workIds": [
+        "3",
+        "7",
+        "8",
+        "10"
+      ]
+    }
+  ]
 }

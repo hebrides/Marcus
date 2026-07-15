@@ -153,6 +153,16 @@ main {
     text-indent: 4px;
 }
 
+.menu-tier-header {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9fb4cf;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
 #menu li label, #menu li a {
     padding: 10px;
     display: block;
@@ -236,7 +246,7 @@ background-color: #1a2c45;
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     overflow-y: hidden;
     z-index: 51;
-    max-width: 600px;
+    max-width: 750px;
 }
 
 #modal-header {
@@ -264,20 +274,19 @@ background-color: #1a2c45;
     overflow-y: auto;
     padding: 30px;
     flex-grow: 1;
-    line-height: 38px;
     letter-spacing: 1px;
 }
 
-#modal-body h2 {
+#modal-body h2, #modal-body h3 {
     text-align: center;
-    padding: 50px 0 30px 0
+    padding: 50px 0 30px 0;
 }
 
 #modal-body p {
-    line-height: 28px;
+    line-height: 30px;
     text-indent: 20px;
     margin: 10px 0 10px 0;
-    font-size: 17px;
+    font-size: 19px;
 }
 
 .activity {
@@ -345,6 +354,13 @@ background-color: #1a2c45;
 .highlight {
     background-color: rgba(255, 255, 0, 0.2);
     transition: background-color 0.5s ease-out;
+}
+
+/* Two-column fullscreen layout only on wide viewports to avoid unreadably narrow columns */
+@media (max-width: 900px) {
+    #modal-content.fullscreen > #modal-body {
+        column-count: 1;
+    }
 }
 
 /* Responsive */
