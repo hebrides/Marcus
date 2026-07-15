@@ -1,12 +1,12 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "batchSize": "2-3 works per release",
   "queue": [
     {
       "priority": 1,
       "batch": "cicero-phase-1",
       "status": "complete",
-      "note": "Work 7 ingested from Gutenberg ebook 29247 (Academic Questions + De Finibus + Tusculan Disputations). Work 8 ingested from Gutenberg ebook 14988. Work 9 (De Officiis) remains a stub — LacusCurtius sub-pages require JS rendering and no English translation exists on Gutenberg.",
+      "note": "Work 7 ingested from Gutenberg ebook 29247 (Academic Questions + De Finibus + Tusculan Disputations). Work 8 ingested from Gutenberg ebook 14988. Work 9 (De Officiis) ingested from Gutenberg ebook 47001 (dual-language Loeb edition, Walter Miller 1913 translation). Parser profile gutenberg-bilingual extracts English from <div class=\"english\"> sections.",
       "sourceFamily": "gutenberg",
       "author": "Cicero",
       "works": [
@@ -22,10 +22,12 @@
         {
           "title": "On Moral Duties (De Officiis)",
           "workId": "9",
-          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html",
-          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile lacuscurtius-loeb --url <sourceUrl> --output stoics/cicero/duties.json --quotes-output /tmp/quotes-9.json --work-id 9",
-          "status": "blocked",
-          "note": "LacusCurtius book sub-pages return minimal HTML without JS; no English Gutenberg source found."
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/47001/pg47001-images.html",
+          "sourceEbook": "47001",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg-bilingual --url <sourceUrl> --output stoics/cicero/duties.json --quotes-output /tmp/quotes-9.json --work-id 9",
+          "status": "complete",
+          "sections": 226,
+          "note": "Dual-language Loeb edition (Walter Miller, 1913). English extracted from <div class='english'> sections using the gutenberg-bilingual profile."
         },
         {
           "title": "Tusculan Disputations",
@@ -138,7 +140,7 @@
         "Chrysippus",
         "Zeno",
         "Arius Didymus",
-        "Cicero — On Duties (De Officiis, needs JS-capable fetch or alternate source)"
+        "Cicero — Orations (dual-language Gutenberg source or Latin-only with AI translation fallback)"
       ]
     }
   ]

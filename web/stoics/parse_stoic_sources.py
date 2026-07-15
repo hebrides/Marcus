@@ -47,6 +47,97 @@ class HeadingParagraphParser(HTMLParser):
             self._chunks.append(data)
 
 
+class BilingualEnglishParser(HTMLParser):
+    """Parser for Gutenberg dual-language (Latin/English) pages.
+
+    Extracts content from two sources:
+    - ``<h2>``/``<h3>`` headings that appear at the top level between section pairs
+      (e.g. "BOOK I — MORAL GOODNESS") as section separators.
+    - Paragraph text only from ``<div class="english">`` blocks, skipping
+      the paired ``<div class="latin" lang="la">`` blocks.
+    - ``<div class="sidenote">`` labels inside English sections are used as
+      sub-section headings to give a finer-grained structure (e.g.
+      "The importance of duty", "Types of moral goodness").
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._stack = []
+        self._chunks = []
+        self.items = []
+        self._in_english = 0     # nesting depth of <div class="english">
+        self._in_latin = 0       # nesting depth of <div class="latin">
+        self._in_sidenote = 0    # nesting depth of <div class="sidenote">
+        self._sidenote_chunks = []
+
+    def _div_class(self, attrs):
+        return set(dict(attrs).get("class", "").split())
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        if tag == "div":
+            classes = self._div_class(attrs)
+            if "english" in classes:
+                self._in_english += 1
+            elif "latin" in classes:
+                self._in_latin += 1
+            elif "sidenote" in classes and self._in_english > 0:
+                self._in_sidenote += 1
+        # Void elements never have a matching end tag; skip them in the stack
+        # so stale tags (especially <h2>/<h3>) don't confuse handle_data.
+        _VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+                 "link", "meta", "param", "source", "track", "wbr"}
+        if tag not in _VOID:
+            self._stack.append(tag)
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if self._stack:
+            self._stack.pop()
+        # Flush headings (when not inside a latin block)
+        if tag in {"h2", "h3", "h4"} and self._in_latin == 0:
+            text = clean_text("".join(self._chunks))
+            self._chunks = []
+            if text:
+                self.items.append(("heading", text))
+            return
+        # Flush paragraphs inside english blocks (not inside sidenotes)
+        if tag == "p" and self._in_english > 0 and self._in_sidenote == 0:
+            text = clean_text("".join(self._chunks))
+            self._chunks = []
+            if text:
+                self.items.append(("paragraph", text))
+            return
+        # Flush sidenote text as a sub-heading
+        if tag == "div" and self._in_sidenote > 0:
+            self._in_sidenote -= 1
+            text = clean_text("".join(self._sidenote_chunks))
+            self._sidenote_chunks = []
+            if text:
+                self.items.append(("heading", text))
+            return
+        if tag == "div":
+            if self._in_english > 0:
+                self._in_english -= 1
+            elif self._in_latin > 0:
+                self._in_latin -= 1
+
+    def handle_data(self, data):
+        content_tags = {"h2", "h3", "h4", "p"}
+        in_heading = any(t in {"h2", "h3", "h4"} for t in self._stack)
+        # Collect heading data outside latin blocks
+        if in_heading and self._in_latin == 0:
+            self._chunks.append(data)
+            return
+        # Collect sidenote data (becomes sub-headings)
+        if self._in_sidenote > 0:
+            self._sidenote_chunks.append(data)
+            return
+        # Collect paragraph data inside english blocks
+        if self._in_english > 0 and "p" in self._stack:
+            self._chunks.append(data)
+
+
 @dataclass
 class ParsedWork:
     title: str
@@ -78,6 +169,23 @@ class LacusCurtiusProfile(SourceProfile):
         parser = HeadingParagraphParser()
         parser.feed(html_doc)
         sections = split_into_sections(parser.items, min_section_size=2)
+        title = sections[0]["title"] if sections else "Untitled"
+        return ParsedWork(title=title, sections=sections)
+
+
+class GutenbergBilingualProfile(SourceProfile):
+    """Profile for Gutenberg parallel-text (Latin/English) editions.
+
+    Extracts only the English translation side, identified by
+    ``<div class="english">`` blocks, and ignores sidenote annotations.
+    """
+
+    name = "gutenberg-bilingual"
+
+    def parse(self, html_doc: str) -> ParsedWork:
+        parser = BilingualEnglishParser()
+        parser.feed(html_doc)
+        sections = split_into_sections(parser.items)
         title = sections[0]["title"] if sections else "Untitled"
         return ParsedWork(title=title, sections=sections)
 
@@ -158,6 +266,7 @@ def load_input(url: str, input_file: Path) -> str:
 def get_profile(name: str) -> SourceProfile:
     profiles = {
         "gutenberg": GutenbergProfile(),
+        "gutenberg-bilingual": GutenbergBilingualProfile(),
         "lacuscurtius-loeb": LacusCurtiusProfile(),
     }
     if name not in profiles:
@@ -167,7 +276,7 @@ def get_profile(name: str) -> SourceProfile:
 
 def main():
     parser = argparse.ArgumentParser(description="Parse Stoic HTML sources into Marcus work JSON format")
-    parser.add_argument("--profile", required=True, choices=["gutenberg", "lacuscurtius-loeb"])
+    parser.add_argument("--profile", required=True, choices=["gutenberg", "gutenberg-bilingual", "lacuscurtius-loeb"])
     parser.add_argument("--url", help="Source URL to parse")
     parser.add_argument("--input-file", type=Path, help="Local HTML file to parse")
     parser.add_argument("--output", type=Path, required=True, help="Output path for work JSON")

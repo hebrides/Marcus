@@ -64,10 +64,20 @@ python3 stoics/parse_stoic_sources.py \
   --quotes-output /tmp/quotes-8.json \
   --work-id 8
 
+# ----------------------------------------------------------------------------
 # Work 9 — Cicero: On Duties (De Officiis)
-# BLOCKED: LacusCurtius sub-pages require JavaScript rendering.
-# No public-domain English translation found on Gutenberg.
-# echo "[9] SKIPPED — De Officiis pending alternate source"
+# Source: Project Gutenberg ebook 47001 — De Officiis, Walter Miller translation
+#         (1913, Loeb Classical Library). Dual-language edition: Latin and English
+#         side-by-side. Parser profile gutenberg-bilingual extracts only the English
+#         <div class="english"> sections.
+# ----------------------------------------------------------------------------
+echo "[9] Cicero — On Duties (De Officiis)"
+python3 stoics/parse_stoic_sources.py \
+  --profile gutenberg-bilingual \
+  --url "https://www.gutenberg.org/cache/epub/47001/pg47001-images.html" \
+  --output stoics/cicero/duties.json \
+  --quotes-output /tmp/quotes-9.json \
+  --work-id 9
 
 echo ""
 echo "=== Priority 2: Extended Seneca works ==="
@@ -149,7 +159,7 @@ quotes_path = web / "data-all-quotes.json"
 existing = json.loads(quotes_path.read_text(encoding="utf-8"))
 
 # Remove any stale stubs for these work IDs before merging
-ingested_ids = {"6", "7", "8", "11", "12", "13", "14", "15"}
+ingested_ids = {"6", "7", "8", "9", "11", "12", "13", "14", "15"}
 kept = [q for q in existing if str(q.get("workId")) not in ingested_ids]
 
 new_quotes = []
