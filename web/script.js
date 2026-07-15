@@ -3,12 +3,33 @@ let appState = {
         currentQuote: null,
         currentAuthor: null,
         currentWork: null,
-        currentView: 'quote'
+        currentView: 'quote',
+        showExtendedLibrary: false,
+        chatScope: 'strict-stoic'
     };
 
 // Stores app data in memory for quick access
 let appData = {
 };
+
+function getCuration() {
+    return appData.curation || {};
+}
+
+function getVisibleWorks() {
+    if (!appData.works) return [];
+    return appData.works.filter(work => {
+        if (!appState.showExtendedLibrary && work.tier === 'extended') return false;
+        return true;
+    });
+}
+
+function getQuoteEligibleWorkIds() {
+    const works = getVisibleWorks();
+    return works
+        .filter(work => appState.chatScope === 'broader-classical-ethics' || work.scope !== 'related')
+        .map(work => work.id);
+}
 
 // ── IndexedDB helpers ────────────────────────────────────────────────────────
 const IDB_NAME    = 'StoicReaderDB';
@@ -63,7 +84,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(metaData => {
             appData = metaData;
+            const curation = getCuration();
+            appState.showExtendedLibrary = !!curation.allowExtendedLibrary;
+            appState.chatScope = curation.defaultChatScope || 'strict-stoic';
             buildMenu();
+            updateScopeLabels();
             console.log('Fetched metadata:', metaData);
 
             // Check whether the cached version matches the current metadata version.
@@ -230,12 +255,15 @@ function showNewQuote(selectionMethod) {
         return;
     }
     const { authors, works, quotes: { allQuotes } } = appData;
+    const eligibleWorkIds = new Set(getQuoteEligibleWorkIds());
+    const filteredQuotes = allQuotes.filter(q => eligibleWorkIds.has(q.workId));
+    const quotePool = filteredQuotes.length > 0 ? filteredQuotes : allQuotes;
     let myQuote;
     if (selectionMethod === 'random') { 
-        myQuote = allQuotes[ Math.floor( Math.random() * allQuotes.length )];
+        myQuote = quotePool[Math.floor(Math.random() * quotePool.length)];
     } else { 
       // days since 1970 modulo # quotes rotates through all the quotes, gives new one each day       
-        myQuote = allQuotes[( Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % allQuotes.length )];
+        myQuote = quotePool[(Math.ceil((new Date().getTime()) / (1000 * 3600 * 24)) % quotePool.length)];
     }
     const myWork = works.find(work => work.id === myQuote.workId);
     const myAuthor = authors.find(author => author.id === myWork.authorId);
@@ -276,60 +304,80 @@ function dismissMenu() {
 // Build the navigation menu dynamically from appData so all works are always wired up.
 // Called once after metadata loads. The static items (Random Quote, etc.) remain in HTML.
 function buildMenu() {
-    const { authors, works } = appData;
-    if (!authors || !works) return;
+    const { authors } = appData;
+    if (!authors || !appData.works) return;
 
     const menuList = document.getElementById('menu-list');
     if (!menuList) return;
 
-    // Group works by authorId, preserving metadata order
-    const worksByAuthor = {};
-    authors.forEach(a => { worksByAuthor[a.id] = []; });
-    works.forEach(w => {
-        if (worksByAuthor[w.authorId]) worksByAuthor[w.authorId].push(w);
-    });
-
     // Remove any previously generated author items
     menuList.querySelectorAll('.menu-author-item').forEach(el => el.remove());
+    menuList.querySelectorAll('.menu-tier-header').forEach(el => el.remove());
 
     const fragment = document.createDocumentFragment();
-    authors.forEach(author => {
-        const authorWorks = worksByAuthor[author.id] || [];
-        if (authorWorks.length === 0) return;
+    const worksByTier = {
+        core: getVisibleWorks().filter(work => work.tier !== 'extended'),
+        extended: getVisibleWorks().filter(work => work.tier === 'extended')
+    };
 
-        const li = document.createElement('li');
-        li.className = 'menu-author-item';
+    function appendTier(tierKey, tierLabel) {
+        const tierWorks = worksByTier[tierKey];
+        if (!tierWorks || tierWorks.length === 0) return;
 
-        const toggleId = `author-${author.id}-toggle`;
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = toggleId;
-        checkbox.hidden = true;
+        const tierLi = document.createElement('li');
+        tierLi.className = 'menu-tier-header';
+        tierLi.textContent = tierLabel;
+        fragment.appendChild(tierLi);
 
-        const label = document.createElement('label');
-        label.htmlFor = toggleId;
-        label.textContent = author.name;
-
-        const worksUl = document.createElement('ul');
-        authorWorks.forEach(work => {
-            const workLi = document.createElement('li');
-            const workA = document.createElement('a');
-            workA.href = '#';
-            workA.textContent = work.title;
-            workA.addEventListener('click', function(e) {
-                e.preventDefault();
-                openWork(work.id);
-            });
-
-            workLi.appendChild(workA);
-            worksUl.appendChild(workLi);
+        const worksByAuthor = {};
+        authors.forEach(a => { worksByAuthor[a.id] = []; });
+        tierWorks.forEach(w => {
+            if (worksByAuthor[w.authorId]) worksByAuthor[w.authorId].push(w);
         });
 
-        li.appendChild(checkbox);
-        li.appendChild(label);
-        li.appendChild(worksUl);
-        fragment.appendChild(li);
-    });
+        authors.forEach(author => {
+            const authorWorks = worksByAuthor[author.id] || [];
+            if (authorWorks.length === 0) return;
+
+            const li = document.createElement('li');
+            li.className = 'menu-author-item';
+
+            const toggleId = tierKey === 'core'
+                ? `author-${author.id}-toggle`
+                : `author-${tierKey}-${author.id}-toggle`;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = toggleId;
+            checkbox.hidden = true;
+
+            const label = document.createElement('label');
+            label.htmlFor = toggleId;
+            label.textContent = author.name;
+
+            const worksUl = document.createElement('ul');
+            authorWorks.forEach(work => {
+                const workLi = document.createElement('li');
+                const workA = document.createElement('a');
+                workA.href = '#';
+                workA.textContent = work.title;
+                workA.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openWork(work.id);
+                });
+
+                workLi.appendChild(workA);
+                worksUl.appendChild(workLi);
+            });
+
+            li.appendChild(checkbox);
+            li.appendChild(label);
+            li.appendChild(worksUl);
+            fragment.appendChild(li);
+        });
+    }
+
+    appendTier('core', 'Core Stoic Canon');
+    appendTier('extended', 'Extended Library');
 
     // Insert author items before the first static menu item
     const firstStatic = menuList.querySelector('.menu-static');
@@ -343,6 +391,63 @@ function buildMenu() {
     menuList.querySelectorAll('.menu-author-item a').forEach(link => {
         link.addEventListener('click', dismissMenu);
     });
+
+    renderStarterPaths();
+}
+
+function renderStarterPaths() {
+    const starterPaths = appData.starterPaths || [];
+    const starterList = document.getElementById('starter-paths-list');
+    if (!starterList) return;
+
+    starterList.innerHTML = '';
+    starterPaths.forEach(path => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = path.title;
+        a.title = path.description || path.title;
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            const firstWorkId = (path.workIds || []).find(workId => {
+                const work = appData.works.find(w => w.id === workId);
+                return work && (appState.showExtendedLibrary || work.tier !== 'extended');
+            });
+            if (firstWorkId) openWork(firstWorkId);
+        });
+        li.appendChild(a);
+        starterList.appendChild(li);
+    });
+}
+
+function updateScopeLabels() {
+    const toggleExtended = document.getElementById('menu-toggle-extended');
+    if (toggleExtended) {
+        toggleExtended.textContent = appState.showExtendedLibrary
+            ? 'Disable Extended Library'
+            : 'Enable Extended Library';
+    }
+    const toggleScope = document.getElementById('menu-toggle-chat-scope');
+    if (toggleScope) {
+        toggleScope.textContent = appState.chatScope === 'strict-stoic'
+            ? 'Chat Scope: Strict Stoic'
+            : 'Chat Scope: Broader Classical Ethics';
+    }
+}
+
+function toggleExtendedLibrary() {
+    appState.showExtendedLibrary = !appState.showExtendedLibrary;
+    buildMenu();
+    updateScopeLabels();
+    showNewQuote('random');
+}
+
+function toggleChatScope() {
+    appState.chatScope = appState.chatScope === 'strict-stoic'
+        ? 'broader-classical-ethics'
+        : 'strict-stoic';
+    updateScopeLabels();
+    showNewQuote('random');
 }
 
 // Set the current work (and its author) then open it in the reader modal.
@@ -475,6 +580,25 @@ function showChat(myAuthor) {
     return; 
 }
 
+function showSettings() {
+    const extendedLabel = appState.showExtendedLibrary ? 'Enabled' : 'Disabled';
+    const scopeLabel = appState.chatScope === 'strict-stoic'
+        ? 'Strict Stoic'
+        : 'Broader Classical Ethics';
+
+    modalTitle.innerHTML = 'Settings';
+    modalBody.innerHTML = `
+        <div id="modal-text">
+            <p><strong>Library Tier:</strong> Core Stoic Canon by default.</p>
+            <p><strong>Extended Library:</strong> ${extendedLabel}</p>
+            <p><strong>AI Stoic Chat Scope:</strong> ${scopeLabel}</p>
+            <p><strong>Inclusion checks:</strong> Public-domain, clean structure, translation quality.</p>
+            <p>Use the “Library Scope” menu section to toggle Extended Library and chat scope.</p>
+        </div>`;
+    modalLoading.style.display = 'none';
+    document.getElementById('modal-toggle').checked = true;
+}
+
 function showDataProtectionPolicy() {
     document.getElementById('modal-title').innerHTML = 
     `<div style="text-align:center; letter-spacing: 8px; margin-left: 30px;">Data Protection Policy</div>`;
@@ -510,6 +634,30 @@ function attachEventListeners() {
     document.getElementById('modal-fullscreen').addEventListener('click', function() {
         document.getElementById('modal-content').classList.toggle('fullscreen');
     });
+    const extendedToggleLink = document.getElementById('menu-toggle-extended');
+    if (extendedToggleLink) {
+        extendedToggleLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleExtendedLibrary();
+            dismissMenu();
+        });
+    }
+    const chatScopeToggleLink = document.getElementById('menu-toggle-chat-scope');
+    if (chatScopeToggleLink) {
+        chatScopeToggleLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleChatScope();
+            dismissMenu();
+        });
+    }
+    const settingsLink = document.getElementById('settings-link');
+    if (settingsLink) {
+        settingsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            dismissMenu();
+            showSettings();
+        });
+    }
     
     return;
 }

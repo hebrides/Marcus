@@ -57,7 +57,13 @@
       ],
       "dataUri": "stoics/aurelius/meditations.json",
       "data": null,
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "meditations",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 360,
+      "sourceProfile": "local-json"
     },
     {
       "id": "6",
@@ -69,7 +75,13 @@
       ],
       "dataUri": "stoics/seneca/life.json",
       "data": null,
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 150,
+      "sourceProfile": "local-json"
     },
     {
       "id": "7",
@@ -81,7 +93,13 @@
       ],
       "dataUri": "stoics/cicero/goodevil.json",
       "data": null,
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "dialogue",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 680,
+      "sourceProfile": "lacuscurtius-loeb"
     },
     {
       "id": "8",
@@ -93,7 +111,13 @@
       ],
       "dataUri": "stoics/cicero/tuscan.json",
       "data": null,
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "dialogue",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 620,
+      "sourceProfile": "gutenberg"
     },
     {
       "id": "9",
@@ -105,7 +129,13 @@
       ],
       "dataUri": "stoics/cicero/duties.json",
       "data": null,
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "tier": "core",
+      "scope": "related",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 420,
+      "sourceProfile": "lacuscurtius-loeb"
     },
     {
       "id": "5",
@@ -117,7 +147,13 @@
       ],
       "dataUri": "stoics/epictetus/enchiridion.json",
       "data": null,
-      "version": "1.1.0"
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "manual",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 120,
+      "sourceProfile": "gutenberg"
     },
     {
       "id": "3",
@@ -129,7 +165,13 @@
       ],
       "dataUri": "stoics/epictetus/discourses.json",
       "data": null,
-      "version": "1.1.0"
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "dialogue",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 960,
+      "sourceProfile": "gutenberg"
     },
     {
       "id": "4",
@@ -141,7 +183,13 @@
       ],
       "dataUri": "stoics/epictetus/gold.json",
       "data": null,
-      "version": "1.1.0"
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "sayings",
+      "difficulty": "beginner",
+      "estimatedReadingMinutes": 200,
+      "sourceProfile": "gutenberg"
     },
     {
       "id": "10",
@@ -153,7 +201,13 @@
       ],
       "dataUri": "stoics/epictetus/fragments.json",
       "data": null,
-      "version": "1.1.0"
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "fragments",
+      "difficulty": "advanced",
+      "estimatedReadingMinutes": 140,
+      "sourceProfile": "gutenberg"
     },
     {
       "id": "2",
@@ -165,7 +219,13 @@
       ],
       "dataUri": "stoics/seneca/letters.json",
       "data": null,
-      "version": "1.1.0"
+      "version": "1.1.0",
+      "tier": "core",
+      "scope": "stoic",
+      "genre": "letters",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 780,
+      "sourceProfile": "gutenberg"
     }
   ],
   "quotes": {
@@ -173,5 +233,52 @@
     "allQuotesUri": "data-all-quotes.json",
     "allQuotes": null,
     "favorites": null
-  }
+  },
+  "curation": {
+    "defaultLibraryTier": "core",
+    "allowExtendedLibrary": false,
+    "defaultChatScope": "strict-stoic",
+    "supportedChatScopes": [
+      "strict-stoic",
+      "broader-classical-ethics"
+    ],
+    "inclusionChecks": [
+      "public-domain",
+      "clean-structure",
+      "translation-quality"
+    ]
+  },
+  "starterPaths": [
+    {
+      "id": "beginner",
+      "title": "Beginner",
+      "description": "Start with short, practical Stoic texts.",
+      "workIds": [
+        "5",
+        "4",
+        "6"
+      ]
+    },
+    {
+      "id": "practical-ethics",
+      "title": "Practical Ethics",
+      "description": "Focus on duty, action, and daily judgment.",
+      "workIds": [
+        "9",
+        "2",
+        "1"
+      ]
+    },
+    {
+      "id": "advanced",
+      "title": "Advanced",
+      "description": "Longer argumentative and fragmentary material.",
+      "workIds": [
+        "3",
+        "7",
+        "8",
+        "10"
+      ]
+    }
+  ]
 }

@@ -26,6 +26,19 @@
             <ul id="menu-list">
                 <!-- Author/work items are injected here dynamically by buildMenu() in script.js -->
                 <li class="menu-static"><a href="#" onclick="showNewQuote('random');" >Random Quote</a></li>
+                <li class="menu-static" id="starter-paths-item">
+                    <input type="checkbox" id="starter-paths-toggle" hidden/>
+                    <label for="starter-paths-toggle">Starter Paths</label>
+                    <ul id="starter-paths-list"></ul>
+                </li>
+                <li class="menu-static">
+                    <input type="checkbox" id="library-toggle" hidden/>
+                    <label for="library-toggle">Library Scope</label>
+                    <ul>
+                        <li><a href="#" id="menu-toggle-extended">Enable Extended Library</a></li>
+                        <li><a href="#" id="menu-toggle-chat-scope">Chat Scope: Strict Stoic</a></li>
+                    </ul>
+                </li>
                 <li class="menu-static">
                     <input type="checkbox" id="chat-toggle" hidden/>
                     <label for="chat-toggle">Stoic Chat</label>
@@ -37,7 +50,7 @@
                     </ul>
                 </li>
                 <li class="menu-static"><a href="#">About</a></li>
-                <li class="menu-static"><a href="#">Settings</a></li>
+                <li class="menu-static"><a href="#" id="settings-link">Settings</a></li>
             </ul>
         </nav>
 

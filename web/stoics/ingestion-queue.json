@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "batchSize": "2-3 works per release",
+  "queue": [
+    {
+      "priority": 1,
+      "batch": "cicero-phase-1",
+      "status": "next",
+      "sourceFamily": "lacuscurtius-loeb",
+      "author": "Cicero",
+      "works": [
+        {
+          "title": "On the Ends of Good and Evil (de Finibus)",
+          "workId": "7",
+          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Finibus/home.html"
+        },
+        {
+          "title": "On Moral Duties (De Officiis)",
+          "workId": "9",
+          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html"
+        },
+        {
+          "title": "Tusculan Disputations",
+          "workId": "8",
+          "sourceUrl": "https://www.gutenberg.org/files/14988/14988-h/14988-h.htm"
+        }
+      ]
+    },
+    {
+      "priority": 2,
+      "batch": "seneca-epictetus-phase-2",
+      "status": "queued",
+      "sourceFamily": "gutenberg",
+      "author": "Seneca / Epictetus",
+      "works": [
+        {
+          "title": "De Officiis (alternate Gutenberg witness)",
+          "sourceUrl": "https://www.gutenberg.org/cache/epub/47001/pg47001-images.html"
+        },
+        {
+          "title": "Letters corpus expansion",
+          "sourceUrl": "https://www.gutenberg.org/ebooks/author/1308"
+        },
+        {
+          "title": "Epictetus corpus expansion",
+          "sourceUrl": "https://www.gutenberg.org/ebooks/author/452"
+        }
+      ]
+    },
+    {
+      "priority": 3,
+      "batch": "additional-stoics",
+      "status": "backlog",
+      "sourceFamily": "mixed",
+      "authors": [
+        "Musonius Rufus",
+        "Hierocles",
+        "Cleanthes",
+        "Chrysippus",
+        "Zeno",
+        "Diogenes Laërtius (Book VII)",
+        "Arius Didymus",
+        "Stobaeus"
+      ]
+    }
+  ]
+}

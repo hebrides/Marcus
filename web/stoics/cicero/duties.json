@@ -3,6 +3,6 @@
     "1"
   ],
   [
-    "<h2>Coming Soon</h2><p>This work has not yet been formatted for the reader. It will be available in a future update.</p>"
+    "<h2 id=\"1\">Ingestion Queue: Cicero Priority</h2><p id=\"1.1\">This work is in the first ingestion batch for Cicero.</p><p id=\"1.2\">Source profile: lacuscurtius-loeb (primary), gutenberg (cross-check).</p><p id=\"1.3\">Primary source: <a href=\"https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html\" target=\"_blank\" rel=\"noopener\">On Moral Duties (Loeb translation)</a>.</p><p id=\"1.4\">Secondary witness: <a href=\"https://www.gutenberg.org/cache/epub/47001/pg47001-images.html\" target=\"_blank\" rel=\"noopener\">Project Gutenberg De Officiis</a>.</p>"
   ]
 ]

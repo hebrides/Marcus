@@ -153,6 +153,16 @@ main {
     text-indent: 4px;
 }
 
+.menu-tier-header {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9fb4cf;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
 #menu li label, #menu li a {
     padding: 10px;
     display: block;
