@@ -1,6 +1,6 @@
 {
   "title": "The Stoic Reader",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "An AI-powered, interactive collection of meditations by the ancient Stoics",
   "license": "CC BY-SA 4.0",
   "licenseUri": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -226,10 +226,46 @@
       "difficulty": "intermediate",
       "estimatedReadingMinutes": 780,
       "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "11",
+      "authorId": "3",
+      "title": "On Benefits",
+      "locationSyntax": [
+        "Book",
+        "Chapter"
+      ],
+      "dataUri": "stoics/seneca/benefits.json",
+      "data": null,
+      "version": "1.3.0",
+      "tier": "extended",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 540,
+      "sourceProfile": "gutenberg"
+    },
+    {
+      "id": "12",
+      "authorId": "3",
+      "title": "On Anger",
+      "locationSyntax": [
+        "Book",
+        "Chapter"
+      ],
+      "dataUri": "stoics/seneca/anger.json",
+      "data": null,
+      "version": "1.3.0",
+      "tier": "extended",
+      "scope": "stoic",
+      "genre": "essay",
+      "difficulty": "intermediate",
+      "estimatedReadingMinutes": 480,
+      "sourceProfile": "gutenberg"
     }
   ],
   "quotes": {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "allQuotesUri": "data-all-quotes.json",
     "allQuotes": null,
     "favorites": null

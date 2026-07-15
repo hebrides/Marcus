@@ -5,45 +5,66 @@
     {
       "priority": 1,
       "batch": "cicero-phase-1",
-      "status": "next",
+      "status": "in-progress",
+      "note": "Work JSON stubs exist in the repo. Actual fetch+parse is blocked pending network access. Run stoics/ingest.sh once network is available.",
       "sourceFamily": "lacuscurtius-loeb",
       "author": "Cicero",
       "works": [
         {
           "title": "On the Ends of Good and Evil (de Finibus)",
           "workId": "7",
-          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Finibus/home.html"
+          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Finibus/home.html",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile lacuscurtius-loeb --url <sourceUrl> --output stoics/cicero/goodevil.json --quotes-output /tmp/quotes-7.json --work-id 7"
         },
         {
           "title": "On Moral Duties (De Officiis)",
           "workId": "9",
-          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html"
+          "sourceUrl": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile lacuscurtius-loeb --url <sourceUrl> --output stoics/cicero/duties.json --quotes-output /tmp/quotes-9.json --work-id 9"
         },
         {
           "title": "Tusculan Disputations",
           "workId": "8",
-          "sourceUrl": "https://www.gutenberg.org/files/14988/14988-h/14988-h.htm"
+          "sourceUrl": "https://www.gutenberg.org/files/14988/14988-h/14988-h.htm",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/cicero/tuscan.json --quotes-output /tmp/quotes-8.json --work-id 8"
+        }
+      ]
+    },
+    {
+      "priority": 1,
+      "batch": "seneca-life-phase-1",
+      "status": "in-progress",
+      "note": "Work JSON stub exists in the repo. Source is a Gutenberg prose collection. Run stoics/ingest.sh once network is available.",
+      "sourceFamily": "gutenberg",
+      "author": "Seneca",
+      "works": [
+        {
+          "title": "On the Shortness of Life (De Brevitate Vitae)",
+          "workId": "6",
+          "sourceUrl": "https://www.gutenberg.org/files/1303/1303-h/1303-h.htm",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/life.json --quotes-output /tmp/quotes-6.json --work-id 6"
         }
       ]
     },
     {
       "priority": 2,
-      "batch": "seneca-epictetus-phase-2",
-      "status": "queued",
+      "batch": "seneca-extended-phase-2",
+      "status": "scaffolded",
+      "note": "Metadata stubs added to data-meta.json as tier:extended. Fetch+parse is blocked pending network access. Run stoics/ingest.sh once network is available.",
       "sourceFamily": "gutenberg",
-      "author": "Seneca / Epictetus",
+      "author": "Seneca",
       "works": [
         {
-          "title": "De Officiis (alternate Gutenberg witness)",
-          "sourceUrl": "https://www.gutenberg.org/cache/epub/47001/pg47001-images.html"
+          "title": "On Benefits (De Beneficiis)",
+          "workId": "11",
+          "sourceUrl": "https://www.gutenberg.org/files/3794/3794-h/3794-h.htm",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/benefits.json --quotes-output /tmp/quotes-11.json --work-id 11"
         },
         {
-          "title": "Letters corpus expansion",
-          "sourceUrl": "https://www.gutenberg.org/ebooks/author/1308"
-        },
-        {
-          "title": "Epictetus corpus expansion",
-          "sourceUrl": "https://www.gutenberg.org/ebooks/author/452"
+          "title": "On Anger (De Ira)",
+          "workId": "12",
+          "sourceUrl": "https://www.gutenberg.org/files/1650/1650-h/1650-h.htm",
+          "ingestCmd": "python3 stoics/parse_stoic_sources.py --profile gutenberg --url <sourceUrl> --output stoics/seneca/anger.json --quotes-output /tmp/quotes-12.json --work-id 12"
         }
       ]
     },
