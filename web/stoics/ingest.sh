@@ -19,84 +19,124 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$WEB_DIR"
 
-echo "=== Priority 1: Core works (currently placeholder stubs) ==="
+echo "=== Priority 1: Core Seneca works ==="
 
 # ----------------------------------------------------------------------------
-# Work 6 — Seneca: On the Shortness of Life (De Brevitate Vitae)
-# Source: Project Gutenberg — Stoic prose collection
-# Verify the URL before running; Gutenberg occasionally restructures paths.
+# Work 6 — Seneca: Minor Dialogues (includes On the Shortness of Life)
+# Source: Project Gutenberg ebook 64576 — Minor Dialogues, Together With the
+#         Dialogue on Clemency. Replaces old stale URL for ebook 1303.
 # ----------------------------------------------------------------------------
-echo "[6] Seneca — On the Shortness of Life"
+echo "[6] Seneca — Minor Dialogues"
 python3 stoics/parse_stoic_sources.py \
   --profile gutenberg \
-  --url "https://www.gutenberg.org/files/1303/1303-h/1303-h.htm" \
+  --url "https://www.gutenberg.org/cache/epub/64576/pg64576-images.html" \
   --output stoics/seneca/life.json \
   --quotes-output /tmp/quotes-6.json \
   --work-id 6
 
+echo ""
+echo "=== Priority 1: Core Cicero works ==="
+
 # ----------------------------------------------------------------------------
-# Work 7 — Cicero: On the Ends of Good and Evil (de Finibus)
-# Source: LacusCurtius (Loeb translation, University of Chicago)
-# Note: The parser handles multi-page Loeb sources via the lacuscurtius profile.
+# Work 7 — Cicero: Academic Questions & De Finibus
+# Source: Project Gutenberg ebook 29247 — Academic Questions, Treatise De
+#         Finibus, and Tusculan Disputations. Contains the full De Finibus
+#         alongside Academic Questions and Tusculan Disputations.
+# Note: Some overlap with work 8 (standalone Tusculan). Full comparison deferred.
 # ----------------------------------------------------------------------------
-echo "[7] Cicero — On the Ends of Good and Evil"
+echo "[7] Cicero — Academic Questions & De Finibus"
 python3 stoics/parse_stoic_sources.py \
-  --profile lacuscurtius-loeb \
-  --url "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Finibus/home.html" \
+  --profile gutenberg \
+  --url "https://www.gutenberg.org/cache/epub/29247/pg29247-images.html" \
   --output stoics/cicero/goodevil.json \
   --quotes-output /tmp/quotes-7.json \
   --work-id 7
 
 # ----------------------------------------------------------------------------
-# Work 8 — Cicero: Tusculan Disputations
-# Source: Project Gutenberg (C. D. Yonge translation, 1877)
+# Work 8 — Cicero: Tusculan Disputations (standalone)
+# Source: Project Gutenberg ebook 14988 (C. D. Yonge translation, 1877)
 # ----------------------------------------------------------------------------
 echo "[8] Cicero — Tusculan Disputations"
 python3 stoics/parse_stoic_sources.py \
   --profile gutenberg \
-  --url "https://www.gutenberg.org/files/14988/14988-h/14988-h.htm" \
+  --url "https://www.gutenberg.org/cache/epub/14988/pg14988-images.html" \
   --output stoics/cicero/tuscan.json \
   --quotes-output /tmp/quotes-8.json \
   --work-id 8
 
-# ----------------------------------------------------------------------------
 # Work 9 — Cicero: On Duties (De Officiis)
-# Source: LacusCurtius (Loeb translation)
-# ----------------------------------------------------------------------------
-echo "[9] Cicero — On Duties"
-python3 stoics/parse_stoic_sources.py \
-  --profile lacuscurtius-loeb \
-  --url "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/home.html" \
-  --output stoics/cicero/duties.json \
-  --quotes-output /tmp/quotes-9.json \
-  --work-id 9
+# BLOCKED: LacusCurtius sub-pages require JavaScript rendering.
+# No public-domain English translation found on Gutenberg.
+# echo "[9] SKIPPED — De Officiis pending alternate source"
 
 echo ""
-echo "=== Priority 2: Extended works (tier:extended) ==="
+echo "=== Priority 2: Extended Seneca works ==="
 
 # ----------------------------------------------------------------------------
-# Work 11 — Seneca: On Benefits (De Beneficiis)
-# Source: Project Gutenberg — verify URL matches the correct translation.
+# Work 11 — Seneca: On Benefits (standalone, De Beneficiis)
+# Source: Project Gutenberg ebook 3794
 # ----------------------------------------------------------------------------
 echo "[11] Seneca — On Benefits"
 python3 stoics/parse_stoic_sources.py \
   --profile gutenberg \
-  --url "https://www.gutenberg.org/files/3794/3794-h/3794-h.htm" \
+  --url "https://www.gutenberg.org/cache/epub/3794/pg3794-images.html" \
   --output stoics/seneca/benefits.json \
   --quotes-output /tmp/quotes-11.json \
   --work-id 11
 
 # ----------------------------------------------------------------------------
-# Work 12 — Seneca: On Anger (De Ira)
-# Source: Project Gutenberg — verify URL before running.
+# Work 12 — Seneca's Morals (includes On Anger, Benefits, Clemency, Happy Life)
+# Source: Project Gutenberg ebook 56075 — Seneca's Morals of a Happy Life,
+#         Benefits, Anger and Clemency. Replaces stale URL for ebook 1650.
+# Note: Overlaps with work 11 (On Benefits). Comparison deferred.
 # ----------------------------------------------------------------------------
-echo "[12] Seneca — On Anger"
+echo "[12] Seneca's Morals"
 python3 stoics/parse_stoic_sources.py \
   --profile gutenberg \
-  --url "https://www.gutenberg.org/files/1650/1650-h/1650-h.htm" \
+  --url "https://www.gutenberg.org/cache/epub/56075/pg56075-images.html" \
   --output stoics/seneca/anger.json \
   --quotes-output /tmp/quotes-12.json \
   --work-id 12
+
+echo ""
+echo "=== Priority 2: New authors (v1.4.0 batch) ==="
+
+# ----------------------------------------------------------------------------
+# Work 13 — Plutarch: Plutarch's Morals
+# Source: Project Gutenberg ebook 23639
+# ----------------------------------------------------------------------------
+echo "[13] Plutarch — Morals"
+python3 stoics/parse_stoic_sources.py \
+  --profile gutenberg \
+  --url "https://www.gutenberg.org/cache/epub/23639/pg23639-images.html" \
+  --output stoics/plutarch/morals.json \
+  --quotes-output /tmp/quotes-13.json \
+  --work-id 13
+
+# ----------------------------------------------------------------------------
+# Work 14 — Diogenes Laertius: Lives and Opinions of Eminent Philosophers
+# Source: Project Gutenberg ebook 57342 (Book VII covers the Stoics)
+# ----------------------------------------------------------------------------
+echo "[14] Diogenes Laertius — Lives and Opinions"
+python3 stoics/parse_stoic_sources.py \
+  --profile gutenberg \
+  --url "https://www.gutenberg.org/cache/epub/57342/pg57342-images.html" \
+  --output stoics/diogenes/lives.json \
+  --quotes-output /tmp/quotes-14.json \
+  --work-id 14
+
+# ----------------------------------------------------------------------------
+# Work 15 — Hierocles & Stobaeus: Political Fragments
+# Source: Project Gutenberg ebook 75184 — Political fragments of Archytas,
+#         Charondas, Zaleucus, and other ancient Pythagoreans, preserved by Stobaeus
+# ----------------------------------------------------------------------------
+echo "[15] Hierocles & Stobaeus — Political Fragments"
+python3 stoics/parse_stoic_sources.py \
+  --profile gutenberg \
+  --url "https://www.gutenberg.org/cache/epub/75184/pg75184-images.html" \
+  --output stoics/hierocles/fragments.json \
+  --quotes-output /tmp/quotes-15.json \
+  --work-id 15
 
 echo ""
 echo "=== Merging generated quotes into data-all-quotes.json ==="
@@ -109,11 +149,11 @@ quotes_path = web / "data-all-quotes.json"
 existing = json.loads(quotes_path.read_text(encoding="utf-8"))
 
 # Remove any stale stubs for these work IDs before merging
-ingested_ids = {"6", "7", "8", "9", "11", "12"}
+ingested_ids = {"6", "7", "8", "11", "12", "13", "14", "15"}
 kept = [q for q in existing if str(q.get("workId")) not in ingested_ids]
 
 new_quotes = []
-for wid in sorted(ingested_ids):
+for wid in sorted(ingested_ids, key=int):
     tmp = pathlib.Path(f"/tmp/quotes-{wid}.json")
     if tmp.exists():
         batch = json.loads(tmp.read_text(encoding="utf-8"))
@@ -129,7 +169,8 @@ PYEOF
 
 echo ""
 echo "=== Done. Next steps ==="
-echo "1. Review the generated work JSON files for structure quality."
-echo "2. Bump the version field in data-meta.json."
-echo "3. Update ingestion-queue.json batch statuses to 'complete'."
-echo "4. Run the Playwright tests: cd tests && npm test"
+echo "1. Review generated work JSON files for structure quality."
+echo "2. Review overlap between works 7/8 (Cicero) and 11/12 (Seneca)."
+echo "3. Bump the version field in data-meta.json if re-running."
+echo "4. Update ingestion-queue.json batch statuses as needed."
+echo "5. Run the Playwright tests: cd tests && npm test"

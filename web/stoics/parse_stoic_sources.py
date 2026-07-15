@@ -42,7 +42,8 @@ class HeadingParagraphParser(HTMLParser):
     def handle_data(self, data):
         if not self._stack:
             return
-        if self._stack[-1] in {"h1", "h2", "h3", "h4", "p"}:
+        content_tags = {"h1", "h2", "h3", "h4", "p"}
+        if any(tag in content_tags for tag in self._stack):
             self._chunks.append(data)
 
 
