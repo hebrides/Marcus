@@ -1,0 +1,13 @@
+{
+  "name": "stoic-reader-tests",
+  "version": "1.0.0",
+  "description": "Playwright interactive tests for The Stoic Reader",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:update-snapshots": "playwright test --update-snapshots"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

@@ -307,16 +307,20 @@ function generateStructure(hierarchy, targetKB) {
 }
 
 /**
- * Extract quotes from bottom-level elements
- * @param {Object} work Work metadata
+ * Extract quotes from elements whose location depth matches the work's locationSyntax.
+ * @param {Object} work Work metadata (locationSyntax must already be set)
  * @param {Array} content Content structure
  * @returns {Array} Extracted quotes
  */
 function extractQuotes(work, content) {
     console.log(`\nExtracting quotes for work ${work.id}:`);
     
-    const bottomElements = content.filter(el => 
-        el && ((el.tag === 'span') || (el.tag === 'p' && el.term === 'Verse'))
+    // Only pick from elements whose ID depth matches the locationSyntax depth so that
+    // every quote location is a well-formed dot-path with the correct number of segments.
+    const expectedDepth = work.locationSyntax.length;
+    const bottomElements = content.filter(el =>
+        el && el.id && el.id.split('.').length === expectedDepth &&
+        (el.tag === 'span' || el.tag === 'p')
     );
     
     if (bottomElements.length === 0) {
@@ -346,7 +350,9 @@ function extractQuotes(work, content) {
 }
 
 /**
- * Partition content into chunks with size tracking
+ * Partition content into chunks with size tracking.
+ * Returns [indexList, partitions] where indexList[i] is the id of the first
+ * element in partitions[i], matching the format used by the real work JSON files.
  * @param {Array} content Content structure
  * @param {number} partitionSize Max partition size in KB
  * @returns {Array} [indexList, partitions]
@@ -358,31 +364,105 @@ function partitionContent(content, partitionSize = CONFIG.partitionKB) {
     const partitions = [];
     let currentPartition = '';
     let currentSize = 0;
+    let currentStart = null;
 
-    // Process each complete element
     content.forEach((element) => {
         const elementHTML = element.innerHTML;
         const elementSize = Buffer.byteLength(elementHTML, 'utf8') / 1024;
-        
+
+        if (currentStart === null) currentStart = element.id;
+
         // Start new partition if current would exceed size
         if (currentSize + elementSize > partitionSize && currentPartition.length > 0) {
             partitions.push(currentPartition);
-            currentPartition = [];
-            currentSize = 0;
-            indexList.push(element.id);
+            indexList.push(currentStart);
+            currentPartition = elementHTML;
+            currentSize = elementSize;
+            currentStart = element.id;
+        } else {
+            currentPartition += elementHTML;
+            currentSize += elementSize;
         }
-        
-        currentPartition += elementHTML;
-        currentSize += elementSize;
     });
     
     // Add final partition
     if (currentPartition.length) {
         partitions.push(currentPartition);
+        indexList.push(currentStart);
     }
 
     console.log(`Created ${partitions.length} partitions`);
     return [indexList, partitions];
+}
+
+/**
+ * Validate the generated data set for consistency.
+ * Checks that all quote workIds resolve to known works, that quote location depth
+ * matches each work's locationSyntax, and that every written work file has a valid
+ * [indexList, partitions] structure with matching lengths and a numeric first index.
+ * Exits with code 1 if any check fails.
+ * @param {Array} works  Array of work metadata objects
+ * @param {Array} quotes Array of quote objects
+ */
+function validateGeneratedData(works, quotes) {
+    console.log('\nValidating generated data...');
+    const errors = [];
+    const workIdSet = new Set(works.map(w => w.id));
+
+    // Check that every quote's workId exists and its location depth is correct
+    quotes.forEach((q, i) => {
+        if (!workIdSet.has(q.workId)) {
+            errors.push(`Quote[${i}]: workId "${q.workId}" not found in generated works`);
+            return;
+        }
+        const work = works.find(w => w.id === q.workId);
+        const depth = q.location.split('.').length;
+        if (work.locationSyntax.length > 0 && depth !== work.locationSyntax.length) {
+            errors.push(
+                `Quote[${i}] (work ${q.workId}): location "${q.location}" has ${depth} level(s) ` +
+                `but locationSyntax has ${work.locationSyntax.length}`
+            );
+        }
+    });
+
+    // Check every written work file for correct structure
+    works.forEach(work => {
+        const filePath = path.join(__dirname, `work${work.id}.json`);
+        if (!fs.existsSync(filePath)) {
+            errors.push(`Work ${work.id}: file "work${work.id}.json" was not written`);
+            return;
+        }
+        let data;
+        try {
+            data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        } catch (e) {
+            errors.push(`Work ${work.id}: JSON parse error – ${e.message}`);
+            return;
+        }
+        if (!Array.isArray(data) || data.length !== 2 ||
+                !Array.isArray(data[0]) || !Array.isArray(data[1])) {
+            errors.push(`Work ${work.id}: data must be [indexList, partitions], got ${JSON.stringify(data).slice(0, 80)}`);
+            return;
+        }
+        const [idxList, parts] = data;
+        if (idxList.length !== parts.length) {
+            errors.push(
+                `Work ${work.id}: indexList.length (${idxList.length}) !== partitions.length (${parts.length})`
+            );
+        }
+        if (idxList.length > 0 && !/^\d+(\.\d+)*$/.test(idxList[0])) {
+            errors.push(
+                `Work ${work.id}: first index entry "${idxList[0]}" is not a valid numeric dot-path`
+            );
+        }
+    });
+
+    if (errors.length > 0) {
+        console.error(`\n✗ Validation failed (${errors.length} error(s)):`);
+        errors.forEach(e => console.error('  -', e));
+        process.exit(1);
+    }
+    console.log(`✓ Validation passed (${quotes.length} quotes, ${works.length} works).`);
 }
 
 /**
@@ -410,13 +490,13 @@ function generateTestData() {
                 const workQuotes = extractQuotes(work, structure);
                 quotes.push(...workQuotes);
                 
-                const [indexList, partitions] = partitionContent(structure);
+                const workData = partitionContent(structure);
                 
                 fs.writeFileSync(
                     path.join(__dirname, `work${work.id}.json`),
-                    JSON.stringify({indexList, partitions}, null, 2)
+                    JSON.stringify(workData, null, 2)
                 );
-                console.log(`Wrote work${work.id}.json (${partitions.length} partitions)`);
+                console.log(`Wrote work${work.id}.json (${workData[1].length} partitions)`);
             } catch (err) {
                 console.error(`Error processing work ${work.id}:`, err);
             }
@@ -487,6 +567,8 @@ function generateTestData() {
         console.log(`- Size range: ${CONFIG.minKB}-${CONFIG.maxKB}KB`);
         console.log(`- Partition size: ${CONFIG.partitionKB}KB`);
 
+        // Validate the generated data
+        validateGeneratedData(works, quotes);
 
     } catch (err) {
         console.error('Fatal error during data generation:', err);

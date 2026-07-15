@@ -63,10 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(metaData => {
             appData = metaData;
+            buildMenu();
             console.log('Fetched metadata:', metaData);
 
             // Check whether the cached version matches the current metadata version.
-            // If it does, serve quotes and work/bio data from IndexedDB (fast, works offline).
+            // If it does, serve quotes and bio data from IndexedDB (fast, works offline).
+            // Work data is loaded lazily on demand and cached per-work in IndexedDB.
             // If IDB is unavailable or the cache is corrupt/outdated, fall back to network fetch.
             return idbGet('version')
                 .then(cachedVersion => {
@@ -89,11 +91,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-// Fetch quotes and all application data from the network, then display a quote.
+// Fetch quotes and author bios from the network, then display a quote.
+// Work data is NOT loaded here – it is fetched lazily the first time each work is opened.
 function fetchFromNetwork() {
     return loadQuotes().then(() => {
         showNewQuote('random');
-        return loadApplicationData();
+        return loadAuthorBios();
     });
 }
 
@@ -109,76 +112,52 @@ function loadQuotes() {
         });
 }
 
-function loadApplicationData() {
-    // Start with the current quote's author and work
-    // Catch errors here to prevent the app from crashing if the data is not available
-    const { currentAuthor, currentWork } = appState || {};
-    if (!currentAuthor || !currentWork) {
-        console.error('Error: Current author or work is not defined in appState.');
-        return Promise.resolve();
-    }
-
-    const { authors, works } = appData || {};
-    if (!authors || !works) {
-        console.error('Error: Authors or works data is not defined in appData.');
-        return Promise.resolve();
-    }
-
-    // Fetch current author bio as text HTML and store it 
-    const currentAuthorPromise = fetch(currentAuthor.bioUri)
-        .then(response => response.text())
-        .then(bio => {
-            currentAuthor.bio = bio;
-            console.log('Loaded author bio:', bio);
-        })
-        .catch(error => {
-            console.error('Error loading author bio:', error);
-        });
-
-    // Fetch current work indexed JSON data and store it 
-    const currentWorkPromise = fetch(currentWork.dataUri)
-        .then(response => response.json())
-        .then(workData => {
-            currentWork.data = workData;
-            console.log('Loaded work text:', workData);
-        })
-        .catch(error => {
-            console.error('Error loading work text:', error);
-        });
-    
-    // Load remaining author bios and work data asynchronously
-    const authorPromises = authors
-        .filter(author => author.id !== currentAuthor.id)
-        .map(author => {
-            return fetch(author.bioUri)
-                .then(response => response.text())
+// Fetch all author bios in parallel and store them on each author object.
+// Bios are small HTML snippets, so prefetching all of them at startup is cheap.
+function loadAuthorBios() {
+    const { authors } = appData || {};
+    if (!authors) return Promise.resolve();
+    return Promise.all(
+        authors.map(author =>
+            fetch(author.bioUri)
+                .then(r => r.text())
                 .then(bio => {
                     author.bio = bio;
-                    console.log(`Loaded author ${author.id} bio:`, bio);
+                    console.log(`Loaded author ${author.id} bio.`);
                 })
-                .catch(error => {
-                    console.error(`Error loading author ${author.id} bio:`, error);
-                });
-        });
-
-    const workPromises = works
-        .filter(work => work.id !== currentWork.id)
-        .map(work => {
-            return fetch(work.dataUri)
-                .then(response => response.json())
-                .then(workData => {
-                    work.data = workData;
-                    console.log(`Loaded work ${work.id} data:`, workData);
-                })
-                .catch(error => {
-                    console.error(`Error loading work ${work.id} data:`, error);
-                });
-        });
-
-    return Promise.all([currentAuthorPromise, currentWorkPromise, ...authorPromises, ...workPromises]);
+                .catch(err => console.error(`Error loading author ${author.id} bio:`, err))
+        )
+    );
 }
 
-// Load all app data from IndexedDB (quotes, work text, author bios).
+// Return the [indexList, partitions] data for a work, loading it lazily if needed.
+// On first access the data is fetched from IDB (if cached) or the network, then
+// stored on work.data and written to IDB for future visits.
+function getWorkData(work) {
+    if (work.data) return Promise.resolve(work.data);
+
+    return idbGet(`work-${work.id}`)
+        .catch(() => null)
+        .then(cached => {
+            if (cached) {
+                work.data = cached;
+                console.log(`Loaded work ${work.id} from IndexedDB cache.`);
+                return cached;
+            }
+            return fetch(work.dataUri)
+                .then(r => r.json())
+                .then(data => {
+                    work.data = data;
+                    idbPut(`work-${work.id}`, data)
+                        .catch(err => console.warn(`Failed to cache work ${work.id}:`, err));
+                    console.log(`Fetched and cached work ${work.id} from network.`);
+                    return data;
+                });
+        });
+}
+
+// Load quotes and author bios from IndexedDB cache.
+// Work data is not pre-loaded here; getWorkData() handles that lazily.
 // Rejects if the cache is incomplete so the caller can fall back to network fetch.
 function loadFromCache() {
     return idbGet('quotes').then(cachedQuotes => {
@@ -190,11 +169,10 @@ function loadFromCache() {
         appData.quotes.allQuotes = cachedQuotes;
         showNewQuote('random');
 
-        // Populate author bios and work data from cache.
-        // Partial cache misses for individual bios/works are acceptable: the app
-        // will show a "no bio/work" error message when the user tries to read them,
-        // consistent with how it handles network failures for the same resources.
-        const { authors, works } = appData;
+        // Populate author bios from cache.
+        // Partial cache misses for individual bios are acceptable: the app
+        // will show an error message when the user opens a bio that failed to cache.
+        const { authors } = appData;
         const promises = [];
 
         if (authors) {
@@ -211,29 +189,16 @@ function loadFromCache() {
             });
         }
 
-        if (works) {
-            works.forEach(work => {
-                promises.push(
-                    idbGet(`work-${work.id}`).then(data => {
-                        if (data) {
-                            work.data = data;
-                        } else {
-                            console.warn(`Cache integrity warning: data missing for work ${work.id}.`);
-                        }
-                    })
-                );
-            });
-        }
-
         return Promise.all(promises).then(() => {
-            console.log('All data loaded from IndexedDB cache.');
+            console.log('Quotes and bios loaded from IndexedDB cache.');
         });
     });
 }
 
-// Persist the current version, quotes, work text, and author bios to IndexedDB.
+// Persist the current version, quotes, and author bios to IndexedDB.
+// Works are persisted lazily by getWorkData() when first opened.
 function persistToCache(version) {
-    const { authors, works, quotes } = appData;
+    const { authors, quotes } = appData;
 
     function safePut(key, value) {
         return idbPut(key, value)
@@ -254,16 +219,8 @@ function persistToCache(version) {
         });
     }
 
-    if (works) {
-        works.forEach(work => {
-            if (work.data) {
-                promises.push(safePut(`work-${work.id}`, work.data));
-            }
-        });
-    }
-
     return Promise.all(promises)
-        .then(() => console.log('App data persisted to IndexedDB cache.'));
+        .then(() => console.log('Quotes and bios persisted to IndexedDB cache.'));
 }
 
 function showNewQuote(selectionMethod) {
@@ -290,15 +247,15 @@ function showNewQuote(selectionMethod) {
     appState.currentView = 'quote';
 
     // Display quote
-    document.getElementById('quote').innerHTML =  // quote
+    document.getElementById('quote').innerHTML =
     `<a href="#" id="quoteLink" onclick="showWork('${myQuote.location}')"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
 
     // Display author, work
     let citationHTML = `~<a href="#" id="authorLink" onclick="showBiography()"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</label></a>`;         
+    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</label></a>`;
 
     // get quote location for citation
-    const  myQuoteLocation = myQuote.location.split(".");
+    const myQuoteLocation = myQuote.location.split(".");
     
     // Compute and display citation chain
     let cumulativeLocation = '';
@@ -306,10 +263,9 @@ function showNewQuote(selectionMethod) {
         cumulativeLocation += (i > 0 ? '.' : '') + myQuoteLocation[i];
         citationHTML += `, <a href="#" id="loc${i}Link" onclick="showWork('${cumulativeLocation}')"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</label></a>`;
     }   
-    document.getElementById('citation').innerHTML =  citationHTML;// citation
+    document.getElementById('citation').innerHTML = citationHTML;
     
-    console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, Book ${myQuote.location[0]}, Verse ${myQuote.location[1]}`);
-    console.log(`At location: ${myQuote.location}`); 
+    console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, ${myQuote.location}`);
 }
 
 function dismissMenu() {
@@ -317,29 +273,134 @@ function dismissMenu() {
   document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);
 }
 
+// Build the navigation menu dynamically from appData so all works are always wired up.
+// Called once after metadata loads. The static items (Random Quote, etc.) remain in HTML.
+function buildMenu() {
+    const { authors, works } = appData;
+    if (!authors || !works) return;
+
+    const menuList = document.getElementById('menu-list');
+    if (!menuList) return;
+
+    // Group works by authorId, preserving metadata order
+    const worksByAuthor = {};
+    authors.forEach(a => { worksByAuthor[a.id] = []; });
+    works.forEach(w => {
+        if (worksByAuthor[w.authorId]) worksByAuthor[w.authorId].push(w);
+    });
+
+    // Remove any previously generated author items
+    menuList.querySelectorAll('.menu-author-item').forEach(el => el.remove());
+
+    const fragment = document.createDocumentFragment();
+    authors.forEach(author => {
+        const authorWorks = worksByAuthor[author.id] || [];
+        if (authorWorks.length === 0) return;
+
+        const li = document.createElement('li');
+        li.className = 'menu-author-item';
+
+        const toggleId = `author-${author.id}-toggle`;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = toggleId;
+        checkbox.hidden = true;
+
+        const label = document.createElement('label');
+        label.htmlFor = toggleId;
+        label.textContent = author.name;
+
+        const worksUl = document.createElement('ul');
+        authorWorks.forEach(work => {
+            const workLi = document.createElement('li');
+            const workA = document.createElement('a');
+            workA.href = '#';
+            workA.textContent = work.title;
+            workA.addEventListener('click', function(e) {
+                e.preventDefault();
+                openWork(work.id);
+            });
+
+            workLi.appendChild(workA);
+            worksUl.appendChild(workLi);
+        });
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        li.appendChild(worksUl);
+        fragment.appendChild(li);
+    });
+
+    // Insert author items before the first static menu item
+    const firstStatic = menuList.querySelector('.menu-static');
+    if (firstStatic) {
+        menuList.insertBefore(fragment, firstStatic);
+    } else {
+        menuList.prepend(fragment);
+    }
+
+    // Attach dismissMenu to all newly created work links
+    menuList.querySelectorAll('.menu-author-item a').forEach(link => {
+        link.addEventListener('click', dismissMenu);
+    });
+}
+
+// Set the current work (and its author) then open it in the reader modal.
+// Used by menu items and any link that navigates to a specific work.
+function openWork(workId, location) {
+    const work = appData.works && appData.works.find(w => w.id === workId);
+    if (!work) {
+        console.error('Work not found:', workId);
+        return;
+    }
+    const author = appData.authors && appData.authors.find(a => a.id === work.authorId);
+    appState.currentWork = work;
+    if (author) appState.currentAuthor = author;
+    // Ensure the modal is visible regardless of how this function was called
+    document.getElementById('modal-toggle').checked = true;
+    showWork(location || '1');
+}
+
 function showBiography() {
     appState.currentView = 'bio';
     console.log('Current view:', appState.currentView);
 
     const myAuthor = appState.currentAuthor;
-    
-    if (!myAuthor.bio) {
-        console.error('No author biography data available!');
-        modalTitle.innerHTML = myAuthor.name;
-        modalBody.innerHTML = `ERROR LOADING BIO. ¯\\_(ツ)_/¯`;
-        return;
-    }
 
-    modalLoading.style.display = 'block';
     modalTitle.innerHTML = myAuthor.name;
-    modalBody.innerHTML = 
-    `<img id="modal-image" src="${myAuthor.imgUri}" alt="${myAuthor.name} Image" />
-    <p id="modal-text" >${myAuthor.bio}</p>`;
-    modalLoading.style.display = 'none';
+    modalBody.innerHTML = '';
+    modalLoading.style.display = 'block';
 
+    // Lazily fetch the bio if it wasn't loaded during startup (e.g. race condition or
+    // network error), then render it.  Using <div> for the text container because the
+    // bio files themselves contain <p> tags and nesting <p> inside <p> is invalid HTML.
+    const getBio = myAuthor.bio
+        ? Promise.resolve(myAuthor.bio)
+        : fetch(myAuthor.bioUri)
+              .then(r => r.text())
+              .then(bio => { myAuthor.bio = bio; return bio; });
+
+    getBio
+        .then(bio => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modalBody.innerHTML =
+                        `<img id="modal-image" src="${myAuthor.imgUri}" alt="${myAuthor.name} Image" />` +
+                        `<div id="modal-text">${bio}</div>`;
+                    modalLoading.style.display = 'none';
+                });
+            });
+        })
+        .catch(err => {
+            console.error('Error loading author bio:', err);
+            modalBody.innerHTML = `ERROR LOADING BIO. ¯\\_(ツ)_/¯`;
+            modalLoading.style.display = 'none';
+        });
 }
 
-// We use version compare to find which partition has our quote / index location
+// Compare two dot-separated numeric version strings, e.g. "4.7" vs "5.1".
+// Returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal.
+// Used to locate the correct partition for a given work location.
 function versionCompare(v1, v2) {
     for (let i = 0, j = 0, n1 = 0, n2 = 0; (i < v1.length || j < v2.length); n1 = n2 = 0, i++, j++) {
         while (i < v1.length && v1[i] !== '.') n1 = n1 * 10 + (v1[i++] - '0');
@@ -349,60 +410,71 @@ function versionCompare(v1, v2) {
     return 0;
 }
 
-function showWork(location = 0) {   
+// Display the current work in the modal, scrolling to the given location.
+// Data is loaded lazily via getWorkData(); the loading indicator is shown while
+// the fetch is in flight, then a double requestAnimationFrame ensures the browser
+// paints that indicator before the (potentially large) HTML is injected.
+function showWork(location = '1') {
     appState.currentView = 'work';
     console.log('Current view:', appState.currentView);
     console.log(`Showing work ${appState.currentWork.title}, at location ${location}`);
-    
 
-    // update modal title and display loading activity indicator    
     modalTitle.innerHTML = appState.currentWork.title;
     modalBody.innerHTML = '';
     modalLoading.style.display = 'block';
 
-    // Computer data chunks to display
-    const indexList = appState.currentWork.data[0];
-    const partitions = appState.currentWork.data[1];
-    let partitionIndex = indexList.findIndex((id, idx) => {
-        const nextId = indexList[idx + 1];
-        return versionCompare(location, id) >= 0 && (!nextId || versionCompare(location, nextId) < 0);
-    });
+    const loc = String(location);
 
-    if (partitionIndex === -1) {
-        console.error('Location not found in index list!');
-        modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-        modalLoading.style.display = 'none';
-        return;
-    }
+    getWorkData(appState.currentWork)
+        .then(data => {
+            const indexList = data[0];
+            const partitions = data[1];
 
-     // Display the partition and n partitions forward and back
-     const n = 1; // Number of partitions to show before and after
-     let content = '';
-     for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
-         content += partitions[i];
-     }
-     modalBody.innerHTML = content;
-     modalLoading.style.display = 'none';
- 
+            if (!Array.isArray(indexList) || !Array.isArray(partitions)) {
+                throw new Error('Unsupported work data format.');
+            }
 
-    // Load the work text asynchronously - hack necessary to make sure the 
-    // modal displays instantly and the loading indicator is shown, otherwise
-    // webkit will wait until all the text is ready to display before showing
-    // the modal, which is weird, non-intuitive, and not user-friendly.   
-    // setTimeout(() => {
-    //     if (!appState.currentWork.data) {
-    //         console.error('No work text data available!');
-    //         modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-    //     } else {
-    //         modalBody.innerHTML = `<p>${appState.currentWork.data[1]}</p>`;
-    //     }
-    //     modalLoading.style.display = 'none';
-    // }, 100);
+            let partitionIndex = indexList.findIndex((id, idx) => {
+                const nextId = indexList[idx + 1];
+                return versionCompare(loc, id) >= 0 &&
+                       (!nextId || versionCompare(loc, nextId) < 0);
+            });
+
+            // Fall back to the first partition if the location wasn't matched
+            if (partitionIndex === -1) {
+                console.warn(`Location "${loc}" not found in index; showing first partition.`);
+                partitionIndex = 0;
+            }
+
+            // Show the target partition plus one on each side for context
+            const n = 1;
+            let content = '';
+            for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
+                content += partitions[i];
+            }
+
+            // Yield to browser so loading indicator paints, then inject content
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modalBody.innerHTML = content;
+                    modalLoading.style.display = 'none';
+                    // Scroll the target element into view if it exists in this partition
+                    const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
+                    if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+                });
+            });
+        })
+        .catch(err => {
+            console.error('Error loading work:', err);
+            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
+            modalLoading.style.display = 'none';
+        });
 }
 
 function showChat(myAuthor) {    
     return; 
 }
+
 function showDataProtectionPolicy() {
     document.getElementById('modal-title').innerHTML = 
     `<div style="text-align:center; letter-spacing: 8px; margin-left: 30px;">Data Protection Policy</div>`;
@@ -413,7 +485,7 @@ function showDataProtectionPolicy() {
     <p style="font-size:18px;">The Stoic Reader will never sell your data. </p>
     <br />
     <p style="font-size:15px; line-height: 24px; letter-spacing: 1.3px;">&#8220;Let us try to persuade them. But act even against their will, when the principles of justice lead that way.&#8221;</p>
-    <p>~Marcus Aurelius, Medidations, Book 6, Verse 50</p>
+    <p>~Marcus Aurelius, Meditationes, Book 6, Verse 50</p>
     </div>`;
     return; 
 }
@@ -423,7 +495,7 @@ function restoreState() {
 }
 
 function attachEventListeners() {
-    // attach dismissMenu() to all a href links in menu
+    // attach dismissMenu() to all static a href links in menu
     document.querySelectorAll('#menu a').forEach(link => {
         link.addEventListener('click', dismissMenu);
     });
