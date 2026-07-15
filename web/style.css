@@ -351,6 +351,10 @@ background-color: #1a2c45;
     display: none;
 }
 
+.highlight {
+    background-color: rgba(255, 255, 0, 0.2);
+    transition: background-color 0.5s ease-out;
+}
 
 /* Two-column fullscreen layout only on wide viewports to avoid unreadably narrow columns */
 @media (max-width: 900px) {
