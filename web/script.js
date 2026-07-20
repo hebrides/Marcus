@@ -5,7 +5,13 @@ let appState = {
         currentWork: null,
         currentView: 'quote',
         showExtendedLibrary: false,
-        chatScope: 'strict-stoic'
+        chatScope: 'strict-stoic',
+        openBooks: [],
+        lastLocations: {},
+        activeBookId: null,
+        closeAction: 'minimize',
+        readerSettings: null,
+        bookmarks: []
     };
 
 // Stores app data in memory for quick access
@@ -75,13 +81,30 @@ function idbPut(key, value) {
 const modalLoading = document.getElementById('modal-data-loading');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
+const READER_STATE_KEY = 'stoic-reader-state';
+const READER_SETTINGS_KEY = 'stoic-reader-settings';
+const BOOKMARKS_KEY = 'stoic-reader-bookmarks';
+const MINIMUM_LOADING_TIME = 350;
+const DEFAULT_READER_SETTINGS = {
+    theme: 'night',
+    largeText: false,
+    font: 'goudy',
+    spacing: 'normal'
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyright-year').textContent = new Date().getFullYear();
+    restoreReaderSettings();
+    restoreBookmarks();
     attachEventListeners();
 
     fetch('data-meta.json')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Metadata request failed with HTTP ${response.status}.`);
+            }
+            return response.json();
+        })
         .then(metaData => {
             appData = metaData;
             const curation = getCuration();
@@ -89,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             appState.chatScope = curation.defaultChatScope || 'strict-stoic';
             buildMenu();
             updateScopeLabels();
+            restoreReaderState();
             console.log('Fetched metadata:', metaData);
 
             // Check whether the cached version matches the current metadata version.
@@ -110,11 +134,119 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.warn('IndexedDB unavailable or cache error, falling back to network:', err);
                     return fetchFromNetwork();
                 });
+
         })
         .catch(error => {
-            console.error('Error initializing app data:', error);
+            showStartupError(error);
         });
 });
+
+function restoreReaderSettings() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(READER_SETTINGS_KEY));
+        appState.readerSettings = {
+            ...DEFAULT_READER_SETTINGS,
+            ...(saved || {})
+        };
+    } catch (error) {
+        console.error('Unable to restore reader settings:', error);
+        appState.readerSettings = { ...DEFAULT_READER_SETTINGS };
+    }
+    applyReaderSettings();
+}
+
+function saveReaderSettings() {
+    localStorage.setItem(READER_SETTINGS_KEY, JSON.stringify(appState.readerSettings));
+}
+
+function applyReaderSettings() {
+    const settings = appState.readerSettings || DEFAULT_READER_SETTINGS;
+    const body = document.body;
+    body.classList.toggle('theme-day', settings.theme === 'day');
+    body.classList.toggle('reader-large', settings.largeText);
+    body.classList.remove('reader-font-goudy', 'reader-font-georgia', 'reader-font-system');
+    body.classList.add(`reader-font-${settings.font}`);
+    body.classList.remove('reader-spacing-normal', 'reader-spacing-relaxed');
+    body.classList.add(`reader-spacing-${settings.spacing}`);
+}
+
+function setReaderModalControls(mode) {
+    const isReader = mode === 'reader';
+    const fullscreen = document.getElementById('modal-fullscreen');
+    const bookmark = document.getElementById('modal-bookmark');
+    const readerSettings = document.getElementById('modal-reader-settings');
+    const minimize = document.getElementById('modal-minimize');
+    fullscreen.hidden = !isReader;
+    bookmark.hidden = !isReader;
+    readerSettings.hidden = !isReader;
+    minimize.hidden = !isReader;
+    document.getElementById('reader-page-previous').hidden = !isReader;
+    document.getElementById('reader-page-next').hidden = !isReader;
+    if (!isReader) document.getElementById('modal-content').classList.remove('fullscreen');
+}
+
+function restoreBookmarks() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(BOOKMARKS_KEY));
+        appState.bookmarks = Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Unable to restore bookmarks:', error);
+        appState.bookmarks = [];
+    }
+}
+
+function saveBookmarks() {
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(appState.bookmarks));
+}
+
+function bookmarkKey(workId, location) {
+    return `${workId}:${location}`;
+}
+
+function updateBookmarkControl() {
+    const button = document.getElementById('modal-bookmark');
+    if (!appState.currentWork || !button) return;
+    const location = getBookTab(appState.currentWork.id)?.location || '1';
+    const saved = appState.bookmarks.some(bookmark =>
+        bookmark.key === bookmarkKey(appState.currentWork.id, location)
+    );
+    button.classList.toggle('is-bookmarked', saved);
+    button.setAttribute('aria-label', saved ? 'Remove bookmark' : 'Bookmark this location');
+}
+
+function toggleBookmark() {
+    if (!appState.currentWork) return;
+    const location = getBookTab(appState.currentWork.id)?.location || '1';
+    const key = bookmarkKey(appState.currentWork.id, location);
+    const existing = appState.bookmarks.findIndex(bookmark => bookmark.key === key);
+    if (existing === -1) {
+        appState.bookmarks.push({
+            key,
+            workId: appState.currentWork.id,
+            location,
+            createdAt: Date.now()
+        });
+    } else {
+        appState.bookmarks.splice(existing, 1);
+    }
+    saveBookmarks();
+    updateBookmarkControl();
+}
+
+function showStartupError(error) {
+    const openedFromFile = window.location.protocol === 'file:';
+    const instructions = openedFromFile
+        ? 'This page was opened directly from your computer, so the browser blocked its library data. In the web folder, run "python3 -m http.server 8000", then visit http://localhost:8000.'
+        : 'The library data could not be loaded. Please refresh the page or try again shortly.';
+    const message = `Stoic Reader could not load its library data. ${instructions}`;
+
+    console.error(message, error);
+    document.getElementById('quote').textContent =
+        'The impediment to action advances action. What stands in the way becomes the way.';
+    document.getElementById('citation').textContent =
+        `Marcus Aurelius, Meditations 5.20. ${instructions}`;
+    document.getElementById('app-load-error').hidden = false;
+}
 
 // Fetch quotes and author bios from the network, then display a quote.
 // Work data is NOT loaded here – it is fetched lazily the first time each work is opened.
@@ -170,7 +302,10 @@ function getWorkData(work) {
                 return cached;
             }
             return fetch(work.dataUri)
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error(`Work request failed with HTTP ${r.status}.`);
+                    return r.json();
+                })
                 .then(data => {
                     work.data = data;
                     idbPut(`work-${work.id}`, data)
@@ -276,11 +411,11 @@ function showNewQuote(selectionMethod) {
 
     // Display quote
     document.getElementById('quote').innerHTML =
-    `<a href="#" id="quoteLink" onclick="showWork('${myQuote.location}')"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
+    `<a href="#" id="quoteLink" onclick="openWork('${myWork.id}', '${myQuote.location}', true)"><label for='modal-toggle'>${myQuote.quote}</label></a>`;
 
     // Display author, work
     let citationHTML = `~<a href="#" id="authorLink" onclick="showBiography()"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-    <a href="#" id="workLink" onclick="showWork()"><label for="modal-toggle">${myWork.title}</label></a>`;
+    <a href="#" id="workLink" onclick="openWork('${myWork.id}')"><label for="modal-toggle">${myWork.title}</label></a>`;
 
     // get quote location for citation
     const myQuoteLocation = myQuote.location.split(".");
@@ -289,7 +424,7 @@ function showNewQuote(selectionMethod) {
     let cumulativeLocation = '';
     for (let i = 0; i < myQuoteLocation.length; i++) {
         cumulativeLocation += (i > 0 ? '.' : '') + myQuoteLocation[i];
-        citationHTML += `, <a href="#" id="loc${i}Link" onclick="showWork('${cumulativeLocation}')"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</label></a>`;
+        citationHTML += `, <a href="#" id="loc${i}Link" onclick="openWork('${myWork.id}', '${cumulativeLocation}')"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</label></a>`;
     }   
     document.getElementById('citation').innerHTML = citationHTML;
     
@@ -452,7 +587,102 @@ function toggleChatScope() {
 
 // Set the current work (and its author) then open it in the reader modal.
 // Used by menu items and any link that navigates to a specific work.
-function openWork(workId, location) {
+function getBookTab(workId) {
+    return appState.openBooks.find(book => book.workId === workId);
+}
+
+function saveReaderState() {
+    localStorage.setItem(READER_STATE_KEY, JSON.stringify({
+        openBooks: appState.openBooks,
+        lastLocations: appState.lastLocations
+    }));
+}
+
+function restoreReaderState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(READER_STATE_KEY));
+        const validWorkIds = new Set((appData.works || []).map(work => work.id));
+        appState.openBooks = Array.isArray(saved && saved.openBooks)
+            ? saved.openBooks.filter(book => validWorkIds.has(book.workId))
+            : [];
+        appState.lastLocations = saved && typeof saved.lastLocations === 'object' && saved.lastLocations
+            ? saved.lastLocations
+            : {};
+        renderBookTabs();
+    } catch (error) {
+        console.error('Unable to restore saved reader state:', error);
+        appState.openBooks = [];
+    }
+}
+
+function renderBookTabs() {
+    const dock = document.getElementById('book-tab-dock');
+    const tabs = document.getElementById('book-tabs');
+    if (!dock || !tabs) return;
+
+    const count = appState.openBooks.length;
+    dock.hidden = count === 0;
+    tabs.innerHTML = '';
+
+    appState.openBooks.forEach(book => {
+        const work = appData.works.find(item => item.id === book.workId);
+        if (!work) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `book-tab${book.error ? ' has-error' : ''}`;
+        button.title = book.error ? `${work.title}: failed to load; click to retry.` : work.title;
+        button.textContent = `${work.title} - ${formatBookLocation(work, book.location)}`;
+        button.addEventListener('click', () => openWork(work.id, book.location));
+        tabs.appendChild(button);
+    });
+}
+
+function formatBookLocation(work, location) {
+    return String(location).split('.')
+        .map((part, index) => `${work.locationSyntax[index] || 'Section'} ${part}`)
+        .join(', ');
+}
+
+function setBookLoadError(workId, failed) {
+    const book = getBookTab(workId);
+    if (book) {
+        book.error = failed;
+        saveReaderState();
+        renderBookTabs();
+    }
+}
+
+function rememberBookLocation(workId, location) {
+    const book = getBookTab(workId);
+    if (book) {
+        book.location = String(location);
+        book.error = false;
+        appState.lastLocations[workId] = String(location);
+        saveReaderState();
+        renderBookTabs();
+        updateBookmarkControl();
+    }
+}
+
+function minimizeBook() {
+    if (appState.activeBookId) {
+        const book = getBookTab(appState.activeBookId);
+        if (book) book.minimized = true;
+        saveReaderState();
+        renderBookTabs();
+    }
+    document.getElementById('modal-toggle').checked = false;
+}
+
+function closeBook() {
+    appState.openBooks = appState.openBooks.filter(book => book.workId !== appState.activeBookId);
+    appState.activeBookId = null;
+    saveReaderState();
+    renderBookTabs();
+    document.getElementById('modal-toggle').checked = false;
+}
+
+function openWork(workId, location, highlightQuote = false) {
     const work = appData.works && appData.works.find(w => w.id === workId);
     if (!work) {
         console.error('Work not found:', workId);
@@ -461,13 +691,36 @@ function openWork(workId, location) {
     const author = appData.authors && appData.authors.find(a => a.id === work.authorId);
     appState.currentWork = work;
     if (author) appState.currentAuthor = author;
+    appState.activeBookId = workId;
+    let book = getBookTab(workId);
+    if (!book) {
+        book = {
+            workId,
+            location: String(location || appState.lastLocations[workId] || '1'),
+            minimized: false,
+            error: false
+        };
+        appState.openBooks.push(book);
+    } else {
+        book.minimized = false;
+        if (location) book.location = String(location);
+    }
+    saveReaderState();
+    renderBookTabs();
     // Ensure the modal is visible regardless of how this function was called
     document.getElementById('modal-toggle').checked = true;
-    showWork(location || '1');
+    // Quote and citation labels toggle the checkbox after their click handlers run.
+    // Reassert the reader state after that default action completes.
+    window.setTimeout(() => {
+        document.getElementById('modal-toggle').checked = true;
+    }, 0);
+    showWork(location || book.location || appState.lastLocations[workId] || '1', highlightQuote);
 }
 
 function showBiography() {
     appState.currentView = 'bio';
+    setReaderModalControls('standard');
+    modalBody.classList.remove('settings-mode');
     console.log('Current view:', appState.currentView);
 
     const myAuthor = appState.currentAuthor;
@@ -515,18 +768,32 @@ function versionCompare(v1, v2) {
     return 0;
 }
 
-// Display the current work in the modal, scrolling to the given location.
-// Data is loaded lazily via getWorkData(); the loading indicator is shown while
-// the fetch is in flight, then a double requestAnimationFrame ensures the browser
-// paints that indicator before the (potentially large) HTML is injected.
-function showWork(location = '1') {
+function beginModalLoading() {
+    modalBody.classList.remove('is-visible');
+    modalBody.classList.remove('settings-mode');
+    modalBody.innerHTML = '';
+    modalLoading.style.display = 'block';
+    return Date.now();
+}
+
+function showModalContent(content, startedAt) {
+    const wait = Math.max(0, MINIMUM_LOADING_TIME - (Date.now() - startedAt));
+    window.setTimeout(() => {
+        modalBody.innerHTML = content;
+        modalLoading.style.display = 'none';
+        requestAnimationFrame(() => modalBody.classList.add('is-visible'));
+    }, wait);
+}
+
+// Display the current work as discrete, snapped pages around the requested location.
+function showWork(location = '1', highlightQuote = false) {
     appState.currentView = 'work';
+    setReaderModalControls('reader');
     console.log('Current view:', appState.currentView);
     console.log(`Showing work ${appState.currentWork.title}, at location ${location}`);
 
     modalTitle.innerHTML = appState.currentWork.title;
-    modalBody.innerHTML = '';
-    modalLoading.style.display = 'block';
+    const loadingStartedAt = beginModalLoading();
 
     const loc = String(location);
 
@@ -551,29 +818,59 @@ function showWork(location = '1') {
                 partitionIndex = 0;
             }
 
-            // Show the target partition plus one on each side for context
+            // Show the target partition plus one on each side for context.
             const n = 1;
-            let content = '';
+            const pages = [];
             for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
-                content += partitions[i];
+                pages.push(`<section class="reader-page" data-location="${indexList[i]}">${partitions[i]}</section>`);
             }
 
-            // Yield to browser so loading indicator paints, then inject content
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    modalBody.innerHTML = content;
-                    modalLoading.style.display = 'none';
-                    // Scroll the target element into view if it exists in this partition
-                    const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
-                    if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
-                });
-            });
+            showModalContent(pages.join(''), loadingStartedAt);
+            window.setTimeout(() => {
+                const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
+                if (target) {
+                    target.scrollIntoView({ block: 'start', inline: 'start', behavior: 'instant' });
+                    if (highlightQuote) {
+                        target.classList.add('quote-highlight');
+                        window.setTimeout(() => target.classList.remove('quote-highlight'), 3500);
+                    }
+                }
+                rememberBookLocation(appState.currentWork.id, loc);
+                updateBookmarkControl();
+            }, Math.max(0, MINIMUM_LOADING_TIME - (Date.now() - loadingStartedAt)) + 20);
         })
         .catch(err => {
-            console.error('Error loading work:', err);
-            modalBody.innerHTML = 'ERROR LOADING WORK. ¯\\_(ツ)_/¯';
-            modalLoading.style.display = 'none';
+            const workId = appState.currentWork.id;
+            const message = `Unable to load "${appState.currentWork.title}".`;
+            console.error(message, err);
+            setBookLoadError(workId, true);
+            showModalContent(
+                `<div class="reader-error" role="alert"><p>${message}</p><button type="button" id="retry-work-load">Try again</button></div>`,
+                loadingStartedAt
+            );
+            window.setTimeout(() => {
+                const retry = document.getElementById('retry-work-load');
+                if (retry) retry.addEventListener('click', () => showWork(loc, highlightQuote));
+            }, MINIMUM_LOADING_TIME);
         });
+}
+
+function moveReaderPage(direction) {
+    if (appState.currentView !== 'work') return;
+    const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
+        ? modalBody.clientWidth / 2
+        : modalBody.clientWidth;
+    modalBody.scrollBy({ left: direction * pageWidth, behavior: 'smooth' });
+}
+
+function rememberVisibleReaderPage() {
+    if (appState.currentView !== 'work' || !appState.currentWork) return;
+    const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
+        ? modalBody.clientWidth / 2
+        : modalBody.clientWidth;
+    const pageIndex = Math.round(modalBody.scrollLeft / pageWidth);
+    const page = modalBody.querySelectorAll('.reader-page')[pageIndex];
+    if (page?.dataset.location) rememberBookLocation(appState.currentWork.id, page.dataset.location);
 }
 
 function showChat(myAuthor) {    
@@ -581,25 +878,118 @@ function showChat(myAuthor) {
 }
 
 function showSettings() {
+    appState.currentView = 'settings';
+    setReaderModalControls('settings');
     const extendedLabel = appState.showExtendedLibrary ? 'Enabled' : 'Disabled';
     const scopeLabel = appState.chatScope === 'strict-stoic'
         ? 'Strict Stoic'
         : 'Broader Classical Ethics';
+    const settings = appState.readerSettings;
+    const bookmarkList = appState.bookmarks.length === 0
+        ? '<p class="setting-note">No saved bookmarks yet.</p>'
+        : `<ul class="bookmark-list">${appState.bookmarks.map(bookmark => {
+            const work = appData.works.find(item => item.id === bookmark.workId);
+            return work
+                ? `<li><button type="button" class="bookmark-link" data-work-id="${work.id}" data-location="${bookmark.location}">${work.title} - ${formatBookLocation(work, bookmark.location)}</button></li>`
+                : '';
+        }).join('')}</ul>`;
 
     modalTitle.innerHTML = 'Settings';
     modalBody.innerHTML = `
-        <div id="modal-text">
+        <div id="modal-text" class="settings-view">
+            <h3>Reading</h3>
+            <label class="setting-toggle">
+                <span>Day mode</span>
+                <input id="setting-day-mode" type="checkbox" ${settings.theme === 'day' ? 'checked' : ''} />
+                <span class="setting-switch" aria-hidden="true"></span>
+            </label>
+            <label class="setting-toggle">
+                <span>Large text</span>
+                <input id="setting-large-text" type="checkbox" ${settings.largeText ? 'checked' : ''} />
+                <span class="setting-switch" aria-hidden="true"></span>
+            </label>
+            <label class="setting-choice" for="setting-font">
+                <span>Reading font</span>
+                <select id="setting-font">
+                    <option value="goudy" ${settings.font === 'goudy' ? 'selected' : ''}>Sorts Mill Goudy</option>
+                    <option value="georgia" ${settings.font === 'georgia' ? 'selected' : ''}>Georgia</option>
+                    <option value="system" ${settings.font === 'system' ? 'selected' : ''}>System serif</option>
+                </select>
+            </label>
+            <p class="setting-note">Default: Sorts Mill Goudy at 19px.</p>
+            <label class="setting-choice" for="setting-spacing">
+                <span>Letter spacing</span>
+                <select id="setting-spacing">
+                    <option value="normal" ${settings.spacing === 'normal' ? 'selected' : ''}>Standard</option>
+                    <option value="relaxed" ${settings.spacing === 'relaxed' ? 'selected' : ''}>Relaxed</option>
+                </select>
+            </label>
+            <p class="setting-note">Default: standard spacing.</p>
+            <hr>
+            <h3>Bookmarks</h3>
+            ${bookmarkList}
+            <hr>
+            <h3>Library</h3>
             <p><strong>Library Tier:</strong> Core Stoic Canon by default.</p>
             <p><strong>Extended Library:</strong> ${extendedLabel}</p>
             <p><strong>AI Stoic Chat Scope:</strong> ${scopeLabel}</p>
             <p><strong>Inclusion checks:</strong> Public-domain, clean structure, translation quality.</p>
             <p>Use the “Library Scope” menu section to toggle Extended Library and chat scope.</p>
+            <hr />
+            <p><strong>Saved reader state:</strong> Open books and reading positions are stored only in this browser.</p>
+            <button type="button" id="clear-reader-state">Clear saved reader state</button>
+            <hr>
+            <h3>App data</h3>
+            <p class="setting-note">Reset clears this app's books, bookmarks, reading settings, and offline cache. Your browser's other site data is unaffected.</p>
+            <button type="button" id="reset-app">Reset app</button>
         </div>`;
     modalLoading.style.display = 'none';
+    modalBody.classList.add('settings-mode');
+    modalBody.classList.add('is-visible');
     document.getElementById('modal-toggle').checked = true;
 }
 
+function resetApp() {
+    if (!window.confirm('Reset The Stoic Reader on this browser? This clears saved books, bookmarks, settings, and offline data.')) {
+        return;
+    }
+
+    localStorage.removeItem(READER_STATE_KEY);
+    localStorage.removeItem(READER_SETTINGS_KEY);
+    localStorage.removeItem(BOOKMARKS_KEY);
+    const reload = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('refresh', Date.now().toString());
+        window.location.replace(url.toString());
+    };
+    const clearOfflineCache = () => {
+        const deleteRequest = indexedDB.deleteDatabase(IDB_NAME);
+        deleteRequest.onsuccess = reload;
+        deleteRequest.onblocked = () => {
+            console.warn('Offline cache deletion is blocked; reloading without the cached app data.');
+            reload();
+        };
+        deleteRequest.onerror = () => {
+            console.error('Unable to clear the offline cache:', deleteRequest.error);
+            reload();
+        };
+    };
+    if (_dbPromise) {
+        _dbPromise.then(db => {
+            db.close();
+            clearOfflineCache();
+        }).catch(error => {
+            console.error('Unable to close the offline cache before reset:', error);
+            clearOfflineCache();
+        });
+    } else {
+        clearOfflineCache();
+    }
+}
+
 function showDataProtectionPolicy() {
+    setReaderModalControls('standard');
+    modalBody.classList.remove('settings-mode');
     document.getElementById('modal-title').innerHTML = 
     `<div style="text-align:center; letter-spacing: 8px; margin-left: 30px;">Data Protection Policy</div>`;
     document.getElementById('modal-body').innerHTML = 
@@ -626,6 +1016,22 @@ function attachEventListeners() {
     // make sure when modal toggle is unchecked, currentView is set to 'quote'
     document.getElementById('modal-toggle').addEventListener('change', function() {
         if (!this.checked) {
+            if (appState.currentView === 'work' && appState.activeBookId) {
+                if (appState.closeAction === 'close') {
+                    appState.openBooks = appState.openBooks.filter(book => book.workId !== appState.activeBookId);
+                    appState.activeBookId = null;
+                    saveReaderState();
+                    renderBookTabs();
+                } else {
+                    const book = getBookTab(appState.activeBookId);
+                    if (book) {
+                        book.minimized = true;
+                        saveReaderState();
+                        renderBookTabs();
+                    }
+                }
+            }
+            appState.closeAction = 'minimize';
             appState.currentView = 'quote';
             console.log('Modal closed. Current view:', appState.currentView);
         }
@@ -633,6 +1039,31 @@ function attachEventListeners() {
     // modal content fullscreen toggle
     document.getElementById('modal-fullscreen').addEventListener('click', function() {
         document.getElementById('modal-content').classList.toggle('fullscreen');
+        window.requestAnimationFrame(rememberVisibleReaderPage);
+    });
+    document.getElementById('modal-bookmark').addEventListener('click', toggleBookmark);
+    document.getElementById('modal-reader-settings').addEventListener('click', showSettings);
+    document.getElementById('modal-minimize').addEventListener('click', minimizeBook);
+    document.getElementById('modal-close').addEventListener('click', closeBook);
+    document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
+    document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
+    document.getElementById('modal-body').addEventListener('click', event => {
+        if (appState.currentView !== 'work' || !event.target.closest('.reader-page')) return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const x = event.clientX - bounds.left;
+        const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
+            ? event.currentTarget.clientWidth / 2
+            : event.currentTarget.clientWidth;
+        if (x < pageWidth * 0.12) {
+            moveReaderPage(-1);
+        } else if (x > event.currentTarget.clientWidth - pageWidth * 0.12) {
+            moveReaderPage(1);
+        }
+    });
+    let readerScrollTimer;
+    modalBody.addEventListener('scroll', () => {
+        window.clearTimeout(readerScrollTimer);
+        readerScrollTimer = window.setTimeout(rememberVisibleReaderPage, 120);
     });
     const extendedToggleLink = document.getElementById('menu-toggle-extended');
     if (extendedToggleLink) {
@@ -658,6 +1089,36 @@ function attachEventListeners() {
             showSettings();
         });
     }
-    
-    return;
+
+    modalBody.addEventListener('click', event => {
+        if (event.target.id === 'clear-reader-state') {
+            localStorage.removeItem(READER_STATE_KEY);
+            appState.openBooks = [];
+            appState.lastLocations = {};
+            appState.activeBookId = null;
+            renderBookTabs();
+            event.target.disabled = true;
+            event.target.textContent = 'Saved reader state cleared';
+        } else if (event.target.id === 'reset-app') {
+            resetApp();
+        } else if (event.target.classList.contains('bookmark-link')) {
+            openWork(event.target.dataset.workId, event.target.dataset.location, true);
+        }
+    });
+    modalBody.addEventListener('change', event => {
+        const settings = appState.readerSettings;
+        if (event.target.id === 'setting-day-mode') {
+            settings.theme = event.target.checked ? 'day' : 'night';
+        } else if (event.target.id === 'setting-large-text') {
+            settings.largeText = event.target.checked;
+        } else if (event.target.id === 'setting-font') {
+            settings.font = event.target.value;
+        } else if (event.target.id === 'setting-spacing') {
+            settings.spacing = event.target.value;
+        } else {
+            return;
+        }
+        saveReaderSettings();
+        applyReaderSettings();
+    });
 }

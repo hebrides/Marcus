@@ -11,6 +11,8 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { pathToFileURL } = require('url');
+const path = require('path');
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -24,9 +26,7 @@ async function waitForQuote(page) {
 async function openWorkModal(page) {
     await page.locator('#quote a label[for="modal-toggle"]').click();
     await expect(page.locator('#modal')).toBeVisible();
-    // Wait for the loading indicator to hide — that means content has been injected
-    // (either real partitions or a "coming soon" placeholder).
-    await expect(page.locator('#modal-loading')).toBeHidden({ timeout: 15000 });
+    await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
 }
 
 // ── smoke tests ───────────────────────────────────────────────────────────────
@@ -50,6 +50,37 @@ test.describe('Smoke', () => {
         const year = String(new Date().getFullYear());
         await expect(page.locator('#copyright-year')).toHaveText(year);
     });
+
+    test('reports a metadata load failure without leaving the page blank', async ({ page }) => {
+        const errors = [];
+        page.on('console', message => {
+            if (message.type() === 'error') errors.push(message.text());
+        });
+        await page.route('**/data-meta.json', route => route.abort('failed'));
+
+        await page.goto('/');
+
+        await expect(page.locator('#quote')).toHaveText(
+            'The impediment to action advances action. What stands in the way becomes the way.'
+        );
+        await expect(page.locator('#citation')).toContainText('Meditations 5.20');
+        await expect(page.locator('#app-load-error')).toBeVisible();
+        expect(errors).toContainEqual(
+            expect.stringContaining('Stoic Reader could not load its library data.')
+        );
+    });
+
+    test('explains how to run the app when opened with the file protocol', async ({ page }) => {
+        const indexUrl = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
+
+        await page.goto(indexUrl);
+
+        await expect(page.locator('#quote')).toHaveText(
+            'The impediment to action advances action. What stands in the way becomes the way.'
+        );
+        await expect(page.locator('#citation')).toContainText('python3 -m http.server 8000');
+        await expect(page.locator('#app-load-error')).toBeVisible();
+    });
 });
 
 // ── quote interaction ─────────────────────────────────────────────────────────
@@ -58,9 +89,12 @@ test.describe('Quote interaction', () => {
     test.beforeEach(async ({ page }) => waitForQuote(page));
 
     test('clicking the quote opens the work modal with content', async ({ page }) => {
-        await openWorkModal(page);
+        await page.locator('#quote a label[for="modal-toggle"]').click();
+        await expect(page.locator('#modal-data-loading')).toBeVisible();
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
         await expect(page.locator('#modal-title')).not.toBeEmpty();
         await expect(page.locator('#modal-body')).not.toBeEmpty();
+        await expect(page.locator('#modal-body')).toHaveClass(/is-visible/);
     });
 
     test('clicking the work link in the citation opens the work from the start', async ({ page }) => {
@@ -74,6 +108,32 @@ test.describe('Quote interaction', () => {
         await page.locator('#loc0Link label[for="modal-toggle"]').click();
         await expect(page.locator('#modal')).toBeVisible();
         await expect(page.locator('#modal-body')).not.toBeEmpty({ timeout: 15000 });
+    });
+
+    test('a quote reopens its own book after another book was viewed', async ({ page }) => {
+        const quoteWork = await page.locator('#workLink').innerText();
+        await page.locator('#menu-open-button').click();
+        const otherWork = page.locator('#menu .menu-author-item a').filter({
+            hasNotText: quoteWork
+        }).first();
+        await otherWork.locator('xpath=../../preceding-sibling::label[1]').click();
+        await otherWork.click();
+        await expect(page.locator('#modal-title')).not.toHaveText(quoteWork);
+
+        await page.locator('#modal-close').click();
+        await page.locator('#quoteLink').click();
+
+        await expect(page.locator('#modal-title')).toHaveText(quoteWork);
+    });
+
+    test('marks an open-book tab when its work data fails to load', async ({ page }) => {
+        await page.route(/\/stoics\/.*\.json$/, route => route.abort('failed'));
+
+        await page.locator('#quoteLink').click();
+
+        await expect(page.locator('.reader-error')).toBeVisible({ timeout: 15000 });
+        await page.locator('#modal-minimize').click();
+        await expect(page.locator('.book-tab.has-error')).toHaveCount(1);
     });
 });
 
@@ -103,6 +163,11 @@ test.describe('Modal controls', () => {
     test('close button dismisses the modal', async ({ page }) => {
         await page.locator('#modal-close').click();
         await expect(page.locator('#modal')).not.toBeVisible();
+        const savedState = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('stoic-reader-state'))
+        );
+        expect(savedState.openBooks).toEqual([]);
+        expect(Object.values(savedState.lastLocations)).toHaveLength(1);
     });
 
     test('clicking the overlay dismisses the modal', async ({ page }) => {
@@ -111,6 +176,39 @@ test.describe('Modal controls', () => {
         // by the modal-content box.
         await page.mouse.click(10, 10);
         await expect(page.locator('#modal')).not.toBeVisible();
+        await expect(page.locator('#book-tab-dock')).toBeVisible();
+    });
+
+    test('minimize button keeps the book available in the open-books dock', async ({ page }) => {
+        await page.locator('#modal-minimize').click();
+        await expect(page.locator('#modal')).not.toBeVisible();
+        await expect(page.locator('#book-tab-dock')).toBeVisible();
+        await expect(page.locator('.book-tab')).toHaveCount(1);
+    });
+
+    test('minimized books remain available after a reload', async ({ page }) => {
+        await page.locator('#modal-minimize').click();
+        await page.reload();
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('#book-tab-dock')).toBeVisible();
+        await expect(page.locator('.book-tab')).toHaveCount(1);
+    });
+
+    test('bookmark control saves and removes the active reading location', async ({ page }) => {
+        const bookmark = page.locator('#modal-bookmark');
+        await bookmark.click();
+        await expect(bookmark).toHaveClass(/is-bookmarked/);
+        let bookmarks = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('stoic-reader-bookmarks'))
+        );
+        expect(bookmarks).toHaveLength(1);
+
+        await bookmark.click();
+        await expect(bookmark).not.toHaveClass(/is-bookmarked/);
+        bookmarks = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('stoic-reader-bookmarks'))
+        );
+        expect(bookmarks).toHaveLength(0);
     });
 
     test('fullscreen toggle adds fullscreen class on first click', async ({ page }) => {
@@ -118,6 +216,21 @@ test.describe('Modal controls', () => {
         await expect(content).not.toHaveClass(/fullscreen/);
         await page.locator('#modal-fullscreen').click();
         await expect(content).toHaveClass(/fullscreen/);
+    });
+
+    test('fullscreen reader renders a two-page spread and page edge advances it', async ({ page }) => {
+        await page.locator('#modal-fullscreen').click();
+        const pageWidth = await page.locator('.reader-page').first().evaluate(el =>
+            el.getBoundingClientRect().width
+        );
+        const readerWidth = await page.locator('#modal-body').evaluate(el =>
+            el.getBoundingClientRect().width
+        );
+        expect(pageWidth).toBeLessThanOrEqual(readerWidth / 2 + 1);
+
+        await page.locator('#reader-page-next').click();
+        await expect.poll(() => page.locator('#modal-body').evaluate(el => el.scrollLeft))
+            .toBeGreaterThan(0);
     });
 
     test('fullscreen toggle removes fullscreen class on second click', async ({ page }) => {
@@ -133,6 +246,82 @@ test.describe('Modal controls', () => {
         await expect(page.locator('#modal')).not.toBeVisible();
         // After close, the quote should still be visible
         await expect(page.locator('#quote a')).toBeVisible();
+    });
+});
+
+// ── reader settings ──────────────────────────────────────────────────────────
+
+test.describe('Reader settings', () => {
+    test.beforeEach(async ({ page }) => {
+        await waitForQuote(page);
+        await openWorkModal(page);
+    });
+
+    test('opens as a single-page modal without reader-only controls', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+
+        await expect(page.locator('#modal-title')).toHaveText('Settings');
+        await expect(page.locator('#modal-fullscreen')).toBeHidden();
+        await expect(page.locator('#modal-minimize')).toBeHidden();
+        await expect(page.locator('#modal-content')).not.toHaveClass(/fullscreen/);
+    });
+
+    test('persists the Day mode toggle across reloads', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+        await page.locator('#setting-day-mode').check();
+
+        await expect(page.locator('body')).toHaveClass(/theme-day/);
+
+        await page.reload();
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('body')).toHaveClass(/theme-day/);
+    });
+
+    test('persists the Large text toggle across reloads', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+        await page.locator('#setting-large-text').check();
+
+        await expect(page.locator('body')).toHaveClass(/reader-large/);
+
+        await page.reload();
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('body')).toHaveClass(/reader-large/);
+    });
+
+    test('persists the curated font choice across reloads', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+        await page.locator('#setting-font').selectOption('georgia');
+
+        await expect(page.locator('body')).toHaveClass(/reader-font-georgia/);
+
+        await page.reload();
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('body')).toHaveClass(/reader-font-georgia/);
+    });
+
+    test('persists the letter-spacing choice across reloads', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+        await page.locator('#setting-spacing').selectOption('relaxed');
+
+        await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
+
+        await page.reload();
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
+    });
+
+    test('Reset app confirms before clearing app state and reloading', async ({ page }) => {
+        await page.locator('#modal-reader-settings').click();
+        page.once('dialog', dialog => dialog.accept());
+        await page.locator('#reset-app').click();
+
+        await page.waitForURL(/refresh=/);
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        const bookmarks = await page.evaluate(() =>
+            localStorage.getItem('stoic-reader-bookmarks')
+        );
+        expect(bookmarks).toBeNull();
     });
 });
 
@@ -188,6 +377,13 @@ test.describe('Menu navigation', () => {
         await expect(page.locator('#citation')).not.toBeEmpty();
     });
 
+    test('Settings menu opens the single-page reader settings modal', async ({ page }) => {
+        await page.locator('#menu-open-button').click();
+        await page.locator('#settings-link').click();
+        await expect(page.locator('#modal-title')).toHaveText('Settings');
+        await expect(page.locator('#modal-fullscreen')).toBeHidden();
+    });
+
     test('clicking outside the menu (overlay) closes it', async ({ page }) => {
         await page.locator('#menu-open-button').click();
         await expect(page.locator('#menu')).toBeVisible();
@@ -234,16 +430,15 @@ test.describe('Readability', () => {
         expect(modalWidth).toBeGreaterThan(600);
     });
 
-    test('fullscreen two-column layout is suppressed on narrow viewport', async ({ page }) => {
+    test('reader uses snapped horizontal pages on narrow viewport', async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 812 });
         await page.locator('#modal-fullscreen').click();
         await expect(page.locator('#modal-content')).toHaveClass(/fullscreen/);
 
-        const columnCount = await page.locator('#modal-body').evaluate(el =>
-            getComputedStyle(el).columnCount
+        const scrollSnapType = await page.locator('#modal-body').evaluate(el =>
+            getComputedStyle(el).scrollSnapType
         );
-        // On a narrow viewport the column-count override kicks in
-        expect(columnCount).toBe('1');
+        expect(scrollSnapType).toContain('x');
     });
 });
 

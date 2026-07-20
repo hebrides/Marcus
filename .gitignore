@@ -19,6 +19,9 @@ DerivedData
 *.xcworkspace
 !default.xcworkspace
 
+# Playwright creates these during local test runs; baselines remain in snapshots.
+web/tests/test-results/
+
 #CocoaPods
 Pods
 Pods-Classes-Maybe

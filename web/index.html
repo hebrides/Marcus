@@ -18,7 +18,7 @@
 
         <!-- Menu toggle button -->
         <input type="checkbox" id="toggle-menu" hidden onchange="if(!this.checked) document.querySelectorAll('#menu input[type=checkbox]').forEach(checkbox => checkbox.checked = false);"/>
-                  
+
         <label for="toggle-menu" id="menu-open-button" alt="Book & Settings Menu"></label>
 
         <!-- Navigation menu -->
@@ -64,8 +64,13 @@
     <div id="selection">
         <p id="quote"></p>
         <p id="citation"></p>
+        <p id="app-load-error" role="alert" hidden>Library data is unavailable.</p>
     </div>
 </main>
+
+<div id="book-tab-dock" aria-label="Open books" hidden>
+    <div id="book-tabs"></div>
+</div>
 
 <!-- Modal Structure -->
 <input type="checkbox" id="modal-toggle" hidden />
@@ -74,6 +79,11 @@
     <div id="modal-content">
         <div id="modal-header">
             <h2 id="modal-title">Modal Title</h2>
+            <button id="modal-bookmark" type="button" aria-label="Bookmark this location">
+                <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="#dedede" stroke-width="2"/>
+                </svg>
+            </button>
             <label id="modal-fullscreen">
                 <svg id="double-column-icon" height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <g stroke="#dedede" stroke-width="2">
@@ -89,22 +99,35 @@
                         <line x1="15" y1="22" x2="34" y2="22"></line>
                         <line x1="15" y1="29" x2="34" y2="29"></line>
                         <line x1="15" y1="36" x2="34" y2="36"></line>
-                    </g>   
+                    </g>
                 </svg>
-    
             </label>
-            <label for="modal-toggle" id="modal-close">
+            <button id="modal-reader-settings" type="button" aria-label="Reader settings">
+                <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="25" cy="25" r="7" fill="none" stroke="#dedede" stroke-width="2"/>
+                    <path d="M25 8v7m0 20v7M8 25h7m20 0h7M13 13l5 5m14 14l5 5m0-24l-5 5M18 32l-5 5" fill="none" stroke="#dedede" stroke-width="2"/>
+                </svg>
+            </button>
+            <button id="modal-minimize" type="button" aria-label="Minimize book">
+                <span></span>
+            </button><!-- Close book -->
+            <button id="modal-close" type="button" aria-label="Close book">
                 <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
                     <line x1="40" y1="10" x2="10" y2="40" stroke="#dedede" stroke-width="2"/>
                 </svg>
-            </label>            
+            </button>
         </div>
 
         <!-- MODAL CONTENT GOES HERE -->
-            <div id="modal-data-loading" class="activity">Loading Book...</div>
+            <div id="modal-data-loading" class="activity">
+                <span class="loading-top">Loading</span>
+                <span class="loading-bottom">Book</span>
+            </div>
 
             <div id="modal-body"></div>
+            <button id="reader-page-previous" class="reader-page-edge" type="button" aria-label="Previous page"></button>
+            <button id="reader-page-next" class="reader-page-edge" type="button" aria-label="Next page"></button>
 
     </div>
 </div>
@@ -181,27 +204,27 @@ Rjw*xBQ@@@@bu@@@@@@@@@@@@@@@@@@Q@@@@@&|~`,-~~i;l@Q+j@@@tP@@P`%@Bj@Qi|&;?&@@p  .
 
 <!--
 
-                      ';olclkxkOxkdkxkOxdOOOK0Okx;                    
-                 ..cl;:c;cxxdodkckdoddccoxOkOO00x,                  
-               .;cl:ck:do.;ol''lxodoxddo;;coOkdddk:.                
-.  ..         .occc,cxc;;llkk;..,l,ldlc::';ddoOkkkkd;.              
-......       .odlxkl'.';..,,loc,',;:coxxxxxkxcc:cld0Ok.             
-.......... .,cc;,,,ol,,;;;,,;oO0O000KXXXK0kdll;',:dOOx:.            
-...........cc,;;'...;:loddkkO0000KKXNNXK0000Oxk0xdOkkO0x'           
-...........;:'loxl;,;;cldxkkkO0000XXXXXK0O00OkO0xxOxdO0kk,          
-...........,'.loxo;',;clodddxkOOkkOOkO0KO000Okxkcoxxxxccc'          
-..........,dc,;;;l,.';lddolllllodolcc:::;codxxdxc;,,:ldooo.         
-...........,,;''cl,..',,.......;odc,''''','';ldOkoc,clooo'          
-.............,coc;,......,;;,,.,x0xdollodddodxkOkxdc;.';c.          
-...............,::,.';;;;:cldo:;k0k0K0Okkkk0KK0Okddol;.'.           
-...............;c:,',coxxxkOkl;;kKxk0KXXKKK00OOkkkxdo;;c.           
-............... ',;.';lodxxkk:':OKkdk0K00OOOOkxkO0d;;:l'            
-..................;,',;clodxx:,l0KOkkxkOOOOkkxkO0Okol;....          
-...................,'',;:lddo'.':c:,cOOxxkkxxxkkxoxd'.......        
-.................';';;;;,cllc,...'lxO000kxkkOkkxkdd;........        
-.................,;.';::;cco;''.'c:ccllxOOOOkkxkood...........      
-..................:;,lc:llcl;'',:codooo:oxkOO0Oxxd:............     
-...................'.,c:c::cc:::oxkOOO0kldxxdddddo.............     
+                      ';olclkxkOxkdkxkOxdOOOK0Okx;
+                 ..cl;:c;cxxdodkckdoddccoxOkOO00x,
+               .;cl:ck:do.;ol''lxodoxddo;;coOkdddk:.
+.  ..         .occc,cxc;;llkk;..,l,ldlc::';ddoOkkkkd;.
+......       .odlxkl'.';..,,loc,',;:coxxxxxkxcc:cld0Ok.
+.......... .,cc;,,,ol,,;;;,,;oO0O000KXXXK0kdll;',:dOOx:.
+...........cc,;;'...;:loddkkO0000KKXNNXK0000Oxk0xdOkkO0x'
+...........;:'loxl;,;;cldxkkkO0000XXXXXK0O00OkO0xxOxdO0kk,
+...........,'.loxo;',;clodddxkOOkkOOkO0KO000Okxkcoxxxxccc'
+..........,dc,;;;l,.';lddolllllodolcc:::;codxxdxc;,,:ldooo.
+...........,,;''cl,..',,.......;odc,''''','';ldOkoc,clooo'
+.............,coc;,......,;;,,.,x0xdollodddodxkOkxdc;.';c.
+...............,::,.';;;;:cldo:;k0k0K0Okkkk0KK0Okddol;.'.
+...............;c:,',coxxxkOkl;;kKxk0KXXKKK00OOkkkxdo;;c.
+............... ',;.';lodxxkk:':OKkdk0K00OOOOkxkO0d;;:l'
+..................;,',;clodxx:,l0KOkkxkOOOOkkxkO0Okol;....
+...................,'',;:lddo'.':c:,cOOxxkkxxxkkxoxd'.......
+.................';';;;;,cllc,...'lxO000kxkkOkkxkdd;........
+.................,;.';::;cco;''.'c:ccllxOOOOkkxkood...........
+..................:;,lc:llcl;'',:codooo:oxkOO0Oxxd:............
+...................'.,c:c::cc:::oxkOOO0kldxxdddddo.............
 .......................'::cdlldllxxOO000kddxxllc:...................
 ........................;,cxdxOkkO0000000Okllc;;:...................
 .........................',:;cdoxxkkkxxkOxoo:',co...................

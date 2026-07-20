@@ -3,6 +3,7 @@ const path = require('path');
 
 module.exports = defineConfig({
     testDir: '.',
+    outputDir: '/tmp/stoic-reader-playwright-results',
     timeout: 30000,
     expect: {
         timeout: 10000,
