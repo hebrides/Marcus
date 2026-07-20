@@ -174,12 +174,8 @@ function setReaderModalControls(mode) {
     const isReader = mode === 'reader';
     const fullscreen = document.getElementById('modal-fullscreen');
     const bookmark = document.getElementById('modal-bookmark');
-    const readerSettings = document.getElementById('modal-reader-settings');
-    const minimize = document.getElementById('modal-minimize');
     fullscreen.hidden = !isReader;
     bookmark.hidden = !isReader;
-    readerSettings.hidden = !isReader;
-    minimize.hidden = !isReader;
     document.getElementById('reader-page-previous').hidden = !isReader;
     document.getElementById('reader-page-next').hidden = !isReader;
     if (!isReader) document.getElementById('modal-content').classList.remove('fullscreen');
@@ -622,18 +618,34 @@ function renderBookTabs() {
 
     const count = appState.openBooks.length;
     dock.hidden = count === 0;
+    tabs.dataset.tabCount = count;
+    const gapWidth = Math.max(0, count - 1) * 3;
+    const cap = count === 1 ? 480 : count === 2 ? 340 : count === 3 ? 250 : 190;
+    tabs.style.setProperty(
+        '--book-tab-max-width',
+        `min(calc((100% - ${gapWidth}px) / ${Math.max(count, 1)}), ${cap}px)`
+    );
     tabs.innerHTML = '';
 
     appState.openBooks.forEach(book => {
         const work = appData.works.find(item => item.id === book.workId);
         if (!work) return;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = `book-tab${book.error ? ' has-error' : ''}`;
-        button.title = book.error ? `${work.title}: failed to load; click to retry.` : work.title;
-        button.textContent = `${work.title} - ${formatBookLocation(work, book.location)}`;
-        button.addEventListener('click', () => openWork(work.id, book.location));
-        tabs.appendChild(button);
+        const tab = document.createElement('div');
+        tab.className = `book-tab${book.error ? ' has-error' : ''}${book.workId === appState.activeBookId ? ' is-active' : ''}`;
+        const openButton = document.createElement('button');
+        openButton.type = 'button';
+        openButton.className = 'book-tab-open';
+        openButton.title = book.error ? `${work.title}: failed to load; click to retry.` : work.title;
+        openButton.textContent = `${work.title} - ${formatBookLocation(work, book.location)}`;
+        openButton.addEventListener('click', () => openWork(work.id, book.location));
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'book-tab-close';
+        closeButton.setAttribute('aria-label', `Close ${work.title} tab`);
+        closeButton.textContent = '×';
+        closeButton.addEventListener('click', () => closeBookTab(work.id));
+        tab.append(openButton, closeButton);
+        tabs.appendChild(tab);
     });
 }
 
@@ -674,15 +686,14 @@ function minimizeBook() {
     document.getElementById('modal-toggle').checked = false;
 }
 
-function closeBook() {
-    appState.openBooks = appState.openBooks.filter(book => book.workId !== appState.activeBookId);
-    appState.activeBookId = null;
+function closeBookTab(workId) {
+    appState.openBooks = appState.openBooks.filter(book => book.workId !== workId);
+    if (appState.activeBookId === workId) appState.activeBookId = null;
     saveReaderState();
     renderBookTabs();
-    document.getElementById('modal-toggle').checked = false;
 }
 
-function openWork(workId, location, highlightQuote = false) {
+function openWork(workId, location, highlightPassage = false) {
     const work = appData.works && appData.works.find(w => w.id === workId);
     if (!work) {
         console.error('Work not found:', workId);
@@ -714,7 +725,7 @@ function openWork(workId, location, highlightQuote = false) {
     window.setTimeout(() => {
         document.getElementById('modal-toggle').checked = true;
     }, 0);
-    showWork(location || book.location || appState.lastLocations[workId] || '1', highlightQuote);
+    showWork(location || book.location || appState.lastLocations[workId] || '1', highlightPassage);
 }
 
 function showBiography() {
@@ -786,7 +797,7 @@ function showModalContent(content, startedAt) {
 }
 
 // Display the current work as discrete, snapped pages around the requested location.
-function showWork(location = '1', highlightQuote = false) {
+function showWork(location = '1', highlightPassage = false) {
     appState.currentView = 'work';
     setReaderModalControls('reader');
     console.log('Current view:', appState.currentView);
@@ -817,23 +828,27 @@ function showWork(location = '1', highlightQuote = false) {
                 console.warn(`Location "${loc}" not found in index; showing first partition.`);
                 partitionIndex = 0;
             }
+            appState.readerPartitionIndex = partitionIndex;
 
-            // Show the target partition plus one on each side for context.
-            const n = 1;
-            const pages = [];
-            for (let i = Math.max(0, partitionIndex - n); i <= Math.min(partitions.length - 1, partitionIndex + n); i++) {
-                pages.push(`<section class="reader-page" data-location="${indexList[i]}">${partitions[i]}</section>`);
-            }
+            const content = partitions.join('');
 
-            showModalContent(pages.join(''), loadingStartedAt);
+            showModalContent(
+                `<div class="reader-viewport"><div class="reader-spread-clip"><article class="reader-flow">${content}</article></div></div>`,
+                loadingStartedAt
+            );
+            modalBody.dataset.readerLocation = loc;
+            appState.readerAnchorLocation = loc;
             window.setTimeout(() => {
                 const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
-                if (target) {
-                    target.scrollIntoView({ block: 'start', inline: 'start', behavior: 'instant' });
-                    if (highlightQuote) {
-                        target.classList.add('quote-highlight');
-                        window.setTimeout(() => target.classList.remove('quote-highlight'), 3500);
-                    }
+                layoutReaderSpread(target);
+                attachReaderSpreadInteractions();
+                if (target && highlightPassage) {
+                    target.classList.add('passage-highlight');
+                    target.style.setProperty('background-color', 'rgba(0, 0, 0, .22)', 'important');
+                    window.setTimeout(() => {
+                        target.classList.remove('passage-highlight');
+                        target.style.removeProperty('background-color');
+                    }, 3500);
                 }
                 rememberBookLocation(appState.currentWork.id, loc);
                 updateBookmarkControl();
@@ -850,27 +865,112 @@ function showWork(location = '1', highlightQuote = false) {
             );
             window.setTimeout(() => {
                 const retry = document.getElementById('retry-work-load');
-                if (retry) retry.addEventListener('click', () => showWork(loc, highlightQuote));
+                if (retry) retry.addEventListener('click', () => showWork(loc, highlightPassage));
             }, MINIMUM_LOADING_TIME);
         });
 }
 
 function moveReaderPage(direction) {
-    if (appState.currentView !== 'work') return;
-    const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
-        ? modalBody.clientWidth / 2
-        : modalBody.clientWidth;
-    modalBody.scrollBy({ left: direction * pageWidth, behavior: 'smooth' });
+    const content = document.getElementById('modal-content');
+    if (appState.currentView !== 'work' || !content.classList.contains('fullscreen')) return;
+    const flow = modalBody.querySelector('.reader-flow');
+    if (!flow) return;
+    const maxSpread = Math.ceil((flow.scrollWidth - flow.clientWidth) / appState.readerSpreadPitch);
+    const nextSpread = Math.max(0, Math.min(maxSpread, appState.readerSpreadIndex + direction));
+    if (nextSpread === appState.readerSpreadIndex) return;
+    setReaderSpread(nextSpread, true);
 }
 
-function rememberVisibleReaderPage() {
-    if (appState.currentView !== 'work' || !appState.currentWork) return;
-    const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
-        ? modalBody.clientWidth / 2
-        : modalBody.clientWidth;
-    const pageIndex = Math.round(modalBody.scrollLeft / pageWidth);
-    const page = modalBody.querySelectorAll('.reader-page')[pageIndex];
-    if (page?.dataset.location) rememberBookLocation(appState.currentWork.id, page.dataset.location);
+function layoutReaderSpread(anchor) {
+    const flow = modalBody.querySelector('.reader-flow');
+    const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
+    if (!flow || !fullscreen) {
+        if (anchor) anchor.scrollIntoView({ block: 'start', behavior: 'instant' });
+        return;
+    }
+
+    const gap = 20;
+    const columnWidth = (flow.clientWidth - gap) / 2;
+    flow.style.setProperty('--reader-column-width', `${columnWidth}px`);
+    flow.scrollLeft = 0;
+
+    requestAnimationFrame(() => {
+        const flowBounds = flow.getBoundingClientRect();
+        const anchorLeft = anchor
+            ? anchor.getBoundingClientRect().left - flowBounds.left - 30
+            : 0;
+        const columnIndex = Math.max(0, Math.round(anchorLeft / (columnWidth + gap)));
+        appState.readerSpreadPitch = 2 * (columnWidth + gap);
+        setReaderSpread(Math.floor(columnIndex / 2), false);
+    });
+}
+
+function setReaderSpread(index, animate) {
+    const flow = modalBody.querySelector('.reader-flow');
+    if (!flow) return;
+    appState.readerSpreadIndex = index;
+    const left = index * appState.readerSpreadPitch;
+    if (animate) {
+        flow.scrollTo({ left, behavior: 'smooth' });
+    } else {
+        flow.scrollLeft = left;
+    }
+    window.setTimeout(rememberReaderAnchor, animate ? 400 : 0);
+}
+
+function rememberReaderAnchor() {
+    const flow = modalBody.querySelector('.reader-flow');
+    if (!flow || !document.getElementById('modal-content').classList.contains('fullscreen')) return;
+    const bounds = flow.getBoundingClientRect();
+    const visible = Array.from(flow.querySelectorAll('[id]'))
+        .map(element => ({ element, bounds: element.getBoundingClientRect() }))
+        .filter(({ bounds: elementBounds }) =>
+            elementBounds.left >= bounds.left + 20 &&
+            elementBounds.left < bounds.left + flow.clientWidth / 2 &&
+            elementBounds.bottom > bounds.top
+        )
+        .sort((a, b) => a.bounds.top - b.bounds.top)[0];
+    if (!visible) return;
+    appState.readerAnchorLocation = visible.element.id;
+    modalBody.dataset.readerLocation = visible.element.id;
+    rememberBookLocation(appState.currentWork.id, visible.element.id);
+}
+
+function attachReaderSpreadInteractions() {
+    const flow = modalBody.querySelector('.reader-flow');
+    if (!flow || flow.dataset.spreadInteractions === 'true') return;
+    flow.dataset.spreadInteractions = 'true';
+
+    let wheelDistance = 0;
+    let wheelTimer;
+    flow.addEventListener('wheel', event => {
+        if (!document.getElementById('modal-content').classList.contains('fullscreen') ||
+            Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+        event.preventDefault();
+        wheelDistance += event.deltaX;
+        window.clearTimeout(wheelTimer);
+        wheelTimer = window.setTimeout(() => { wheelDistance = 0; }, 160);
+        if (Math.abs(wheelDistance) >= flow.clientWidth * .15) {
+            moveReaderPage(wheelDistance > 0 ? 1 : -1);
+            wheelDistance = 0;
+        }
+    }, { passive: false });
+
+    let touchStart;
+    flow.addEventListener('touchstart', event => {
+        if (event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        touchStart = { x: touch.clientX, y: touch.clientY };
+    }, { passive: true });
+    flow.addEventListener('touchend', event => {
+        if (!touchStart) return;
+        const touch = event.changedTouches[0];
+        const horizontal = touch.clientX - touchStart.x;
+        const vertical = touch.clientY - touchStart.y;
+        touchStart = null;
+        if (Math.abs(horizontal) < 50 || Math.abs(horizontal) <= Math.abs(vertical)) return;
+        moveReaderPage(horizontal < 0 ? 1 : -1);
+    }, { passive: true });
 }
 
 function showChat(myAuthor) {    
@@ -1038,32 +1138,29 @@ function attachEventListeners() {
     });
     // modal content fullscreen toggle
     document.getElementById('modal-fullscreen').addEventListener('click', function() {
-        document.getElementById('modal-content').classList.toggle('fullscreen');
-        window.requestAnimationFrame(rememberVisibleReaderPage);
-    });
-    document.getElementById('modal-bookmark').addEventListener('click', toggleBookmark);
-    document.getElementById('modal-reader-settings').addEventListener('click', showSettings);
-    document.getElementById('modal-minimize').addEventListener('click', minimizeBook);
-    document.getElementById('modal-close').addEventListener('click', closeBook);
-    document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
-    document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
-    document.getElementById('modal-body').addEventListener('click', event => {
-        if (appState.currentView !== 'work' || !event.target.closest('.reader-page')) return;
-        const bounds = event.currentTarget.getBoundingClientRect();
-        const x = event.clientX - bounds.left;
-        const pageWidth = document.getElementById('modal-content').classList.contains('fullscreen')
-            ? event.currentTarget.clientWidth / 2
-            : event.currentTarget.clientWidth;
-        if (x < pageWidth * 0.12) {
-            moveReaderPage(-1);
-        } else if (x > event.currentTarget.clientWidth - pageWidth * 0.12) {
-            moveReaderPage(1);
+        const content = document.getElementById('modal-content');
+        content.classList.toggle('fullscreen');
+        if (content.classList.contains('fullscreen')) {
+            window.requestAnimationFrame(() => {
+                const location = modalBody.dataset.readerLocation;
+                layoutReaderSpread(location && modalBody.querySelector(`[id="${CSS.escape(location)}"]`));
+            });
         }
     });
-    let readerScrollTimer;
-    modalBody.addEventListener('scroll', () => {
-        window.clearTimeout(readerScrollTimer);
-        readerScrollTimer = window.setTimeout(rememberVisibleReaderPage, 120);
+    document.getElementById('modal-bookmark').addEventListener('click', toggleBookmark);
+    document.getElementById('modal-close').addEventListener('click', minimizeBook);
+    document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
+    document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
+    let readerResizeTimer;
+    window.addEventListener('resize', () => {
+        if (appState.currentView !== 'work' ||
+            !document.getElementById('modal-content').classList.contains('fullscreen')) return;
+        window.clearTimeout(readerResizeTimer);
+        readerResizeTimer = window.setTimeout(() => {
+            const anchor = appState.readerAnchorLocation &&
+                modalBody.querySelector(`[id="${CSS.escape(appState.readerAnchorLocation)}"]`);
+            layoutReaderSpread(anchor);
+        }, 100);
     });
     const extendedToggleLink = document.getElementById('menu-toggle-extended');
     if (extendedToggleLink) {

@@ -29,6 +29,14 @@ async function openWorkModal(page) {
     await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
 }
 
+async function openSettings(page) {
+    if (await page.locator('#modal').isVisible()) {
+        await page.locator('#modal-close').click();
+    }
+    await page.locator('#menu-open-button').click();
+    await page.locator('#settings-link').click();
+}
+
 // ── smoke tests ───────────────────────────────────────────────────────────────
 
 test.describe('Smoke', () => {
@@ -132,7 +140,7 @@ test.describe('Quote interaction', () => {
         await page.locator('#quoteLink').click();
 
         await expect(page.locator('.reader-error')).toBeVisible({ timeout: 15000 });
-        await page.locator('#modal-minimize').click();
+        await page.locator('#modal-close').click();
         await expect(page.locator('.book-tab.has-error')).toHaveCount(1);
     });
 });
@@ -160,13 +168,13 @@ test.describe('Modal controls', () => {
         await openWorkModal(page);
     });
 
-    test('close button dismisses the modal', async ({ page }) => {
+    test('close button minimizes the modal while preserving its open tab', async ({ page }) => {
         await page.locator('#modal-close').click();
         await expect(page.locator('#modal')).not.toBeVisible();
         const savedState = await page.evaluate(() =>
             JSON.parse(localStorage.getItem('stoic-reader-state'))
         );
-        expect(savedState.openBooks).toEqual([]);
+        expect(savedState.openBooks).toHaveLength(1);
         expect(Object.values(savedState.lastLocations)).toHaveLength(1);
     });
 
@@ -179,15 +187,70 @@ test.describe('Modal controls', () => {
         await expect(page.locator('#book-tab-dock')).toBeVisible();
     });
 
-    test('minimize button keeps the book available in the open-books dock', async ({ page }) => {
-        await page.locator('#modal-minimize').click();
+    test('close button keeps the book available in the open-books dock', async ({ page }) => {
+        await page.locator('#modal-close').click();
         await expect(page.locator('#modal')).not.toBeVisible();
         await expect(page.locator('#book-tab-dock')).toBeVisible();
         await expect(page.locator('.book-tab')).toHaveCount(1);
+        await expect(page.locator('.book-tab')).toContainText(' - ');
+        await expect(page.locator('.book-tab')).toHaveClass(/is-active/);
+    });
+
+    test('book tabs sit flush above the footer and reopen their book', async ({ page }) => {
+        await page.locator('#modal-close').click();
+        const geometry = await page.evaluate(() => {
+            const tab = document.querySelector('.book-tab').getBoundingClientRect();
+            const footer = document.querySelector('footer').getBoundingClientRect();
+            return Math.abs(tab.bottom - footer.top);
+        });
+        expect(geometry).toBeLessThanOrEqual(1);
+
+        await page.locator('.book-tab-open').click();
+        await expect(page.locator('#modal')).toBeVisible();
+    });
+
+    test('tabs keep their close control visible and underline their text on hover', async ({ page }) => {
+        await page.locator('#modal-close').click();
+        const tab = page.locator('.book-tab.is-active');
+        const openButton = tab.locator('.book-tab-open');
+        const closeButton = tab.locator('.book-tab-close');
+
+        await expect(closeButton).toBeVisible();
+        await tab.hover();
+        await expect(openButton).toHaveCSS('text-decoration-line', 'underline');
+
+        const geometry = await tab.evaluate(element => {
+            const tabRect = element.getBoundingClientRect();
+            const closeRect = element.querySelector('.book-tab-close').getBoundingClientRect();
+            return {
+                closeFits: closeRect.left >= tabRect.left && closeRect.right <= tabRect.right,
+                tabWidth: tabRect.width,
+                afterContent: getComputedStyle(element, '::after').content
+            };
+        });
+        expect(geometry.closeFits).toBe(true);
+        expect(geometry.tabWidth).toBeGreaterThan(0);
+        expect(geometry.afterContent).toBe('none');
+    });
+
+    test('book tab close control removes only that open tab', async ({ page }) => {
+        await page.locator('#modal-close').click();
+        await page.locator('.book-tab-close').click();
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        await expect(page.locator('.book-tab')).toHaveCount(0);
+    });
+
+    test('book tab updates when the reader location is remembered', async ({ page }) => {
+        const location = await page.locator('#modal-body [id]').last().evaluate(element => {
+            rememberBookLocation(appState.currentWork.id, element.id);
+            return element.id;
+        });
+        await expect.poll(() => page.locator('.book-tab').innerText())
+            .toContain(location.split('.').at(-1));
     });
 
     test('minimized books remain available after a reload', async ({ page }) => {
-        await page.locator('#modal-minimize').click();
+        await page.locator('#modal-close').click();
         await page.reload();
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
         await expect(page.locator('#book-tab-dock')).toBeVisible();
@@ -211,6 +274,35 @@ test.describe('Modal controls', () => {
         expect(bookmarks).toHaveLength(0);
     });
 
+    test('opening a saved bookmark emphasizes its passage without changing the quote surface', async ({ page }) => {
+        const quoteStyle = await page.locator('#quote > a').evaluate(element => {
+            const style = getComputedStyle(element);
+            return {
+                backgroundColor: style.backgroundColor,
+                textDecorationLine: style.textDecorationLine
+            };
+        });
+        expect(quoteStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+        expect(quoteStyle.textDecorationLine).toBe('none');
+
+        await page.locator('#modal-bookmark').click();
+        await openSettings(page);
+        await page.locator('.bookmark-link').click();
+
+        const passageStyle = await page.locator('.passage-highlight').evaluate(element => {
+            const style = getComputedStyle(element);
+            return {
+                backgroundColor: style.backgroundColor,
+                color: style.color,
+                textDecorationLine: style.textDecorationLine
+            };
+        });
+
+        expect(passageStyle.color).toBe('rgb(255, 255, 255)');
+        expect(passageStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+        expect(passageStyle.textDecorationLine).toContain('underline');
+    });
+
     test('fullscreen toggle adds fullscreen class on first click', async ({ page }) => {
         const content = page.locator('#modal-content');
         await expect(content).not.toHaveClass(/fullscreen/);
@@ -218,19 +310,28 @@ test.describe('Modal controls', () => {
         await expect(content).toHaveClass(/fullscreen/);
     });
 
-    test('fullscreen reader renders a two-page spread and page edge advances it', async ({ page }) => {
+    test('fullscreen reader renders clipped two-column spreads with working page controls', async ({ page }) => {
+        await expect(page.locator('#reader-page-next')).toBeHidden();
+        await page.evaluate(() => openWork('1', '5.1'));
+        await expect(page.locator('#modal-body [id]')).not.toHaveCount(0);
         await page.locator('#modal-fullscreen').click();
-        const pageWidth = await page.locator('.reader-page').first().evaluate(el =>
-            el.getBoundingClientRect().width
-        );
-        const readerWidth = await page.locator('#modal-body').evaluate(el =>
-            el.getBoundingClientRect().width
-        );
-        expect(pageWidth).toBeLessThanOrEqual(readerWidth / 2 + 1);
 
+        await expect(page.locator('.reader-flow')).toHaveCSS('column-count', 'auto');
+        await expect(page.locator('#reader-page-next')).toBeVisible();
+        await expect.poll(() => page.locator('.reader-flow').evaluate(element =>
+            element.style.getPropertyValue('--reader-column-width')
+        )).not.toBe('');
+
+        const dimensions = await page.locator('.reader-flow').evaluate(element => ({
+            clientWidth: element.clientWidth,
+            scrollWidth: element.scrollWidth
+        }));
+        expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+        await expect(page.locator('.reader-spread-clip')).toHaveCSS('overflow', 'hidden');
+        const initialScroll = await page.locator('.reader-flow').evaluate(element => element.scrollLeft);
         await page.locator('#reader-page-next').click();
-        await expect.poll(() => page.locator('#modal-body').evaluate(el => el.scrollLeft))
-            .toBeGreaterThan(0);
+        await expect.poll(() => page.locator('.reader-flow').evaluate(element => element.scrollLeft))
+            .toBeGreaterThan(initialScroll);
     });
 
     test('fullscreen toggle removes fullscreen class on second click', async ({ page }) => {
@@ -258,16 +359,16 @@ test.describe('Reader settings', () => {
     });
 
     test('opens as a single-page modal without reader-only controls', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
 
         await expect(page.locator('#modal-title')).toHaveText('Settings');
         await expect(page.locator('#modal-fullscreen')).toBeHidden();
-        await expect(page.locator('#modal-minimize')).toBeHidden();
+        await expect(page.locator('#modal-reader-settings')).toHaveCount(0);
         await expect(page.locator('#modal-content')).not.toHaveClass(/fullscreen/);
     });
 
     test('persists the Day mode toggle across reloads', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
         await page.locator('#setting-day-mode').check();
 
         await expect(page.locator('body')).toHaveClass(/theme-day/);
@@ -278,7 +379,7 @@ test.describe('Reader settings', () => {
     });
 
     test('persists the Large text toggle across reloads', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
         await page.locator('#setting-large-text').check();
 
         await expect(page.locator('body')).toHaveClass(/reader-large/);
@@ -289,7 +390,7 @@ test.describe('Reader settings', () => {
     });
 
     test('persists the curated font choice across reloads', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
         await page.locator('#setting-font').selectOption('georgia');
 
         await expect(page.locator('body')).toHaveClass(/reader-font-georgia/);
@@ -300,7 +401,7 @@ test.describe('Reader settings', () => {
     });
 
     test('persists the letter-spacing choice across reloads', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
         await page.locator('#setting-spacing').selectOption('relaxed');
 
         await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
@@ -311,7 +412,7 @@ test.describe('Reader settings', () => {
     });
 
     test('Reset app confirms before clearing app state and reloading', async ({ page }) => {
-        await page.locator('#modal-reader-settings').click();
+        await openSettings(page);
         page.once('dialog', dialog => dialog.accept());
         await page.locator('#reset-app').click();
 
@@ -322,6 +423,20 @@ test.describe('Reader settings', () => {
             localStorage.getItem('stoic-reader-bookmarks')
         );
         expect(bookmarks).toBeNull();
+    });
+
+    test('Reset app leaves data intact when confirmation is cancelled', async ({ page }) => {
+        await openSettings(page);
+        await page.locator('#setting-day-mode').check();
+        page.once('dialog', dialog => dialog.dismiss());
+        await page.locator('#reset-app').click();
+
+        await expect(page.locator('#modal-title')).toHaveText('Settings');
+        await expect(page).not.toHaveURL(/refresh=/);
+        const settings = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('stoic-reader-settings'))
+        );
+        expect(settings.theme).toBe('day');
     });
 });
 
