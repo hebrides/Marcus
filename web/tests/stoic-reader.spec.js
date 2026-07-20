@@ -168,14 +168,13 @@ test.describe('Modal controls', () => {
         await openWorkModal(page);
     });
 
-    test('close button minimizes the modal while preserving its open tab', async ({ page }) => {
+    test('close button minimizes the active book tab', async ({ page }) => {
         await page.locator('#modal-close').click();
         await expect(page.locator('#modal')).not.toBeVisible();
         const savedState = await page.evaluate(() =>
             JSON.parse(localStorage.getItem('stoic-reader-state'))
         );
         expect(savedState.openBooks).toHaveLength(1);
-        expect(Object.values(savedState.lastLocations)).toHaveLength(1);
     });
 
     test('clicking the overlay dismisses the modal', async ({ page }) => {
@@ -188,7 +187,7 @@ test.describe('Modal controls', () => {
     });
 
     test('close button keeps the book available in the open-books dock', async ({ page }) => {
-        await page.locator('#modal-close').click();
+        await page.mouse.click(10, 10);
         await expect(page.locator('#modal')).not.toBeVisible();
         await expect(page.locator('#book-tab-dock')).toBeVisible();
         await expect(page.locator('.book-tab')).toHaveCount(1);
@@ -197,7 +196,7 @@ test.describe('Modal controls', () => {
     });
 
     test('book tabs sit flush above the footer and reopen their book', async ({ page }) => {
-        await page.locator('#modal-close').click();
+        await page.mouse.click(10, 10);
         const geometry = await page.evaluate(() => {
             const tab = document.querySelector('.book-tab').getBoundingClientRect();
             const footer = document.querySelector('footer').getBoundingClientRect();
@@ -209,8 +208,18 @@ test.describe('Modal controls', () => {
         await expect(page.locator('#modal')).toBeVisible();
     });
 
+    test('reopens a minimized book from its warm rendered view', async ({ page }) => {
+        await page.locator('.reader-viewport').evaluate(element => {
+            element.dataset.warmViewProbe = 'retained';
+        });
+        await page.mouse.click(10, 10);
+        await page.locator('.book-tab-open').click();
+
+        await expect(page.locator('.reader-viewport')).toHaveAttribute('data-warm-view-probe', 'retained');
+    });
+
     test('tabs keep their close control visible and underline their text on hover', async ({ page }) => {
-        await page.locator('#modal-close').click();
+        await page.mouse.click(10, 10);
         const tab = page.locator('.book-tab.is-active');
         const openButton = tab.locator('.book-tab-open');
         const closeButton = tab.locator('.book-tab-close');
@@ -234,8 +243,18 @@ test.describe('Modal controls', () => {
     });
 
     test('book tab close control removes only that open tab', async ({ page }) => {
-        await page.locator('#modal-close').click();
+        await page.mouse.click(10, 10);
         await page.locator('.book-tab-close').click();
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        await expect(page.locator('.book-tab')).toHaveCount(0);
+    });
+
+    test('a closed book tab does not return after refresh', async ({ page }) => {
+        await page.mouse.click(10, 10);
+        await page.locator('.book-tab-close').click();
+        await page.reload();
+
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
         await expect(page.locator('#book-tab-dock')).toBeHidden();
         await expect(page.locator('.book-tab')).toHaveCount(0);
     });
@@ -250,11 +269,25 @@ test.describe('Modal controls', () => {
     });
 
     test('minimized books remain available after a reload', async ({ page }) => {
-        await page.locator('#modal-close').click();
+        await page.mouse.click(10, 10);
         await page.reload();
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
         await expect(page.locator('#book-tab-dock')).toBeVisible();
         await expect(page.locator('.book-tab')).toHaveCount(1);
+    });
+
+    test('discards legacy saved tabs during reader-state migration', async ({ page }) => {
+        await page.evaluate(() => {
+            localStorage.setItem('stoic-reader-state', JSON.stringify({
+                openBooks: [{ workId: '8', location: '1', minimized: true, error: false }],
+                lastLocations: { 8: '1' }
+            }));
+        });
+        await page.reload();
+
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        expect(await page.evaluate(() => localStorage.getItem('stoic-reader-state'))).toBeNull();
     });
 
     test('bookmark control saves and removes the active reading location', async ({ page }) => {
@@ -316,6 +349,13 @@ test.describe('Modal controls', () => {
         await expect(page.locator('#modal-body [id]')).not.toHaveCount(0);
         await page.locator('#modal-fullscreen').click();
 
+        const isTwoColumnViewport = await page.evaluate(() => window.innerWidth > 900);
+        if (!isTwoColumnViewport) {
+            await expect(page.locator('.reader-flow')).toHaveCSS('column-count', '1');
+            await expect(page.locator('#reader-page-next')).toBeHidden();
+            return;
+        }
+
         await expect(page.locator('.reader-flow')).toHaveCSS('column-count', 'auto');
         await expect(page.locator('#reader-page-next')).toBeVisible();
         await expect.poll(() => page.locator('.reader-flow').evaluate(element =>
@@ -334,12 +374,184 @@ test.describe('Modal controls', () => {
             .toBeGreaterThan(initialScroll);
     });
 
+    test('reader progress reflects the visible one- and two-column windows', async ({ page }) => {
+        await expect(page.locator('#reader-progress')).toBeVisible();
+        const oneColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
+            parseFloat(getComputedStyle(element).width)
+        );
+
+        await page.locator('#modal-fullscreen').click();
+        if (await page.evaluate(() => window.innerWidth > 900)) {
+            await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+            const twoColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
+                parseFloat(getComputedStyle(element).width)
+            );
+            expect(twoColumnWidth).toBeGreaterThan(oneColumnWidth);
+        }
+    });
+
+    test('rapidly switching books does not let an older layout enable the current spread', async ({ page }) => {
+        await page.locator('#modal-fullscreen').click();
+        await page.evaluate(() => {
+            openWork('3', '1');
+            openWork('8', '1');
+        });
+
+        await expect(page.locator('#modal-title')).toHaveText('Tusculan Disputations');
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await expect(page.locator('.reader-flow')).toContainText('Tusculan', { timeout: 15000 });
+
+        if (await page.evaluate(() => window.innerWidth > 900)) {
+            await expect(page.locator('#reader-page-next')).toBeEnabled();
+        }
+    });
+
+    test('renders an incremental reader window instead of the entire work', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('.reader-flow')).toBeVisible({ timeout: 15000 });
+
+        const sizes = await page.evaluate(() => {
+            const work = appData.works.find(item => item.id === '1');
+            const sourceLength = work.data[1].join('').length;
+            const renderedLength = document.querySelector('.reader-flow').innerHTML.length;
+            const beforeAppend = renderedLength;
+            const appended = appendNextReaderChunk('1');
+            const afterAppend = document.querySelector('.reader-flow').innerHTML.length;
+            return { sourceLength, renderedLength, beforeAppend, appended, afterAppend };
+        });
+
+        expect(sizes.renderedLength).toBeLessThan(sizes.sourceLength);
+        expect(sizes.appended).toBe(true);
+        expect(sizes.afterAppend).toBeGreaterThan(sizes.beforeAppend);
+    });
+
+    test('deep-linked Letters from a Stoic enables spread controls', async ({ page }) => {
+        await page.evaluate(() => openWork('2', '58.21', true));
+        await expect(page.locator('#modal-title')).toHaveText('Letters from a Stoic');
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await expect(page.locator('.reader-flow')).toContainText('The third class is made up');
+        await page.locator('#modal-fullscreen').click();
+
+        if (await page.evaluate(() => window.innerWidth > 900)) {
+            await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+            const initialScroll = await page.locator('.reader-flow').evaluate(element => element.scrollLeft);
+            const dimensions = await page.locator('.reader-flow').evaluate(element => ({
+                clientWidth: element.clientWidth,
+                scrollWidth: element.scrollWidth,
+                textLength: element.textContent.length,
+                chunkIndex: appState.readerChunks.get(appState.currentWork.id)?.nextChunkIndex
+            }));
+            expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+            await page.locator('#reader-page-next').click();
+            await expect.poll(() => page.locator('.reader-flow').evaluate(element => element.scrollLeft))
+                .toBeGreaterThan(initialScroll);
+        }
+    });
+
+    test('quote-linked works enable spread controls', async ({ page }) => {
+        await page.locator('#modal-close').click();
+        for (const quote of [
+            { workId: '2', location: '58.21', title: 'Letters from a Stoic', text: 'A deep-linked Letters passage.' },
+            { workId: '3', location: '69.1', title: 'The Discourses', text: 'A deep-linked Discourses passage.' }
+        ]) {
+            await page.evaluate(currentQuote => {
+                appData.quotes.allQuotes = [currentQuote];
+                showNewQuote('random');
+            }, { workId: quote.workId, location: quote.location, quote: quote.text });
+            await page.locator('#quoteLink').click();
+            await expect(page.locator('#modal-title')).toHaveText(quote.title);
+            await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+            await page.locator('#modal-fullscreen').click();
+
+            if (await page.evaluate(() => window.innerWidth > 900)) {
+                await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+                const initialScroll = await page.locator('.reader-flow').evaluate(element => element.scrollLeft);
+                await page.locator('#reader-page-next').click();
+                await expect.poll(() => page.locator('.reader-flow').evaluate(element => element.scrollLeft))
+                    .toBeGreaterThan(initialScroll);
+            }
+
+            await page.locator('#modal-close').click();
+        }
+    });
+
     test('fullscreen toggle removes fullscreen class on second click', async ({ page }) => {
         const content = page.locator('#modal-content');
         await page.locator('#modal-fullscreen').click();
         await expect(content).toHaveClass(/fullscreen/);
         await page.locator('#modal-fullscreen').click();
         await expect(content).not.toHaveClass(/fullscreen/);
+    });
+
+    test('minimized books restore their fullscreen reader state', async ({ page }) => {
+        await page.locator('#modal-fullscreen').click();
+        await expect(page.locator('#modal-content')).toHaveClass(/fullscreen/);
+        await page.locator('#modal-close').click();
+        await page.locator('.book-tab-open').click();
+
+        await expect(page.locator('#modal-content')).toHaveClass(/fullscreen/);
+    });
+
+    test('reopening a paginated tab preserves its semantic anchor', async ({ page }) => {
+        await page.evaluate(() => openWork('4', '19.1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        const goldenTab = page.locator('.book-tab-open').filter({ hasText: 'The Golden Sayings' });
+        const savedLocation = await page.evaluate(() => getBookTab('4').location);
+        await page.locator('#modal-fullscreen').click();
+        await page.locator('#modal-fullscreen').click();
+        await page.locator('#modal-fullscreen').click();
+        const fullscreenAnchor = await page.evaluate(() => {
+            const anchor = document.querySelector('#modal-body [id="19.1"]').getBoundingClientRect();
+            const flow = document.querySelector('.reader-flow').getBoundingClientRect();
+            return { anchorLeft: anchor.left, flowLeft: flow.left, flowRight: flow.right };
+        });
+        expect(fullscreenAnchor.anchorLeft).toBeGreaterThanOrEqual(fullscreenAnchor.flowLeft);
+        expect(fullscreenAnchor.anchorLeft).toBeLessThan(fullscreenAnchor.flowRight);
+        await page.locator('#modal-fullscreen').click();
+        await expect.poll(() => page.evaluate(() => getBookTab('4').location)).toBe(savedLocation);
+        await page.locator('#modal-close').click();
+        await goldenTab.click();
+
+        await expect.poll(() => page.evaluate(() => getBookTab('4').location)).toBe(savedLocation);
+        await expect(page.locator('#modal-body')).toHaveAttribute('data-reader-location', savedLocation);
+    });
+
+    test('leaving two-column mode retains the current semantic anchor', async ({ page }) => {
+        await page.evaluate(() => openWork('4', '19.1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+        await page.locator('#modal-fullscreen').click();
+
+        const anchorPosition = await page.evaluate(() => {
+            const anchor = document.querySelector('#modal-body [id="19.1"]');
+            const viewport = document.querySelector('.reader-viewport').getBoundingClientRect();
+            const bounds = anchor.getBoundingClientRect();
+            return { top: bounds.top, bottom: bounds.bottom, viewportTop: viewport.top, viewportBottom: viewport.bottom };
+        });
+        expect(anchorPosition.bottom).toBeGreaterThan(anchorPosition.viewportTop);
+        expect(anchorPosition.top).toBeLessThan(anchorPosition.viewportBottom);
+    });
+
+    test('restored single-column views continue updating their semantic anchor', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        const viewport = page.locator('.reader-viewport');
+
+        await viewport.evaluate(element => {
+            element.scrollTop = element.scrollHeight * .45;
+        });
+        await expect.poll(() => page.evaluate(() => getBookTab('1').location)).not.toBe('1');
+        const firstLocation = await page.evaluate(() => getBookTab('1').location);
+
+        await page.locator('#modal-close').click();
+        await page.locator('.book-tab-open').filter({ hasText: 'Meditations' }).click();
+        await viewport.evaluate(element => {
+            element.scrollTop = element.scrollHeight * .8;
+        });
+
+        await expect.poll(() => page.evaluate(() => getBookTab('1').location)).not.toBe(firstLocation);
     });
 
     test('closing the modal resets currentView to quote', async ({ page }) => {
@@ -409,6 +621,19 @@ test.describe('Reader settings', () => {
         await page.reload();
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
         await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
+    });
+
+    test('keeps library scope and starter paths in Settings, not the main menu', async ({ page }) => {
+        await page.locator('#modal-close').click();
+        await page.locator('#menu-open-button').click();
+        await expect(page.locator('#menu')).not.toContainText('Starter Paths');
+        await expect(page.locator('#menu')).not.toContainText('Library Scope');
+        await expect(page.locator('#menu')).not.toContainText('Core Stoic Canon');
+        await page.locator('#settings-link').click();
+
+        await expect(page.locator('#setting-extended-library')).toBeVisible();
+        await expect(page.locator('#setting-chat-scope')).toBeVisible();
+        await expect(page.locator('.starter-path-link')).toHaveCount(3);
     });
 
     test('Reset app confirms before clearing app state and reloading', async ({ page }) => {

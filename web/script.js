@@ -11,7 +11,13 @@ let appState = {
         activeBookId: null,
         closeAction: 'minimize',
         readerSettings: null,
-        bookmarks: []
+        bookmarks: [],
+        readerViews: new Map(),
+        renderedWorkId: null,
+        readerChunks: new Map(),
+        readerAnchorGeneration: 0,
+        readerAnchorWritesBlocked: false,
+        readerLayoutGeneration: 0
     };
 
 // Stores app data in memory for quick access
@@ -20,6 +26,12 @@ let appData = {
 
 function getCuration() {
     return appData.curation || {};
+}
+
+function releaseReaderAnchorWrites() {
+    window.setTimeout(() => {
+        appState.readerAnchorWritesBlocked = false;
+    }, 500);
 }
 
 function getVisibleWorks() {
@@ -82,6 +94,7 @@ const modalLoading = document.getElementById('modal-data-loading');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 const READER_STATE_KEY = 'stoic-reader-state';
+const READER_STATE_VERSION = 2;
 const READER_SETTINGS_KEY = 'stoic-reader-settings';
 const BOOKMARKS_KEY = 'stoic-reader-bookmarks';
 const MINIMUM_LOADING_TIME = 350;
@@ -178,6 +191,7 @@ function setReaderModalControls(mode) {
     bookmark.hidden = !isReader;
     document.getElementById('reader-page-previous').hidden = !isReader;
     document.getElementById('reader-page-next').hidden = !isReader;
+    document.getElementById('reader-progress').style.display = isReader ? 'block' : 'none';
     if (!isReader) document.getElementById('modal-content').classList.remove('fullscreen');
 }
 
@@ -455,10 +469,12 @@ function buildMenu() {
         const tierWorks = worksByTier[tierKey];
         if (!tierWorks || tierWorks.length === 0) return;
 
-        const tierLi = document.createElement('li');
-        tierLi.className = 'menu-tier-header';
-        tierLi.textContent = tierLabel;
-        fragment.appendChild(tierLi);
+        if (tierLabel) {
+            const tierLi = document.createElement('li');
+            tierLi.className = 'menu-tier-header';
+            tierLi.textContent = tierLabel;
+            fragment.appendChild(tierLi);
+        }
 
         const worksByAuthor = {};
         authors.forEach(a => { worksByAuthor[a.id] = []; });
@@ -507,7 +523,7 @@ function buildMenu() {
         });
     }
 
-    appendTier('core', 'Core Stoic Canon');
+    appendTier('core');
     appendTier('extended', 'Extended Library');
 
     // Insert author items before the first static menu item
@@ -523,32 +539,6 @@ function buildMenu() {
         link.addEventListener('click', dismissMenu);
     });
 
-    renderStarterPaths();
-}
-
-function renderStarterPaths() {
-    const starterPaths = appData.starterPaths || [];
-    const starterList = document.getElementById('starter-paths-list');
-    if (!starterList) return;
-
-    starterList.innerHTML = '';
-    starterPaths.forEach(path => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#';
-        a.textContent = path.title;
-        a.title = path.description || path.title;
-        a.addEventListener('click', function(e) {
-            e.preventDefault();
-            const firstWorkId = (path.workIds || []).find(workId => {
-                const work = appData.works.find(w => w.id === workId);
-                return work && (appState.showExtendedLibrary || work.tier !== 'extended');
-            });
-            if (firstWorkId) openWork(firstWorkId);
-        });
-        li.appendChild(a);
-        starterList.appendChild(li);
-    });
 }
 
 function updateScopeLabels() {
@@ -589,6 +579,7 @@ function getBookTab(workId) {
 
 function saveReaderState() {
     localStorage.setItem(READER_STATE_KEY, JSON.stringify({
+        version: READER_STATE_VERSION,
         openBooks: appState.openBooks,
         lastLocations: appState.lastLocations
     }));
@@ -597,6 +588,13 @@ function saveReaderState() {
 function restoreReaderState() {
     try {
         const saved = JSON.parse(localStorage.getItem(READER_STATE_KEY));
+        if (saved?.version !== READER_STATE_VERSION) {
+            localStorage.removeItem(READER_STATE_KEY);
+            appState.openBooks = [];
+            appState.lastLocations = {};
+            renderBookTabs();
+            return;
+        }
         const validWorkIds = new Set((appData.works || []).map(work => work.id));
         appState.openBooks = Array.isArray(saved && saved.openBooks)
             ? saved.openBooks.filter(book => validWorkIds.has(book.workId))
@@ -679,7 +677,10 @@ function rememberBookLocation(workId, location) {
 function minimizeBook() {
     if (appState.activeBookId) {
         const book = getBookTab(appState.activeBookId);
-        if (book) book.minimized = true;
+        if (book) {
+            book.minimized = true;
+            book.fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
+        }
         saveReaderState();
         renderBookTabs();
     }
@@ -689,8 +690,106 @@ function minimizeBook() {
 function closeBookTab(workId) {
     appState.openBooks = appState.openBooks.filter(book => book.workId !== workId);
     if (appState.activeBookId === workId) appState.activeBookId = null;
+    discardReaderView(workId);
     saveReaderState();
     renderBookTabs();
+}
+
+function stashRenderedReaderView() {
+    const workId = appState.renderedWorkId;
+    const view = modalBody.querySelector('.reader-viewport');
+    if (workId && view) {
+        view.remove();
+        appState.readerViews.set(workId, view);
+    }
+    appState.renderedWorkId = null;
+}
+
+function discardReaderView(workId) {
+    const cachedView = appState.readerViews.get(workId);
+    if (cachedView) cachedView.remove();
+    appState.readerViews.delete(workId);
+    appState.readerChunks.delete(workId);
+    if (appState.renderedWorkId === workId) {
+        modalBody.innerHTML = '';
+        appState.renderedWorkId = null;
+    }
+}
+
+function splitReaderContentIntoChunks(partitions, partitionIndex) {
+    const maxChunkLength = 16000;
+    const blocks = partitions
+        .slice(partitionIndex)
+        .flatMap(partition => {
+            const matchedBlocks = partition.match(/<(?:h[1-6]|p|blockquote|li)\b[\s\S]*?<\/(?:h[1-6]|p|blockquote|li)>/gi);
+            return matchedBlocks && matchedBlocks.length > 0 ? matchedBlocks : [partition];
+        });
+    const chunks = [];
+    let chunk = '';
+
+    blocks.forEach(block => {
+        if (chunk && chunk.length + block.length > maxChunkLength) {
+            chunks.push(chunk);
+            chunk = '';
+        }
+        chunk += block;
+    });
+    if (chunk) chunks.push(chunk);
+    return chunks;
+}
+
+function getReaderChunkIndex(chunks, location) {
+    const escapedLocation = String(location).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const locationPattern = new RegExp(`\\bid=(["'])${escapedLocation}\\1`);
+    const index = chunks.findIndex(chunk => locationPattern.test(chunk));
+    return index === -1 ? 0 : index;
+}
+
+function appendNextReaderChunk(workId = appState.renderedWorkId) {
+    const readerData = appState.readerChunks.get(workId);
+    const flow = modalBody.querySelector('.reader-flow');
+    if (!readerData || !flow || readerData.nextChunkIndex >= readerData.chunks.length) return false;
+
+    flow.insertAdjacentHTML('beforeend', readerData.chunks[readerData.nextChunkIndex]);
+    readerData.nextChunkIndex += 1;
+    updateReaderProgress();
+    return true;
+}
+
+function restoreReaderView(workId, location, highlightPassage) {
+    const view = appState.readerViews.get(workId) ||
+        (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
+    if (!view) return false;
+
+    if (view.parentElement !== modalBody) modalBody.replaceChildren(view);
+    modalBody.classList.remove('settings-mode');
+    modalBody.classList.add('is-visible');
+    modalLoading.style.display = 'none';
+    appState.renderedWorkId = workId;
+    appState.readerAnchorLocation = String(location);
+    modalBody.dataset.readerLocation = String(location);
+    appState.readerLayoutReady = false;
+    setReaderControlsReady(false);
+
+    requestAnimationFrame(() => {
+        const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
+        layoutReaderSpread(target, () => {
+            attachReaderSpreadInteractions();
+            appState.readerLayoutReady = true;
+            setReaderControlsReady(true);
+        });
+        if (target && highlightPassage) highlightReaderPassage(target);
+    });
+    return true;
+}
+
+function highlightReaderPassage(target) {
+    target.classList.add('passage-highlight');
+    target.style.setProperty('background-color', 'rgba(0, 0, 0, .22)', 'important');
+    window.setTimeout(() => {
+        target.classList.remove('passage-highlight');
+        target.style.removeProperty('background-color');
+    }, 3500);
 }
 
 function openWork(workId, location, highlightPassage = false) {
@@ -709,6 +808,7 @@ function openWork(workId, location, highlightPassage = false) {
             workId,
             location: String(location || appState.lastLocations[workId] || '1'),
             minimized: false,
+            fullscreen: false,
             error: false
         };
         appState.openBooks.push(book);
@@ -716,6 +816,7 @@ function openWork(workId, location, highlightPassage = false) {
         book.minimized = false;
         if (location) book.location = String(location);
     }
+    document.getElementById('modal-content').classList.toggle('fullscreen', !!book.fullscreen);
     saveReaderState();
     renderBookTabs();
     // Ensure the modal is visible regardless of how this function was called
@@ -723,7 +824,15 @@ function openWork(workId, location, highlightPassage = false) {
     // Quote and citation labels toggle the checkbox after their click handlers run.
     // Reassert the reader state after that default action completes.
     window.setTimeout(() => {
+        if (appState.currentWork?.id !== workId) return;
         document.getElementById('modal-toggle').checked = true;
+        appState.currentView = 'work';
+        const activeBook = getBookTab(workId);
+        if (activeBook) {
+            activeBook.minimized = false;
+            saveReaderState();
+            renderBookTabs();
+        }
     }, 0);
     showWork(location || book.location || appState.lastLocations[workId] || '1', highlightPassage);
 }
@@ -787,29 +896,54 @@ function beginModalLoading() {
     return Date.now();
 }
 
-function showModalContent(content, startedAt) {
+function showModalContent(content, startedAt, onRendered, renderToken) {
     const wait = Math.max(0, MINIMUM_LOADING_TIME - (Date.now() - startedAt));
     window.setTimeout(() => {
+        if (renderToken && renderToken !== appState.readerRenderToken) return;
         modalBody.innerHTML = content;
-        modalLoading.style.display = 'none';
-        requestAnimationFrame(() => modalBody.classList.add('is-visible'));
+        requestAnimationFrame(() => {
+            modalBody.classList.add('is-visible');
+            requestAnimationFrame(() => {
+                if (onRendered) {
+                    onRendered();
+                } else {
+                    modalLoading.style.display = 'none';
+                }
+            });
+        });
     }, wait);
 }
 
 // Display the current work as discrete, snapped pages around the requested location.
 function showWork(location = '1', highlightPassage = false) {
+    const renderToken = (appState.readerRenderToken || 0) + 1;
+    appState.readerRenderToken = renderToken;
+    appState.readerAnchorGeneration += 1;
     appState.currentView = 'work';
     setReaderModalControls('reader');
     console.log('Current view:', appState.currentView);
     console.log(`Showing work ${appState.currentWork.title}, at location ${location}`);
 
     modalTitle.innerHTML = appState.currentWork.title;
+    const workId = appState.currentWork.id;
+    if (appState.renderedWorkId && appState.renderedWorkId !== workId) {
+        stashRenderedReaderView();
+    }
+    if (restoreReaderView(workId, location, highlightPassage)) {
+        rememberBookLocation(workId, String(location));
+        updateBookmarkControl();
+        return;
+    }
+
     const loadingStartedAt = beginModalLoading();
+    appState.readerLayoutReady = false;
+    setReaderControlsReady(false);
 
     const loc = String(location);
 
     getWorkData(appState.currentWork)
         .then(data => {
+            if (renderToken !== appState.readerRenderToken) return;
             const indexList = data[0];
             const partitions = data[1];
 
@@ -829,39 +963,50 @@ function showWork(location = '1', highlightPassage = false) {
                 partitionIndex = 0;
             }
             appState.readerPartitionIndex = partitionIndex;
-
-            const content = partitions.join('');
+            const chunks = splitReaderContentIntoChunks(partitions, partitionIndex);
+            const targetChunkIndex = getReaderChunkIndex(chunks, loc);
+            const firstChunkIndex = Math.max(0, targetChunkIndex - 1);
+            const nextChunkIndex = Math.min(chunks.length, firstChunkIndex + 3);
+            appState.readerChunks.set(workId, { chunks, nextChunkIndex });
+            const content = chunks.slice(firstChunkIndex, nextChunkIndex).join('');
 
             showModalContent(
                 `<div class="reader-viewport"><div class="reader-spread-clip"><article class="reader-flow">${content}</article></div></div>`,
-                loadingStartedAt
+                loadingStartedAt,
+                () => {
+                    if (renderToken !== appState.readerRenderToken) return;
+                    const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
+                    const isCurrentRender = () =>
+                        renderToken === appState.readerRenderToken &&
+                        appState.currentWork?.id === workId;
+                    layoutReaderSpread(target, () => {
+                        if (!isCurrentRender()) return;
+                        attachReaderSpreadInteractions();
+                        appState.renderedWorkId = workId;
+                        appState.readerLayoutReady = true;
+                        setReaderControlsReady(true);
+                        modalLoading.style.display = 'none';
+                    }, isCurrentRender);
+                    if (target && highlightPassage) highlightReaderPassage(target);
+                    rememberBookLocation(appState.currentWork.id, loc);
+                    updateBookmarkControl();
+                },
+                renderToken
             );
             modalBody.dataset.readerLocation = loc;
             appState.readerAnchorLocation = loc;
-            window.setTimeout(() => {
-                const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
-                layoutReaderSpread(target);
-                attachReaderSpreadInteractions();
-                if (target && highlightPassage) {
-                    target.classList.add('passage-highlight');
-                    target.style.setProperty('background-color', 'rgba(0, 0, 0, .22)', 'important');
-                    window.setTimeout(() => {
-                        target.classList.remove('passage-highlight');
-                        target.style.removeProperty('background-color');
-                    }, 3500);
-                }
-                rememberBookLocation(appState.currentWork.id, loc);
-                updateBookmarkControl();
-            }, Math.max(0, MINIMUM_LOADING_TIME - (Date.now() - loadingStartedAt)) + 20);
         })
         .catch(err => {
+            if (renderToken !== appState.readerRenderToken) return;
             const workId = appState.currentWork.id;
             const message = `Unable to load "${appState.currentWork.title}".`;
             console.error(message, err);
             setBookLoadError(workId, true);
             showModalContent(
                 `<div class="reader-error" role="alert"><p>${message}</p><button type="button" id="retry-work-load">Try again</button></div>`,
-                loadingStartedAt
+                loadingStartedAt,
+                undefined,
+                renderToken
             );
             window.setTimeout(() => {
                 const retry = document.getElementById('retry-work-load');
@@ -872,20 +1017,30 @@ function showWork(location = '1', highlightPassage = false) {
 
 function moveReaderPage(direction) {
     const content = document.getElementById('modal-content');
-    if (appState.currentView !== 'work' || !content.classList.contains('fullscreen')) return;
+    if (appState.currentView !== 'work' ||
+        !content.classList.contains('fullscreen') ||
+        !appState.readerLayoutReady ||
+        !Number.isFinite(appState.readerSpreadPitch)) return;
     const flow = modalBody.querySelector('.reader-flow');
     if (!flow) return;
-    const maxSpread = Math.ceil((flow.scrollWidth - flow.clientWidth) / appState.readerSpreadPitch);
+    let maxSpread = Math.ceil((flow.scrollWidth - flow.clientWidth) / appState.readerSpreadPitch);
+    const requestedSpread = appState.readerSpreadIndex + direction;
+    if (direction > 0 && requestedSpread > maxSpread && appendNextReaderChunk()) {
+        window.requestAnimationFrame(() => moveReaderPage(direction));
+        return;
+    }
     const nextSpread = Math.max(0, Math.min(maxSpread, appState.readerSpreadIndex + direction));
     if (nextSpread === appState.readerSpreadIndex) return;
     setReaderSpread(nextSpread, true);
 }
 
-function layoutReaderSpread(anchor) {
+function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
     const flow = modalBody.querySelector('.reader-flow');
     const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
     if (!flow || !fullscreen) {
         if (anchor) anchor.scrollIntoView({ block: 'start', behavior: 'instant' });
+        updateReaderProgress();
+        if (isCurrent() && onReady) onReady();
         return;
     }
 
@@ -894,19 +1049,87 @@ function layoutReaderSpread(anchor) {
     flow.style.setProperty('--reader-column-width', `${columnWidth}px`);
     flow.scrollLeft = 0;
 
-    requestAnimationFrame(() => {
-        const flowBounds = flow.getBoundingClientRect();
-        const anchorLeft = anchor
-            ? anchor.getBoundingClientRect().left - flowBounds.left - 30
-            : 0;
-        const columnIndex = Math.max(0, Math.round(anchorLeft / (columnWidth + gap)));
-        appState.readerSpreadPitch = 2 * (columnWidth + gap);
-        setReaderSpread(Math.floor(columnIndex / 2), false);
+    const fontsReady = document.fonts
+        ? Promise.race([
+            document.fonts.ready,
+            new Promise(resolve => window.setTimeout(resolve, 1500))
+        ])
+        : Promise.resolve();
+    fontsReady.then(() => {
+        if (!isCurrent()) return;
+        while (flow.scrollWidth <= flow.clientWidth &&
+            appendNextReaderChunk(appState.currentWork?.id)) {
+            // Load only enough adjacent content to make the first page turn possible.
+        }
+        waitForStableReaderLayout(flow, () => {
+            if (!isCurrent() || !flow.isConnected) return;
+            const columnIndex = anchor
+                ? Math.max(0, Math.floor(anchor.offsetLeft / (columnWidth + gap)))
+                : 0;
+            appState.readerSpreadPitch = 2 * (columnWidth + gap);
+            setReaderSpread(Math.floor(columnIndex / 2), false, flow);
+            updateReaderProgress();
+            if (onReady) onReady();
+        }, isCurrent);
     });
 }
 
-function setReaderSpread(index, animate) {
+function waitForStableReaderLayout(flow, onStable, isCurrent = () => true) {
+    let previousGeometry = '';
+    let stableFrames = 0;
+    let attempts = 0;
+    let settled = false;
+    const settle = () => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(fallback);
+        onStable();
+    };
+    const fallback = window.setTimeout(() => {
+        if (isCurrent() && flow.isConnected) settle();
+    }, 2000);
+    const measure = () => {
+        if (!isCurrent() || !flow.isConnected) return;
+        const geometry = `${flow.clientWidth}:${flow.clientHeight}:${flow.scrollWidth}`;
+        stableFrames = geometry === previousGeometry ? stableFrames + 1 : 0;
+        previousGeometry = geometry;
+        attempts += 1;
+        if (stableFrames >= 2 || attempts >= 60) {
+            settle();
+            return;
+        }
+        window.requestAnimationFrame(measure);
+    };
+    window.requestAnimationFrame(measure);
+}
+
+function setReaderControlsReady(ready) {
+    document.getElementById('reader-page-previous').disabled = !ready;
+    document.getElementById('reader-page-next').disabled = !ready;
+}
+
+function updateReaderProgress() {
+    const progress = document.getElementById('reader-progress');
+    const indicator = document.getElementById('reader-progress-indicator');
     const flow = modalBody.querySelector('.reader-flow');
+    if (!progress || !indicator || !flow || appState.currentView !== 'work') return;
+
+    const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
+    const viewport = fullscreen ? flow : modalBody.querySelector('.reader-viewport');
+    const total = fullscreen ? flow.scrollWidth : viewport?.scrollHeight;
+    const visible = fullscreen ? flow.clientWidth : viewport?.clientHeight;
+    const offset = fullscreen ? flow.scrollLeft : viewport?.scrollTop;
+    if (!total || !visible) return;
+
+    const length = Math.min(1, visible / total);
+    const position = total > visible
+        ? Math.min(1 - length, Math.max(0, offset / (total - visible)))
+        : 0;
+    indicator.style.left = `${position * 100}%`;
+    indicator.style.width = `${length * 100}%`;
+}
+
+function setReaderSpread(index, animate, flow = modalBody.querySelector('.reader-flow'), updateAnchor = animate) {
     if (!flow) return;
     appState.readerSpreadIndex = index;
     const left = index * appState.readerSpreadPitch;
@@ -915,31 +1138,48 @@ function setReaderSpread(index, animate) {
     } else {
         flow.scrollLeft = left;
     }
-    window.setTimeout(rememberReaderAnchor, animate ? 400 : 0);
+    if (updateAnchor) {
+        const workId = appState.currentWork?.id;
+        const anchorGeneration = appState.readerAnchorGeneration;
+        window.setTimeout(() => {
+            if (anchorGeneration === appState.readerAnchorGeneration) {
+                rememberReaderAnchor(flow, workId);
+            }
+            updateReaderProgress();
+        }, animate ? 400 : 0);
+    }
 }
 
-function rememberReaderAnchor() {
-    const flow = modalBody.querySelector('.reader-flow');
-    if (!flow || !document.getElementById('modal-content').classList.contains('fullscreen')) return;
-    const bounds = flow.getBoundingClientRect();
+function rememberReaderAnchor(flow = modalBody.querySelector('.reader-flow'), workId = appState.currentWork?.id) {
+    if (!flow || flow !== modalBody.querySelector('.reader-flow') ||
+        appState.currentWork?.id !== workId) return;
+
+    const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
+    const bounds = (fullscreen ? flow : modalBody.querySelector('.reader-viewport'))?.getBoundingClientRect();
+    if (!bounds) return;
     const visible = Array.from(flow.querySelectorAll('[id]'))
         .map(element => ({ element, bounds: element.getBoundingClientRect() }))
-        .filter(({ bounds: elementBounds }) =>
-            elementBounds.left >= bounds.left + 20 &&
-            elementBounds.left < bounds.left + flow.clientWidth / 2 &&
-            elementBounds.bottom > bounds.top
+        .filter(({ bounds: elementBounds }) => fullscreen
+            ? elementBounds.left >= bounds.left + 20 &&
+                elementBounds.left < bounds.left + flow.clientWidth / 2 &&
+                elementBounds.bottom > bounds.top
+            : elementBounds.bottom > bounds.top && elementBounds.top < bounds.bottom
         )
-        .sort((a, b) => a.bounds.top - b.bounds.top)[0];
+        .sort((a, b) => {
+            if (fullscreen) return a.bounds.top - b.bounds.top;
+            return Math.abs(a.bounds.top - bounds.top) - Math.abs(b.bounds.top - bounds.top);
+        })[0];
     if (!visible) return;
     appState.readerAnchorLocation = visible.element.id;
     modalBody.dataset.readerLocation = visible.element.id;
-    rememberBookLocation(appState.currentWork.id, visible.element.id);
+    rememberBookLocation(workId, visible.element.id);
 }
 
 function attachReaderSpreadInteractions() {
     const flow = modalBody.querySelector('.reader-flow');
     if (!flow || flow.dataset.spreadInteractions === 'true') return;
     flow.dataset.spreadInteractions = 'true';
+    const workId = appState.currentWork?.id;
 
     let wheelDistance = 0;
     let wheelTimer;
@@ -971,6 +1211,22 @@ function attachReaderSpreadInteractions() {
         if (Math.abs(horizontal) < 50 || Math.abs(horizontal) <= Math.abs(vertical)) return;
         moveReaderPage(horizontal < 0 ? 1 : -1);
     }, { passive: true });
+
+    flow.addEventListener('scroll', updateReaderProgress, { passive: true });
+
+    const viewport = modalBody.querySelector('.reader-viewport');
+    if (!viewport || viewport.dataset.readerLoading === 'true') return;
+    viewport.dataset.readerLoading = 'true';
+    let anchorTimer;
+    viewport.addEventListener('scroll', () => {
+        if (document.getElementById('modal-content').classList.contains('fullscreen')) return;
+        if (appState.readerAnchorWritesBlocked) return;
+        const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+        if (remaining < 500) appendNextReaderChunk(workId);
+        updateReaderProgress();
+        window.clearTimeout(anchorTimer);
+        anchorTimer = window.setTimeout(() => rememberReaderAnchor(flow, workId), 120);
+    }, { passive: true });
 }
 
 function showChat(myAuthor) {    
@@ -993,6 +1249,11 @@ function showSettings() {
                 ? `<li><button type="button" class="bookmark-link" data-work-id="${work.id}" data-location="${bookmark.location}">${work.title} - ${formatBookLocation(work, bookmark.location)}</button></li>`
                 : '';
         }).join('')}</ul>`;
+    const starterPathList = (appData.starterPaths || []).length === 0
+        ? '<p class="setting-note">No starter paths are available yet.</p>'
+        : `<div class="starter-path-list">${appData.starterPaths.map((path, index) =>
+            `<button type="button" class="starter-path-link" data-starter-path-index="${index}">${path.title}</button>`
+        ).join('')}</div>`;
 
     modalTitle.innerHTML = 'Settings';
     modalBody.innerHTML = `
@@ -1030,11 +1291,24 @@ function showSettings() {
             ${bookmarkList}
             <hr>
             <h3>Library</h3>
-            <p><strong>Library Tier:</strong> Core Stoic Canon by default.</p>
-            <p><strong>Extended Library:</strong> ${extendedLabel}</p>
-            <p><strong>AI Stoic Chat Scope:</strong> ${scopeLabel}</p>
+            <label class="setting-toggle">
+                <span>Extended library</span>
+                <input id="setting-extended-library" type="checkbox" ${appState.showExtendedLibrary ? 'checked' : ''} />
+                <span class="setting-switch" aria-hidden="true"></span>
+            </label>
+            <p class="setting-note">Core Stoic Canon by default. Extended library is currently ${extendedLabel.toLowerCase()}.</p>
+            <label class="setting-choice" for="setting-chat-scope">
+                <span>Stoic chat scope</span>
+                <select id="setting-chat-scope">
+                    <option value="strict-stoic" ${appState.chatScope === 'strict-stoic' ? 'selected' : ''}>Strict Stoic</option>
+                    <option value="broader-classical-ethics" ${appState.chatScope === 'broader-classical-ethics' ? 'selected' : ''}>Broader Classical Ethics</option>
+                </select>
+            </label>
+            <p class="setting-note">Current scope: ${scopeLabel}.</p>
             <p><strong>Inclusion checks:</strong> Public-domain, clean structure, translation quality.</p>
-            <p>Use the “Library Scope” menu section to toggle Extended Library and chat scope.</p>
+            <h3>Starter paths</h3>
+            <p class="setting-note">Choose a guided starting point without crowding the book menu.</p>
+            ${starterPathList}
             <hr />
             <p><strong>Saved reader state:</strong> Open books and reading positions are stored only in this browser.</p>
             <button type="button" id="clear-reader-state">Clear saved reader state</button>
@@ -1139,12 +1413,43 @@ function attachEventListeners() {
     // modal content fullscreen toggle
     document.getElementById('modal-fullscreen').addEventListener('click', function() {
         const content = document.getElementById('modal-content');
+        appState.readerAnchorGeneration += 1;
+        const layoutGeneration = ++appState.readerLayoutGeneration;
+        appState.readerAnchorWritesBlocked = true;
         content.classList.toggle('fullscreen');
+        const activeBook = getBookTab(appState.activeBookId);
+        if (activeBook) {
+            activeBook.fullscreen = content.classList.contains('fullscreen');
+            saveReaderState();
+        }
         if (content.classList.contains('fullscreen')) {
+            appState.readerLayoutReady = false;
+            setReaderControlsReady(false);
+            const renderToken = appState.readerRenderToken;
+            const workId = appState.currentWork?.id;
             window.requestAnimationFrame(() => {
                 const location = modalBody.dataset.readerLocation;
-                layoutReaderSpread(location && modalBody.querySelector(`[id="${CSS.escape(location)}"]`));
+                layoutReaderSpread(
+                    location && modalBody.querySelector(`[id="${CSS.escape(location)}"]`),
+                    () => {
+                        if (renderToken !== appState.readerRenderToken ||
+                            appState.currentWork?.id !== workId ||
+                            layoutGeneration !== appState.readerLayoutGeneration ||
+                            !content.classList.contains('fullscreen')) return;
+                        appState.readerLayoutReady = true;
+                        setReaderControlsReady(true);
+                        releaseReaderAnchorWrites();
+                    },
+                    () => renderToken === appState.readerRenderToken &&
+                        appState.currentWork?.id === workId &&
+                        layoutGeneration === appState.readerLayoutGeneration &&
+                        content.classList.contains('fullscreen')
+                );
             });
+        } else {
+            const location = modalBody.dataset.readerLocation;
+            const anchor = location && modalBody.querySelector(`[id="${CSS.escape(location)}"]`);
+            layoutReaderSpread(anchor, releaseReaderAnchorWrites);
         }
     });
     document.getElementById('modal-bookmark').addEventListener('click', toggleBookmark);
@@ -1157,9 +1462,14 @@ function attachEventListeners() {
             !document.getElementById('modal-content').classList.contains('fullscreen')) return;
         window.clearTimeout(readerResizeTimer);
         readerResizeTimer = window.setTimeout(() => {
+            const renderToken = appState.readerRenderToken;
+            const workId = appState.currentWork?.id;
             const anchor = appState.readerAnchorLocation &&
                 modalBody.querySelector(`[id="${CSS.escape(appState.readerAnchorLocation)}"]`);
-            layoutReaderSpread(anchor);
+            layoutReaderSpread(anchor, undefined, () =>
+                renderToken === appState.readerRenderToken &&
+                appState.currentWork?.id === workId
+            );
         }, 100);
     });
     const extendedToggleLink = document.getElementById('menu-toggle-extended');
@@ -1193,11 +1503,21 @@ function attachEventListeners() {
             appState.openBooks = [];
             appState.lastLocations = {};
             appState.activeBookId = null;
+            appState.readerViews.clear();
+            appState.readerChunks.clear();
+            appState.renderedWorkId = null;
             renderBookTabs();
             event.target.disabled = true;
             event.target.textContent = 'Saved reader state cleared';
         } else if (event.target.id === 'reset-app') {
             resetApp();
+        } else if (event.target.classList.contains('starter-path-link')) {
+            const path = appData.starterPaths?.[Number(event.target.dataset.starterPathIndex)];
+            const firstWorkId = path?.workIds?.find(workId => {
+                const work = appData.works.find(item => item.id === workId);
+                return work && (appState.showExtendedLibrary || work.tier !== 'extended');
+            });
+            if (firstWorkId) openWork(firstWorkId);
         } else if (event.target.classList.contains('bookmark-link')) {
             openWork(event.target.dataset.workId, event.target.dataset.location, true);
         }
@@ -1212,6 +1532,16 @@ function attachEventListeners() {
             settings.font = event.target.value;
         } else if (event.target.id === 'setting-spacing') {
             settings.spacing = event.target.value;
+        } else if (event.target.id === 'setting-extended-library') {
+            toggleExtendedLibrary();
+            showSettings();
+            return;
+        } else if (event.target.id === 'setting-chat-scope') {
+            appState.chatScope = event.target.value;
+            updateScopeLabels();
+            showNewQuote('random');
+            showSettings();
+            return;
         } else {
             return;
         }

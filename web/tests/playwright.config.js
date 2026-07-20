@@ -41,5 +41,9 @@ module.exports = defineConfig({
             name: 'mobile-safari',
             use: { ...devices['iPhone 13'] },
         },
+        {
+            name: 'desktop-safari',
+            use: { ...devices['Desktop Safari'] },
+        },
     ],
 });

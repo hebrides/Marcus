@@ -26,19 +26,6 @@
             <ul id="menu-list">
                 <!-- Author/work items are injected here dynamically by buildMenu() in script.js -->
                 <li class="menu-static"><a href="#" onclick="showNewQuote('random');" >Random Quote</a></li>
-                <li class="menu-static" id="starter-paths-item">
-                    <input type="checkbox" id="starter-paths-toggle" hidden/>
-                    <label for="starter-paths-toggle">Starter Paths</label>
-                    <ul id="starter-paths-list"></ul>
-                </li>
-                <li class="menu-static">
-                    <input type="checkbox" id="library-toggle" hidden/>
-                    <label for="library-toggle">Library Scope</label>
-                    <ul>
-                        <li><a href="#" id="menu-toggle-extended">Enable Extended Library</a></li>
-                        <li><a href="#" id="menu-toggle-chat-scope">Chat Scope: Strict Stoic</a></li>
-                    </ul>
-                </li>
                 <li class="menu-static">
                     <input type="checkbox" id="chat-toggle" hidden/>
                     <label for="chat-toggle">Stoic Chat</label>
@@ -102,7 +89,7 @@
                     </g>
                 </svg>
             </label>
-            <button id="modal-close" type="button" aria-label="Close book">
+            <button id="modal-close" type="button" aria-label="Minimize book">
                 <svg height="30px" width="30px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <line x1="10" y1="10" x2="40" y2="40" stroke="#dedede" stroke-width="2"/>
                     <line x1="40" y1="10" x2="10" y2="40" stroke="#dedede" stroke-width="2"/>
@@ -111,12 +98,10 @@
         </div>
 
         <!-- MODAL CONTENT GOES HERE -->
-            <div id="modal-data-loading" class="activity">
-                <span class="loading-top">Loading</span>
-                <span class="loading-bottom">Book</span>
-            </div>
+            <div id="modal-data-loading" class="activity" aria-label="Loading"></div>
 
             <div id="modal-body"></div>
+            <div id="reader-progress" aria-hidden="true"><div id="reader-progress-indicator"></div></div>
             <button id="reader-page-previous" class="reader-page-edge" type="button" aria-label="Previous page"></button>
             <button id="reader-page-next" class="reader-page-edge" type="button" aria-label="Next page"></button>
 

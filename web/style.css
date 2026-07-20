@@ -509,16 +509,6 @@ background-color: #1a2c45;
     animation: reader-spin 1.2s linear infinite;
 }
 
-.loading-top, .loading-bottom {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    letter-spacing: .22em;
-}
-
-.loading-top { top: 0; }
-.loading-bottom { bottom: 0; }
-
 body.theme-day .activity::before {
     border-color: rgba(38,55,71,.25);
     border-top-color: #263747;
@@ -635,12 +625,47 @@ body.theme-day .activity::before {
     background: linear-gradient(90deg, rgba(255,255,255,.05), transparent);
 }
 
+.reader-page-edge:disabled {
+    cursor: wait;
+    opacity: 0;
+}
+
 #reader-page-next:hover {
     background: linear-gradient(270deg, rgba(255,255,255,.05), transparent);
 }
 
 #modal-content.fullscreen .reader-page-edge {
     display: block;
+}
+
+#reader-progress {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255,255,255,.12);
+    pointer-events: none;
+    z-index: 3;
+}
+
+#reader-progress-indicator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(233,233,233,.72);
+    transition: left .18s ease-out, width .18s ease-out;
+}
+
+body.theme-day #reader-progress {
+    background: rgba(38,55,71,.14);
+}
+
+body.theme-day #reader-progress-indicator {
+    background: rgba(38,55,71,.68);
 }
 
 #modal-content #double-column-icon {
@@ -669,6 +694,10 @@ body.theme-day .activity::before {
         column-width: auto;
         column-count: 1;
         overflow-y: auto;
+    }
+
+    #modal-content.fullscreen .reader-page-edge {
+        display: none;
     }
 }
 
