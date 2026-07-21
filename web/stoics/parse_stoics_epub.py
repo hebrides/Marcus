@@ -127,7 +127,24 @@ def partition_html(elements, max_chars=22000):
         partitions.append("".join(current))
         index_list.append(current_start)
 
-    return [index_list, partitions]
+    return [index_list, partitions, build_semantic_timeline(elements)]
+
+
+def build_semantic_timeline(elements):
+    ids = []
+    word_offsets = []
+    total_words = 0
+
+    for element_id, element_html in elements:
+        ids.append(element_id)
+        word_offsets.append(total_words)
+        total_words += len(strip_tags(element_html).split())
+
+    return {
+        "ids": ids,
+        "wordOffsets": word_offsets,
+        "totalWords": total_words,
+    }
 
 
 def parse_work(file_map, start_file, end_file, heading_mode):

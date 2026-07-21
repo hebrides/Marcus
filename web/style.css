@@ -657,7 +657,7 @@ body.theme-day .activity::before {
     left: 0;
     width: 100%;
     background: rgba(233,233,233,.72);
-    transition: left .18s ease-out, width .18s ease-out;
+    transition: width .18s ease-out;
 }
 
 body.theme-day #reader-progress {

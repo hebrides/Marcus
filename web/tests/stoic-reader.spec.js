@@ -46,6 +46,23 @@ test.describe('Smoke', () => {
         await expect(page.locator('#citation')).not.toBeEmpty();
     });
 
+    test('shows the saved quote preview before quote data finishes loading', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('stoic-reader-startup-quote', JSON.stringify({
+                quote: 'A prepared thought.',
+                citation: 'Marcus Aurelius, Meditations, 1.1'
+            }));
+        });
+        await page.route('**/data-all-quotes.json', async route => {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await route.continue();
+        });
+        await page.goto('/');
+
+        await expect(page.locator('#quote')).toHaveText('A prepared thought.');
+        await expect(page.locator('#citation')).toHaveText('Marcus Aurelius, Meditations, 1.1');
+    });
+
     test('no uncaught JS errors on load', async ({ page }) => {
         const errors = [];
         page.on('pageerror', err => errors.push(err.message));
@@ -374,20 +391,49 @@ test.describe('Modal controls', () => {
             .toBeGreaterThan(initialScroll);
     });
 
-    test('reader progress reflects the visible one- and two-column windows', async ({ page }) => {
+    test('reader progress retains its semantic extent across reader modes', async ({ page }) => {
         await expect(page.locator('#reader-progress')).toBeVisible();
         const oneColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
-            parseFloat(getComputedStyle(element).width)
+            parseFloat(element.style.width)
         );
 
         await page.locator('#modal-fullscreen').click();
         if (await page.evaluate(() => window.innerWidth > 900)) {
             await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
             const twoColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
-                parseFloat(getComputedStyle(element).width)
+                parseFloat(element.style.width)
             );
-            expect(twoColumnWidth).toBeGreaterThan(oneColumnWidth);
+            expect(twoColumnWidth).toBeCloseTo(oneColumnWidth, 1);
         }
+    });
+
+    test('reader progress uses generated word-weighted semantic timelines', async ({ page }) => {
+        await page.evaluate(() => openWork('4', '56.2'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+
+        const progress = await page.evaluate(() => {
+            const timeline = appState.readerChunks.get('4').timeline;
+            const viewport = document.querySelector('.reader-viewport').getBoundingClientRect();
+            const pair = getReaderProgressAnchorPair(
+                document.querySelector('.reader-flow'),
+                timeline,
+                viewport.top + viewport.height / 2
+            );
+            const pairRatio = (viewport.top + viewport.height / 2 - pair.previous.top) /
+                (pair.next.top - pair.previous.top);
+            return {
+                indicatorLeft: parseFloat(document.getElementById('reader-progress-indicator').style.left),
+                indicatorWidth: parseFloat(document.getElementById('reader-progress-indicator').style.width),
+                interpolatedPosition: (timeline.wordOffsets[pair.previous.index] +
+                    pairRatio * (timeline.wordOffsets[pair.next.index] - timeline.wordOffsets[pair.previous.index])) /
+                    timeline.totalWords * 100,
+                ordinalPosition: pair.previous.index / (timeline.ids.length - 1) * 100
+            };
+        });
+
+        expect(progress.indicatorLeft).toBe(0);
+        expect(progress.indicatorWidth).toBeCloseTo(progress.interpolatedPosition, 1);
+        expect(progress.interpolatedPosition).not.toBeCloseTo(progress.ordinalPosition, 1);
     });
 
     test('rapidly switching books does not let an older layout enable the current spread', async ({ page }) => {
@@ -423,6 +469,69 @@ test.describe('Modal controls', () => {
         expect(sizes.renderedLength).toBeLessThan(sizes.sourceLength);
         expect(sizes.appended).toBe(true);
         expect(sizes.afterAppend).toBeGreaterThan(sizes.beforeAppend);
+    });
+
+    test('loads earlier chunks while scrolling backward from a deep link', async ({ page }) => {
+        await page.evaluate(() => openWork('2', '99.12'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.waitForTimeout(550);
+
+        const result = await page.locator('.reader-viewport').evaluate(viewport => {
+            const readerData = appState.readerChunks.get('2');
+            const previousChunkIndex = readerData.previousChunkIndex;
+            viewport.scrollTop = 0;
+            viewport.dispatchEvent(new Event('scroll'));
+            return {
+                previousChunkIndex,
+                updatedPreviousChunkIndex: readerData.previousChunkIndex,
+                scrollTop: viewport.scrollTop
+            };
+        });
+
+        expect(result.previousChunkIndex).toBeGreaterThanOrEqual(0);
+        expect(result.updatedPreviousChunkIndex).toBe(result.previousChunkIndex - 1);
+        expect(result.scrollTop).toBeGreaterThan(0);
+    });
+
+    test('reader progress does not move backward during forward scrolling', async ({ page }) => {
+        await page.evaluate(() => openWork('2', '99.12'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.waitForTimeout(550);
+
+        const widths = await page.locator('.reader-viewport').evaluate(async viewport => {
+            const values = [];
+            for (let step = 0; step < 8; step += 1) {
+                viewport.scrollTop += 160;
+                viewport.dispatchEvent(new Event('scroll'));
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                values.push(parseFloat(document.getElementById('reader-progress-indicator').style.width));
+            }
+            return values;
+        });
+
+        widths.slice(1).forEach((width, index) => {
+            expect(width).toBeGreaterThanOrEqual(widths[index]);
+        });
+    });
+
+    test('reader progress fills completely at the end of a work', async ({ page }) => {
+        await page.evaluate(() => openWork('4', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.waitForTimeout(550);
+
+        const progress = await page.locator('.reader-viewport').evaluate(async viewport => {
+            const readerData = appState.readerChunks.get('4');
+            while (readerData.nextChunkIndex < readerData.chunks.length) {
+                viewport.scrollTop = viewport.scrollHeight;
+                viewport.dispatchEvent(new Event('scroll'));
+                await new Promise(resolve => requestAnimationFrame(resolve));
+            }
+            viewport.scrollTop = viewport.scrollHeight;
+            viewport.dispatchEvent(new Event('scroll'));
+            return parseFloat(document.getElementById('reader-progress-indicator').style.width);
+        });
+
+        expect(progress).toBe(100);
     });
 
     test('deep-linked Letters from a Stoic enables spread controls', async ({ page }) => {
@@ -501,7 +610,8 @@ test.describe('Modal controls', () => {
         const savedLocation = await page.evaluate(() => getBookTab('4').location);
         await page.locator('#modal-fullscreen').click();
         await page.locator('#modal-fullscreen').click();
-        await page.locator('#modal-fullscreen').click();
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        await expect(page.locator('#modal-body [id="19.1"]')).toBeAttached({ timeout: 15000 });
         const fullscreenAnchor = await page.evaluate(() => {
             const anchor = document.querySelector('#modal-body [id="19.1"]').getBoundingClientRect();
             const flow = document.querySelector('.reader-flow').getBoundingClientRect();
@@ -537,6 +647,7 @@ test.describe('Modal controls', () => {
     test('restored single-column views continue updating their semantic anchor', async ({ page }) => {
         await page.evaluate(() => openWork('1', '1'));
         await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.waitForTimeout(550);
         const viewport = page.locator('.reader-viewport');
 
         await viewport.evaluate(element => {
@@ -547,6 +658,7 @@ test.describe('Modal controls', () => {
 
         await page.locator('#modal-close').click();
         await page.locator('.book-tab-open').filter({ hasText: 'Meditations' }).click();
+        await page.waitForTimeout(550);
         await viewport.evaluate(element => {
             element.scrollTop = element.scrollHeight * .8;
         });

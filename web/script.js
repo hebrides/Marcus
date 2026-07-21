@@ -97,6 +97,7 @@ const READER_STATE_KEY = 'stoic-reader-state';
 const READER_STATE_VERSION = 2;
 const READER_SETTINGS_KEY = 'stoic-reader-settings';
 const BOOKMARKS_KEY = 'stoic-reader-bookmarks';
+const STARTUP_QUOTE_KEY = 'stoic-reader-startup-quote';
 const MINIMUM_LOADING_TIME = 350;
 const DEFAULT_READER_SETTINGS = {
     theme: 'night',
@@ -109,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyright-year').textContent = new Date().getFullYear();
     restoreReaderSettings();
     restoreBookmarks();
+    restoreStartupQuote();
     attachEventListeners();
 
     fetch('data-meta.json')
@@ -170,6 +172,21 @@ function restoreReaderSettings() {
 
 function saveReaderSettings() {
     localStorage.setItem(READER_SETTINGS_KEY, JSON.stringify(appState.readerSettings));
+}
+
+function restoreStartupQuote() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STARTUP_QUOTE_KEY));
+        if (!saved?.quote || !saved?.citation) return;
+        document.getElementById('quote').textContent = saved.quote;
+        document.getElementById('citation').textContent = saved.citation;
+    } catch (error) {
+        console.warn('Unable to restore startup quote:', error);
+    }
+}
+
+function saveStartupQuote(quote, citation) {
+    localStorage.setItem(STARTUP_QUOTE_KEY, JSON.stringify({ quote, citation }));
 }
 
 function applyReaderSettings() {
@@ -437,6 +454,7 @@ function showNewQuote(selectionMethod) {
         citationHTML += `, <a href="#" id="loc${i}Link" onclick="openWork('${myWork.id}', '${cumulativeLocation}')"><label for="modal-toggle">${myWork.locationSyntax[i]} ${myQuoteLocation[i]}</label></a>`;
     }   
     document.getElementById('citation').innerHTML = citationHTML;
+    saveStartupQuote(myQuote.quote, `${myAuthor.name}, ${myWork.title}, ${myQuote.location}`);
     
     console.log(`New quote: "${myQuote.quote}" ~${myAuthor.name}, ${myWork.title}, ${myQuote.location}`);
 }
@@ -716,10 +734,9 @@ function discardReaderView(workId) {
     }
 }
 
-function splitReaderContentIntoChunks(partitions, partitionIndex) {
+function splitReaderContentIntoChunks(partitions) {
     const maxChunkLength = 16000;
     const blocks = partitions
-        .slice(partitionIndex)
         .flatMap(partition => {
             const matchedBlocks = partition.match(/<(?:h[1-6]|p|blockquote|li)\b[\s\S]*?<\/(?:h[1-6]|p|blockquote|li)>/gi);
             return matchedBlocks && matchedBlocks.length > 0 ? matchedBlocks : [partition];
@@ -745,6 +762,45 @@ function getReaderChunkIndex(chunks, location) {
     return index === -1 ? 0 : index;
 }
 
+function getReaderAnchors(partitions) {
+    const anchors = [];
+    const anchorPattern = /\bid=(["'])(.*?)\1/g;
+    partitions.forEach(partition => {
+        let match;
+        while ((match = anchorPattern.exec(partition))) {
+            anchors.push(match[2]);
+        }
+    });
+    return anchors;
+}
+
+function getReaderTimeline(partitions, timeline) {
+    const ids = timeline?.ids;
+    const wordOffsets = timeline?.wordOffsets;
+    const totalWords = timeline?.totalWords;
+    if (Array.isArray(ids) &&
+        Array.isArray(wordOffsets) &&
+        ids.length === wordOffsets.length &&
+        ids.length > 0 &&
+        Number.isFinite(totalWords) &&
+        totalWords > 0) {
+        return {
+            ids,
+            wordOffsets,
+            totalWords,
+            indexById: new Map(ids.map((id, index) => [id, index]))
+        };
+    }
+
+    const legacyIds = getReaderAnchors(partitions);
+    return {
+        ids: legacyIds,
+        wordOffsets: null,
+        totalWords: 0,
+        indexById: new Map(legacyIds.map((id, index) => [id, index]))
+    };
+}
+
 function appendNextReaderChunk(workId = appState.renderedWorkId) {
     const readerData = appState.readerChunks.get(workId);
     const flow = modalBody.querySelector('.reader-flow');
@@ -752,6 +808,22 @@ function appendNextReaderChunk(workId = appState.renderedWorkId) {
 
     flow.insertAdjacentHTML('beforeend', readerData.chunks[readerData.nextChunkIndex]);
     readerData.nextChunkIndex += 1;
+    updateReaderProgress();
+    return true;
+}
+
+function prependPreviousReaderChunk(workId = appState.renderedWorkId) {
+    const readerData = appState.readerChunks.get(workId);
+    const flow = modalBody.querySelector('.reader-flow');
+    const viewport = modalBody.querySelector('.reader-viewport');
+    if (!readerData || !flow || readerData.previousChunkIndex < 0) return false;
+
+    const previousHeight = viewport?.scrollHeight || 0;
+    flow.insertAdjacentHTML('afterbegin', readerData.chunks[readerData.previousChunkIndex]);
+    readerData.previousChunkIndex -= 1;
+    if (viewport && !document.getElementById('modal-content').classList.contains('fullscreen')) {
+        viewport.scrollTop += viewport.scrollHeight - previousHeight;
+    }
     updateReaderProgress();
     return true;
 }
@@ -777,6 +849,7 @@ function restoreReaderView(workId, location, highlightPassage) {
             attachReaderSpreadInteractions();
             appState.readerLayoutReady = true;
             setReaderControlsReady(true);
+            releaseReaderAnchorWrites();
         });
         if (target && highlightPassage) highlightReaderPassage(target);
     });
@@ -919,6 +992,7 @@ function showWork(location = '1', highlightPassage = false) {
     const renderToken = (appState.readerRenderToken || 0) + 1;
     appState.readerRenderToken = renderToken;
     appState.readerAnchorGeneration += 1;
+    appState.readerAnchorWritesBlocked = true;
     appState.currentView = 'work';
     setReaderModalControls('reader');
     console.log('Current view:', appState.currentView);
@@ -963,11 +1037,16 @@ function showWork(location = '1', highlightPassage = false) {
                 partitionIndex = 0;
             }
             appState.readerPartitionIndex = partitionIndex;
-            const chunks = splitReaderContentIntoChunks(partitions, partitionIndex);
+            const chunks = splitReaderContentIntoChunks(partitions);
             const targetChunkIndex = getReaderChunkIndex(chunks, loc);
             const firstChunkIndex = Math.max(0, targetChunkIndex - 1);
             const nextChunkIndex = Math.min(chunks.length, firstChunkIndex + 3);
-            appState.readerChunks.set(workId, { chunks, nextChunkIndex });
+            appState.readerChunks.set(workId, {
+                chunks,
+                previousChunkIndex: firstChunkIndex - 1,
+                nextChunkIndex,
+                timeline: getReaderTimeline(partitions, data[2])
+            });
             const content = chunks.slice(firstChunkIndex, nextChunkIndex).join('');
 
             showModalContent(
@@ -986,6 +1065,7 @@ function showWork(location = '1', highlightPassage = false) {
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
                         modalLoading.style.display = 'none';
+                        releaseReaderAnchorWrites();
                     }, isCurrentRender);
                     if (target && highlightPassage) highlightReaderPassage(target);
                     rememberBookLocation(appState.currentWork.id, loc);
@@ -1063,10 +1143,11 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
         }
         waitForStableReaderLayout(flow, () => {
             if (!isCurrent() || !flow.isConnected) return;
-            const columnIndex = anchor
-                ? Math.max(0, Math.floor(anchor.offsetLeft / (columnWidth + gap)))
-                : 0;
             appState.readerSpreadPitch = 2 * (columnWidth + gap);
+            if (anchor) {
+                anchor.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+            }
+            const columnIndex = Math.max(0, Math.floor(flow.scrollLeft / (columnWidth + gap)));
             setReaderSpread(Math.floor(columnIndex / 2), false, flow);
             updateReaderProgress();
             if (onReady) onReady();
@@ -1108,25 +1189,89 @@ function setReaderControlsReady(ready) {
     document.getElementById('reader-page-next').disabled = !ready;
 }
 
-function updateReaderProgress() {
+function getReaderProgressAnchorPair(flow, timeline, focalY) {
+    const positionedAnchors = Array.from(flow.querySelectorAll('[id]'))
+        .map(element => {
+            const index = timeline.indexById.get(element.id);
+            return index === undefined ? null : {
+                index,
+                top: element.getBoundingClientRect().top
+            };
+        })
+        .filter(Boolean)
+        .sort((left, right) => left.top - right.top || left.index - right.index);
+    let previous;
+    let next;
+
+    for (const anchor of positionedAnchors) {
+        if (anchor.top <= focalY) {
+            previous = anchor;
+        } else if (previous && anchor.top > previous.top) {
+            next = anchor;
+            break;
+        }
+    }
+    return previous && next ? { previous, next } : null;
+}
+
+function updateReaderProgress(constrainToScrollDirection = false) {
     const progress = document.getElementById('reader-progress');
     const indicator = document.getElementById('reader-progress-indicator');
     const flow = modalBody.querySelector('.reader-flow');
     if (!progress || !indicator || !flow || appState.currentView !== 'work') return;
 
+    const readerData = appState.readerChunks.get(appState.currentWork?.id);
+    const timeline = readerData?.timeline;
+    const anchors = timeline?.ids || [];
     const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
-    const viewport = fullscreen ? flow : modalBody.querySelector('.reader-viewport');
-    const total = fullscreen ? flow.scrollWidth : viewport?.scrollHeight;
-    const visible = fullscreen ? flow.clientWidth : viewport?.clientHeight;
-    const offset = fullscreen ? flow.scrollLeft : viewport?.scrollTop;
-    if (!total || !visible) return;
+    const viewport = modalBody.querySelector('.reader-viewport');
+    const viewportBounds = viewport?.getBoundingClientRect();
+    let currentAnchor = getBookTab(appState.currentWork?.id)?.location;
+    if (!fullscreen && viewportBounds) {
+        const focalElements = document.elementsFromPoint(
+            viewportBounds.left + viewportBounds.width / 2,
+            viewportBounds.top + viewportBounds.height / 2
+        );
+        const focalAnchor = focalElements
+            .map(element => element.closest?.('[id]'))
+            .find(element => element?.id && anchors.includes(element.id));
+        if (focalAnchor) currentAnchor = focalAnchor.id;
+    }
+    const anchorIndex = timeline.indexById.get(currentAnchor) ?? -1;
+    if (anchors.length === 0) return;
 
-    const length = Math.min(1, visible / total);
-    const position = total > visible
-        ? Math.min(1 - length, Math.max(0, offset / (total - visible)))
-        : 0;
-    indicator.style.left = `${position * 100}%`;
-    indicator.style.width = `${length * 100}%`;
+    let progressRatio = anchorIndex === -1
+        ? 0
+        : timeline.wordOffsets
+            ? timeline.wordOffsets[anchorIndex] / timeline.totalWords
+            : anchorIndex / Math.max(1, anchors.length - 1);
+    if (!fullscreen && viewport && viewportBounds && timeline.wordOffsets) {
+        const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+        if (remaining <= 2) {
+            progressRatio = 1;
+        } else {
+            const focalY = viewportBounds.top + viewportBounds.height / 2;
+            const pair = getReaderProgressAnchorPair(flow, timeline, focalY);
+            if (pair) {
+                const distance = pair.next.top - pair.previous.top;
+                const position = Math.min(1, Math.max(0, (focalY - pair.previous.top) / distance));
+                const start = timeline.wordOffsets[pair.previous.index];
+                const end = timeline.wordOffsets[pair.next.index];
+                progressRatio = (start + position * (end - start)) / timeline.totalWords;
+            }
+        }
+    }
+    progressRatio = Math.min(1, Math.max(0, progressRatio));
+    if (constrainToScrollDirection && !fullscreen && Number.isFinite(readerData?.lastProgressRatio)) {
+        if (readerData.scrollDirection === 'forward') {
+            progressRatio = Math.max(progressRatio, readerData.lastProgressRatio);
+        } else if (readerData.scrollDirection === 'backward') {
+            progressRatio = Math.min(progressRatio, readerData.lastProgressRatio);
+        }
+    }
+    if (readerData) readerData.lastProgressRatio = progressRatio;
+    indicator.style.left = '0';
+    indicator.style.width = `${progressRatio * 100}%`;
 }
 
 function setReaderSpread(index, animate, flow = modalBody.querySelector('.reader-flow'), updateAnchor = animate) {
@@ -1155,24 +1300,36 @@ function rememberReaderAnchor(flow = modalBody.querySelector('.reader-flow'), wo
         appState.currentWork?.id !== workId) return;
 
     const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
-    const bounds = (fullscreen ? flow : modalBody.querySelector('.reader-viewport'))?.getBoundingClientRect();
+    const viewport = fullscreen ? flow : modalBody.querySelector('.reader-viewport');
+    const bounds = viewport?.getBoundingClientRect();
     if (!bounds) return;
-    const visible = Array.from(flow.querySelectorAll('[id]'))
-        .map(element => ({ element, bounds: element.getBoundingClientRect() }))
-        .filter(({ bounds: elementBounds }) => fullscreen
-            ? elementBounds.left >= bounds.left + 20 &&
-                elementBounds.left < bounds.left + flow.clientWidth / 2 &&
-                elementBounds.bottom > bounds.top
-            : elementBounds.bottom > bounds.top && elementBounds.top < bounds.bottom
-        )
-        .sort((a, b) => {
-            if (fullscreen) return a.bounds.top - b.bounds.top;
-            return Math.abs(a.bounds.top - bounds.top) - Math.abs(b.bounds.top - bounds.top);
-        })[0];
-    if (!visible) return;
-    appState.readerAnchorLocation = visible.element.id;
-    modalBody.dataset.readerLocation = visible.element.id;
-    rememberBookLocation(workId, visible.element.id);
+    const focalXs = fullscreen ? [.25, .5, .75] : [.25, .5, .75];
+    const focalYs = [.08, .18, .32];
+    let focalAnchor;
+    for (const x of focalXs) {
+        for (const y of focalYs) {
+            focalAnchor = document.elementsFromPoint(
+                bounds.left + bounds.width * x,
+                bounds.top + bounds.height * y
+            ).map(element => element.closest?.('[id]')).find(element => element && flow.contains(element));
+            if (focalAnchor) break;
+        }
+        if (focalAnchor) break;
+    }
+    if (!focalAnchor) {
+        focalAnchor = Array.from(flow.querySelectorAll('[id]')).find(element => {
+            const elementBounds = element.getBoundingClientRect();
+            return elementBounds.right > bounds.left &&
+                elementBounds.left < bounds.right &&
+                elementBounds.bottom > bounds.top &&
+                elementBounds.top < bounds.bottom;
+        });
+    }
+    if (!focalAnchor) return;
+    appState.readerAnchorLocation = focalAnchor.id;
+    modalBody.dataset.readerLocation = focalAnchor.id;
+    rememberBookLocation(workId, focalAnchor.id);
+    updateReaderProgress();
 }
 
 function attachReaderSpreadInteractions() {
@@ -1218,12 +1375,23 @@ function attachReaderSpreadInteractions() {
     if (!viewport || viewport.dataset.readerLoading === 'true') return;
     viewport.dataset.readerLoading = 'true';
     let anchorTimer;
+    let lastScrollTop = viewport.scrollTop;
     viewport.addEventListener('scroll', () => {
         if (document.getElementById('modal-content').classList.contains('fullscreen')) return;
-        if (appState.readerAnchorWritesBlocked) return;
+        if (appState.readerAnchorWritesBlocked) {
+            lastScrollTop = viewport.scrollTop;
+            return;
+        }
+        const readerData = appState.readerChunks.get(workId);
+        const scrollingUp = viewport.scrollTop < lastScrollTop;
+        if (readerData && viewport.scrollTop !== lastScrollTop) {
+            readerData.scrollDirection = scrollingUp ? 'backward' : 'forward';
+        }
+        if (scrollingUp && viewport.scrollTop < 500) prependPreviousReaderChunk(workId);
+        lastScrollTop = viewport.scrollTop;
         const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
         if (remaining < 500) appendNextReaderChunk(workId);
-        updateReaderProgress();
+        updateReaderProgress(true);
         window.clearTimeout(anchorTimer);
         anchorTimer = window.setTimeout(() => rememberReaderAnchor(flow, workId), 120);
     }, { passive: true });
@@ -1331,6 +1499,7 @@ function resetApp() {
     localStorage.removeItem(READER_STATE_KEY);
     localStorage.removeItem(READER_SETTINGS_KEY);
     localStorage.removeItem(BOOKMARKS_KEY);
+    localStorage.removeItem(STARTUP_QUOTE_KEY);
     const reload = () => {
         const url = new URL(window.location.href);
         url.searchParams.set('refresh', Date.now().toString());

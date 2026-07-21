@@ -229,7 +229,24 @@ def partition_html(elements, max_chars=22000):
         partitions.append("".join(current))
         indexes.append(current_start)
 
-    return [indexes, partitions]
+    return [indexes, partitions, build_semantic_timeline(elements)]
+
+
+def build_semantic_timeline(elements):
+    ids = []
+    word_offsets = []
+    total_words = 0
+
+    for element_id, element_html in elements:
+        ids.append(element_id)
+        word_offsets.append(total_words)
+        total_words += len(clean_text(element_html).split())
+
+    return {
+        "ids": ids,
+        "wordOffsets": word_offsets,
+        "totalWords": total_words,
+    }
 
 
 def to_reader_json(parsed: ParsedWork):
