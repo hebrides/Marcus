@@ -442,7 +442,7 @@ function showNewQuote(selectionMethod) {
 
     // Display author, work
     let citationHTML = `~<a href="#" id="authorLink" onclick="showBiography()"><label for="modal-toggle">${myAuthor.name}</label></a>, 
-    <a href="#" id="workLink" onclick="openWork('${myWork.id}')"><label for="modal-toggle">${myWork.title}</label></a>`;
+    <a href="#" id="workLink" onclick="openWork('${myWork.id}', '1')"><label for="modal-toggle">${myWork.title}</label></a>`;
 
     // get quote location for citation
     const myQuoteLocation = myQuote.location.split(".");
@@ -694,6 +694,7 @@ function rememberBookLocation(workId, location) {
 
 function minimizeBook() {
     if (appState.activeBookId) {
+        clearReaderPassageHighlight(appState.activeBookId);
         const book = getBookTab(appState.activeBookId);
         if (book) {
             book.minimized = true;
@@ -706,6 +707,7 @@ function minimizeBook() {
 }
 
 function closeBookTab(workId) {
+    clearReaderPassageHighlight(workId);
     appState.openBooks = appState.openBooks.filter(book => book.workId !== workId);
     if (appState.activeBookId === workId) appState.activeBookId = null;
     discardReaderView(workId);
@@ -828,6 +830,20 @@ function prependPreviousReaderChunk(workId = appState.renderedWorkId) {
     return true;
 }
 
+function ensureReaderLocationRendered(workId, location) {
+    const readerData = appState.readerChunks.get(workId);
+    if (!readerData) return false;
+
+    const targetChunkIndex = getReaderChunkIndex(readerData.chunks, location);
+    while (readerData.previousChunkIndex >= targetChunkIndex) {
+        if (!prependPreviousReaderChunk(workId)) return false;
+    }
+    while (readerData.nextChunkIndex <= targetChunkIndex) {
+        if (!appendNextReaderChunk(workId)) return false;
+    }
+    return true;
+}
+
 function restoreReaderView(workId, location, highlightPassage) {
     const view = appState.readerViews.get(workId) ||
         (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
@@ -844,6 +860,7 @@ function restoreReaderView(workId, location, highlightPassage) {
     setReaderControlsReady(false);
 
     requestAnimationFrame(() => {
+        ensureReaderLocationRendered(workId, location);
         const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
         layoutReaderSpread(target, () => {
             attachReaderSpreadInteractions();
@@ -857,12 +874,19 @@ function restoreReaderView(workId, location, highlightPassage) {
 }
 
 function highlightReaderPassage(target) {
+    clearReaderPassageHighlight(appState.currentWork?.id);
     target.classList.add('passage-highlight');
     target.style.setProperty('background-color', 'rgba(0, 0, 0, .22)', 'important');
-    window.setTimeout(() => {
+}
+
+function clearReaderPassageHighlight(workId) {
+    const view = appState.readerViews.get(workId) ||
+        (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
+    if (!view) return;
+    view.querySelectorAll('.passage-highlight').forEach(target => {
         target.classList.remove('passage-highlight');
         target.style.removeProperty('background-color');
-    }, 3500);
+    });
 }
 
 function openWork(workId, location, highlightPassage = false) {
@@ -1000,6 +1024,11 @@ function showWork(location = '1', highlightPassage = false) {
 
     modalTitle.innerHTML = appState.currentWork.title;
     const workId = appState.currentWork.id;
+    const readerData = appState.readerChunks.get(workId);
+    if (readerData?.progressAnimationFrame) {
+        window.cancelAnimationFrame(readerData.progressAnimationFrame);
+    }
+    if (readerData) delete readerData.visualProgressRatio;
     if (appState.renderedWorkId && appState.renderedWorkId !== workId) {
         stashRenderedReaderView();
     }
@@ -1117,6 +1146,11 @@ function moveReaderPage(direction) {
 function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
     const flow = modalBody.querySelector('.reader-flow');
     const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
+    const readerData = appState.readerChunks.get(appState.currentWork?.id);
+    if (readerData?.progressAnimationFrame) {
+        window.cancelAnimationFrame(readerData.progressAnimationFrame);
+    }
+    if (readerData) delete readerData.visualProgressRatio;
     if (!flow || !fullscreen) {
         if (anchor) anchor.scrollIntoView({ block: 'start', behavior: 'instant' });
         updateReaderProgress();
@@ -1147,8 +1181,20 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
             if (anchor) {
                 anchor.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
             }
-            const columnIndex = Math.max(0, Math.floor(flow.scrollLeft / (columnWidth + gap)));
-            setReaderSpread(Math.floor(columnIndex / 2), false, flow);
+            const flowBounds = flow.getBoundingClientRect();
+            const targetColumnIndex = anchor
+                ? Math.max(0, Math.floor(
+                    (anchor.getBoundingClientRect().left - flowBounds.left + flow.scrollLeft) /
+                    (columnWidth + gap)
+                ))
+                : Math.max(0, Math.floor(flow.scrollLeft / (columnWidth + gap)));
+            // A deep link should begin in the left reading column, even when that
+            // column is the second half of the surrounding source spread.
+            setReaderSpread(targetColumnIndex / 2, false, flow);
+            if (readerData) {
+                const visualRatio = getFullscreenReaderProgressRatio(flow, readerData);
+                if (Number.isFinite(visualRatio)) readerData.visualProgressRatio = visualRatio;
+            }
             updateReaderProgress();
             if (onReady) onReady();
         }, isCurrent);
@@ -1214,6 +1260,64 @@ function getReaderProgressAnchorPair(flow, timeline, focalY) {
     return previous && next ? { previous, next } : null;
 }
 
+function getReaderLeadingAnchor(flow, viewport) {
+    const bounds = viewport?.getBoundingClientRect();
+    if (!bounds) return null;
+    const anchors = Array.from(flow.querySelectorAll('[id]'))
+        .map(element => ({ element, bounds: element.getBoundingClientRect() }))
+        .filter(({ bounds: anchorBounds }) =>
+            anchorBounds.bottom > bounds.top && anchorBounds.top < bounds.bottom
+        );
+    const containingAnchor = anchors
+        .filter(({ bounds: anchorBounds }) => anchorBounds.top <= bounds.top + 4)
+        .sort((left, right) => right.bounds.top - left.bounds.top)[0];
+    return containingAnchor?.element ||
+        anchors.sort((left, right) => left.bounds.top - right.bounds.top)[0]?.element ||
+        null;
+}
+
+function getFullscreenReaderProgressRatio(flow, readerData) {
+    const { timeline } = readerData;
+    if (!timeline?.wordOffsets || timeline.totalWords <= 0) return null;
+
+    const maxScrollLeft = Math.max(0, flow.scrollWidth - flow.clientWidth);
+    if (flow.scrollLeft <= 2) return 0;
+    if (readerData.nextChunkIndex >= readerData.chunks.length &&
+        flow.scrollLeft >= maxScrollLeft - 2) {
+        return 1;
+    }
+
+    const focalX = flow.scrollLeft + flow.clientWidth / 2;
+    const positionedAnchors = Array.from(flow.querySelectorAll('[id]'))
+        .map(element => {
+            const index = timeline.indexById.get(element.id);
+            const rect = element.getClientRects()[0];
+            return index === undefined || !rect ? null : {
+                index,
+                left: rect.left + flow.scrollLeft
+            };
+        })
+        .filter(Boolean)
+        .sort((left, right) => left.left - right.left || left.index - right.index);
+    let previous;
+    let next;
+
+    for (const anchor of positionedAnchors) {
+        if (anchor.left <= focalX) {
+            previous = anchor;
+        } else if (previous && anchor.left > previous.left) {
+            next = anchor;
+            break;
+        }
+    }
+    if (!previous || !next) return null;
+
+    const position = Math.min(1, Math.max(0, (focalX - previous.left) / (next.left - previous.left)));
+    return (timeline.wordOffsets[previous.index] +
+        position * (timeline.wordOffsets[next.index] - timeline.wordOffsets[previous.index])) /
+        timeline.totalWords;
+}
+
 function updateReaderProgress(constrainToScrollDirection = false) {
     const progress = document.getElementById('reader-progress');
     const indicator = document.getElementById('reader-progress-indicator');
@@ -1240,14 +1344,18 @@ function updateReaderProgress(constrainToScrollDirection = false) {
     const anchorIndex = timeline.indexById.get(currentAnchor) ?? -1;
     if (anchors.length === 0) return;
 
-    let progressRatio = anchorIndex === -1
+    let progressRatio = fullscreen && Number.isFinite(readerData?.visualProgressRatio)
+        ? readerData.visualProgressRatio
+        : anchorIndex === -1
         ? 0
         : timeline.wordOffsets
             ? timeline.wordOffsets[anchorIndex] / timeline.totalWords
             : anchorIndex / Math.max(1, anchors.length - 1);
     if (!fullscreen && viewport && viewportBounds && timeline.wordOffsets) {
         const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-        if (remaining <= 2) {
+        if (anchorIndex === 0 && viewport.scrollTop <= 50) {
+            progressRatio = 0;
+        } else if (remaining <= 2) {
             progressRatio = 1;
         } else {
             const focalY = viewportBounds.top + viewportBounds.height / 2;
@@ -1274,6 +1382,37 @@ function updateReaderProgress(constrainToScrollDirection = false) {
     indicator.style.width = `${progressRatio * 100}%`;
 }
 
+function settleReaderSpread(flow, targetLeft, workId, anchorGeneration) {
+    const readerData = appState.readerChunks.get(workId);
+    if (!readerData) return;
+    if (readerData.progressAnimationFrame) {
+        window.cancelAnimationFrame(readerData.progressAnimationFrame);
+    }
+    let stableFrames = 0;
+    const tick = () => {
+        if (anchorGeneration !== appState.readerAnchorGeneration ||
+            appState.currentWork?.id !== workId ||
+            flow !== modalBody.querySelector('.reader-flow')) {
+            return;
+        }
+        const currentReaderData = appState.readerChunks.get(workId);
+        if (!currentReaderData) return;
+        const visualRatio = currentReaderData && getFullscreenReaderProgressRatio(flow, currentReaderData);
+        if (Number.isFinite(visualRatio)) {
+            currentReaderData.visualProgressRatio = visualRatio;
+            updateReaderProgress();
+        }
+        stableFrames = Math.abs(flow.scrollLeft - targetLeft) <= 1 ? stableFrames + 1 : 0;
+        if (stableFrames < 3) {
+            currentReaderData.progressAnimationFrame = window.requestAnimationFrame(tick);
+            return;
+        }
+        delete currentReaderData.progressAnimationFrame;
+        rememberReaderAnchor(flow, workId);
+    };
+    readerData.progressAnimationFrame = window.requestAnimationFrame(tick);
+}
+
 function setReaderSpread(index, animate, flow = modalBody.querySelector('.reader-flow'), updateAnchor = animate) {
     if (!flow) return;
     appState.readerSpreadIndex = index;
@@ -1281,17 +1420,22 @@ function setReaderSpread(index, animate, flow = modalBody.querySelector('.reader
     if (animate) {
         flow.scrollTo({ left, behavior: 'smooth' });
     } else {
-        flow.scrollLeft = left;
+        flow.scrollTo({ left, behavior: 'instant' });
     }
     if (updateAnchor) {
         const workId = appState.currentWork?.id;
         const anchorGeneration = appState.readerAnchorGeneration;
-        window.setTimeout(() => {
+        if (animate) {
+            settleReaderSpread(flow, left, workId, anchorGeneration);
+        } else {
+            const readerData = appState.readerChunks.get(workId);
+            const visualRatio = readerData && getFullscreenReaderProgressRatio(flow, readerData);
+            if (Number.isFinite(visualRatio)) readerData.visualProgressRatio = visualRatio;
             if (anchorGeneration === appState.readerAnchorGeneration) {
                 rememberReaderAnchor(flow, workId);
             }
             updateReaderProgress();
-        }, animate ? 400 : 0);
+        }
     }
 }
 
@@ -1560,6 +1704,7 @@ function attachEventListeners() {
     document.getElementById('modal-toggle').addEventListener('change', function() {
         if (!this.checked) {
             if (appState.currentView === 'work' && appState.activeBookId) {
+                clearReaderPassageHighlight(appState.activeBookId);
                 if (appState.closeAction === 'close') {
                     appState.openBooks = appState.openBooks.filter(book => book.workId !== appState.activeBookId);
                     appState.activeBookId = null;
@@ -1582,6 +1727,15 @@ function attachEventListeners() {
     // modal content fullscreen toggle
     document.getElementById('modal-fullscreen').addEventListener('click', function() {
         const content = document.getElementById('modal-content');
+        if (!content.classList.contains('fullscreen')) {
+            const flow = modalBody.querySelector('.reader-flow');
+            const viewport = modalBody.querySelector('.reader-viewport');
+            const leadingAnchor = flow && getReaderLeadingAnchor(flow, viewport);
+            if (leadingAnchor && appState.activeBookId) {
+                appState.readerAnchorLocation = leadingAnchor.id;
+                modalBody.dataset.readerLocation = leadingAnchor.id;
+            }
+        }
         appState.readerAnchorGeneration += 1;
         const layoutGeneration = ++appState.readerLayoutGeneration;
         appState.readerAnchorWritesBlocked = true;

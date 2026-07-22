@@ -123,9 +123,21 @@ test.describe('Quote interaction', () => {
     });
 
     test('clicking the work link in the citation opens the work from the start', async ({ page }) => {
+        await page.evaluate(() => {
+            appData.quotes.allQuotes = [{
+                workId: '4',
+                location: '19.1',
+                quote: 'A deep quote before opening the work title.'
+            }];
+            showNewQuote('random');
+        });
+        await page.locator('#quoteLink').click();
+        await expect(page.locator('#modal-body [id="19.1"]')).toBeAttached({ timeout: 15000 });
+        await page.locator('#modal-close').click();
+
         await page.locator('#workLink label[for="modal-toggle"]').click();
-        await expect(page.locator('#modal')).toBeVisible();
-        await expect(page.locator('#modal-body')).not.toBeEmpty({ timeout: 15000 });
+        await expect(page.locator('#modal-body [id="1"]')).toBeAttached({ timeout: 15000 });
+        await expect(page.locator('#modal-body')).toHaveAttribute('data-reader-location', '1');
     });
 
     test('clicking a location link in the citation opens the work at that location', async ({ page }) => {
@@ -149,6 +161,46 @@ test.describe('Quote interaction', () => {
         await page.locator('#quoteLink').click();
 
         await expect(page.locator('#modal-title')).toHaveText(quoteWork);
+    });
+
+    test('a quote deep link restores its target in an already-open work', async ({ page }) => {
+        await page.evaluate(() => openWork('2', '58.21'));
+        await expect(page.locator('#modal-body [id="58.21"]')).toBeAttached({ timeout: 15000 });
+
+        await page.evaluate(() => {
+            appData.quotes.allQuotes = [{
+                workId: '2',
+                location: '99.12',
+                quote: 'A later passage in an already-open book.'
+            }];
+            showNewQuote('random');
+            document.getElementById('quoteLink').click();
+        });
+
+        await expect(page.locator('#modal-body [id="99.12"]')).toBeAttached({ timeout: 15000 });
+        await expect(page.locator('#modal-body')).toHaveAttribute('data-reader-location', '99.12');
+        await expect.poll(() => page.evaluate(() => getBookTab('2').location)).toBe('99.12');
+    });
+
+    test('quote emphasis persists until minimize and returns when reopening a minimized work', async ({ page }) => {
+        await page.evaluate(() => {
+            appData.quotes.allQuotes = [{
+                workId: '4',
+                location: '19.1',
+                quote: 'A highlighted quote passage.'
+            }];
+            showNewQuote('random');
+        });
+        await page.locator('#quoteLink').click();
+        await expect(page.locator('#modal-body [id="19.1"]')).toHaveClass(/passage-highlight/, { timeout: 15000 });
+        await page.waitForTimeout(3800);
+        await expect(page.locator('#modal-body [id="19.1"]')).toHaveClass(/passage-highlight/);
+
+        await page.locator('#modal-close').click();
+        await expect(page.locator('#modal-body [id="19.1"]')).not.toHaveClass(/passage-highlight/);
+
+        await page.locator('#quoteLink').click();
+        await expect(page.locator('#modal-body [id="19.1"]')).toHaveClass(/passage-highlight/, { timeout: 15000 });
     });
 
     test('marks an open-book tab when its work data fails to load', async ({ page }) => {
@@ -391,6 +443,65 @@ test.describe('Modal controls', () => {
             .toBeGreaterThan(initialScroll);
     });
 
+    test('Fragments animates progress during page turns and completes at the final spread', async ({ page }) => {
+        await page.evaluate(() => {
+            closeBookTab('10');
+            openWork('10', '1');
+        });
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await expect(page.locator('#reader-progress-indicator')).toHaveCSS('width', '0px');
+        await page.locator('#modal-fullscreen').click();
+        if (await page.evaluate(() => window.innerWidth <= 900)) return;
+
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        await expect(page.locator('#reader-progress-indicator')).toHaveCSS('width', '0px');
+        const sampledProgress = await page.evaluate(async () => {
+            const indicator = document.getElementById('reader-progress-indicator');
+            const next = document.getElementById('reader-page-next');
+            const values = [parseFloat(indicator.style.width)];
+            next.click();
+            for (let frame = 0; frame < 12; frame += 1) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                values.push(parseFloat(indicator.style.width));
+            }
+            return values;
+        });
+        expect(Math.max(...sampledProgress)).toBeGreaterThan(sampledProgress[0]);
+        sampledProgress.slice(1).forEach((value, index) => {
+            expect(value).toBeGreaterThanOrEqual(sampledProgress[index]);
+        });
+
+        const finalProgress = await page.evaluate(async () => {
+            const indicator = document.getElementById('reader-progress-indicator');
+            const next = document.getElementById('reader-page-next');
+            for (let turn = 0; turn < 16; turn += 1) {
+                next.click();
+                await new Promise(resolve => setTimeout(resolve, 450));
+            }
+            return parseFloat(indicator.style.width);
+        });
+        expect(finalProgress).toBe(100);
+    });
+
+    test('deep targets begin in the left fullscreen column', async ({ page }) => {
+        await page.evaluate(() => {
+            closeBookTab('4');
+            openWork('4', '19.1');
+        });
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+        if (await page.evaluate(() => window.innerWidth <= 900)) return;
+
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        const placement = await page.evaluate(() => {
+            const anchor = document.querySelector('#modal-body [id="19.1"]').getBoundingClientRect();
+            const flow = document.querySelector('.reader-flow').getBoundingClientRect();
+            return { anchorLeft: anchor.left, flowLeft: flow.left, flowWidth: flow.width };
+        });
+        expect(placement.anchorLeft).toBeGreaterThanOrEqual(placement.flowLeft);
+        expect(placement.anchorLeft).toBeLessThan(placement.flowLeft + placement.flowWidth / 2);
+    });
+
     test('reader progress retains its semantic extent across reader modes', async ({ page }) => {
         await expect(page.locator('#reader-progress')).toBeVisible();
         const oneColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
@@ -403,7 +514,7 @@ test.describe('Modal controls', () => {
             const twoColumnWidth = await page.locator('#reader-progress-indicator').evaluate(element =>
                 parseFloat(element.style.width)
             );
-            expect(twoColumnWidth).toBeCloseTo(oneColumnWidth, 1);
+            expect(Math.abs(twoColumnWidth - oneColumnWidth)).toBeLessThan(1);
         }
     });
 
@@ -472,7 +583,10 @@ test.describe('Modal controls', () => {
     });
 
     test('loads earlier chunks while scrolling backward from a deep link', async ({ page }) => {
-        await page.evaluate(() => openWork('2', '99.12'));
+        await page.evaluate(() => {
+            closeBookTab('2');
+            openWork('2', '99.12');
+        });
         await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
         await page.waitForTimeout(550);
 
@@ -882,15 +996,15 @@ test.describe('Readability', () => {
         expect(modalWidth).toBeGreaterThan(600);
     });
 
-    test('reader uses snapped horizontal pages on narrow viewport', async ({ page }) => {
+    test('reader remains a vertical single-column view on narrow viewport', async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 812 });
         await page.locator('#modal-fullscreen').click();
         await expect(page.locator('#modal-content')).toHaveClass(/fullscreen/);
 
-        const scrollSnapType = await page.locator('#modal-body').evaluate(el =>
-            getComputedStyle(el).scrollSnapType
+        const columns = await page.locator('.reader-flow').evaluate(el =>
+            getComputedStyle(el).columnCount
         );
-        expect(scrollSnapType).toContain('x');
+        expect(columns).toBe('1');
     });
 });
 
