@@ -660,6 +660,10 @@ body.theme-day .activity::before {
     transition: width .18s ease-out;
 }
 
+#modal-content.reader-progress-instant #reader-progress-indicator {
+    transition: none;
+}
+
 body.theme-day #reader-progress {
     background: rgba(38,55,71,.14);
 }

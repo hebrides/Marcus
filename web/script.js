@@ -17,7 +17,9 @@ let appState = {
         readerChunks: new Map(),
         readerAnchorGeneration: 0,
         readerAnchorWritesBlocked: false,
-        readerLayoutGeneration: 0
+        readerLayoutGeneration: 0,
+        isResetting: false,
+        readerStateEpoch: null
     };
 
 // Stores app data in memory for quick access
@@ -95,9 +97,11 @@ const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 const READER_STATE_KEY = 'stoic-reader-state';
 const READER_STATE_VERSION = 2;
+const READER_STATE_EPOCH_KEY = 'stoic-reader-state-epoch';
 const READER_SETTINGS_KEY = 'stoic-reader-settings';
 const BOOKMARKS_KEY = 'stoic-reader-bookmarks';
 const STARTUP_QUOTE_KEY = 'stoic-reader-startup-quote';
+const RESET_APP_QUERY_KEY = 'reset-app';
 const MINIMUM_LOADING_TIME = 350;
 const DEFAULT_READER_SETTINGS = {
     theme: 'night',
@@ -105,6 +109,37 @@ const DEFAULT_READER_SETTINGS = {
     font: 'goudy',
     spacing: 'normal'
 };
+
+function createReaderStateEpoch() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function initializeReaderStateEpoch() {
+    const savedEpoch = localStorage.getItem(READER_STATE_EPOCH_KEY);
+    appState.readerStateEpoch = savedEpoch || createReaderStateEpoch();
+    if (!savedEpoch) localStorage.setItem(READER_STATE_EPOCH_KEY, appState.readerStateEpoch);
+}
+
+function rotateReaderStateEpoch() {
+    const epoch = createReaderStateEpoch();
+    localStorage.setItem(READER_STATE_EPOCH_KEY, epoch);
+    appState.readerStateEpoch = epoch;
+}
+
+function clearStateAfterResetNavigation() {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(RESET_APP_QUERY_KEY)) return;
+
+    localStorage.removeItem(READER_STATE_KEY);
+    localStorage.removeItem(READER_SETTINGS_KEY);
+    localStorage.removeItem(BOOKMARKS_KEY);
+    localStorage.removeItem(STARTUP_QUOTE_KEY);
+    url.searchParams.delete(RESET_APP_QUERY_KEY);
+    window.history.replaceState({}, '', url.toString());
+}
+
+clearStateAfterResetNavigation();
+initializeReaderStateEpoch();
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyright-year').textContent = new Date().getFullYear();
@@ -596,6 +631,8 @@ function getBookTab(workId) {
 }
 
 function saveReaderState() {
+    if (appState.isResetting ||
+        localStorage.getItem(READER_STATE_EPOCH_KEY) !== appState.readerStateEpoch) return;
     localStorage.setItem(READER_STATE_KEY, JSON.stringify({
         version: READER_STATE_VERSION,
         openBooks: appState.openBooks,
@@ -934,6 +971,16 @@ function openWork(workId, location, highlightPassage = false) {
     showWork(location || book.location || appState.lastLocations[workId] || '1', highlightPassage);
 }
 
+function suppressReaderProgressTransition() {
+    document.getElementById('modal-content').classList.add('reader-progress-instant');
+}
+
+function resumeReaderProgressTransition() {
+    window.requestAnimationFrame(() => {
+        document.getElementById('modal-content').classList.remove('reader-progress-instant');
+    });
+}
+
 function showBiography() {
     appState.currentView = 'bio';
     setReaderModalControls('standard');
@@ -1013,6 +1060,7 @@ function showModalContent(content, startedAt, onRendered, renderToken) {
 
 // Display the current work as discrete, snapped pages around the requested location.
 function showWork(location = '1', highlightPassage = false) {
+    suppressReaderProgressTransition();
     const renderToken = (appState.readerRenderToken || 0) + 1;
     appState.readerRenderToken = renderToken;
     appState.readerAnchorGeneration += 1;
@@ -1107,6 +1155,7 @@ function showWork(location = '1', highlightPassage = false) {
         })
         .catch(err => {
             if (renderToken !== appState.readerRenderToken) return;
+            resumeReaderProgressTransition();
             const workId = appState.currentWork.id;
             const message = `Unable to load "${appState.currentWork.title}".`;
             console.error(message, err);
@@ -1154,7 +1203,10 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
     if (!flow || !fullscreen) {
         if (anchor) anchor.scrollIntoView({ block: 'start', behavior: 'instant' });
         updateReaderProgress();
-        if (isCurrent() && onReady) onReady();
+        if (isCurrent()) {
+            if (onReady) onReady();
+            resumeReaderProgressTransition();
+        }
         return;
     }
 
@@ -1197,6 +1249,7 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
             }
             updateReaderProgress();
             if (onReady) onReady();
+            resumeReaderProgressTransition();
         }, isCurrent);
     });
 }
@@ -1640,13 +1693,23 @@ function resetApp() {
         return;
     }
 
+    appState.isResetting = true;
+    rotateReaderStateEpoch();
+    appState.readerRenderToken = (appState.readerRenderToken || 0) + 1;
+    appState.openBooks = [];
+    appState.lastLocations = {};
+    appState.activeBookId = null;
+    appState.readerViews.clear();
+    appState.readerChunks.clear();
+    appState.renderedWorkId = null;
+    renderBookTabs();
     localStorage.removeItem(READER_STATE_KEY);
     localStorage.removeItem(READER_SETTINGS_KEY);
     localStorage.removeItem(BOOKMARKS_KEY);
     localStorage.removeItem(STARTUP_QUOTE_KEY);
     const reload = () => {
         const url = new URL(window.location.href);
-        url.searchParams.set('refresh', Date.now().toString());
+        url.searchParams.set(RESET_APP_QUERY_KEY, '1');
         window.location.replace(url.toString());
     };
     const clearOfflineCache = () => {

@@ -163,6 +163,102 @@ test.describe('Quote interaction', () => {
         await expect(page.locator('#modal-title')).toHaveText(quoteWork);
     });
 
+    test('a menu-selected work loads its reader content', async ({ page }) => {
+        await page.locator('#menu-open-button').click();
+        const work = page.locator('#menu .menu-author-item').filter({
+            hasText: 'The Golden Sayings'
+        });
+        await work.locator('label').click();
+        await work.getByRole('link', { name: 'The Golden Sayings' }).click();
+
+        await expect(page.locator('#modal-title')).toHaveText('The Golden Sayings');
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await expect(page.locator('#modal-body [id="1"]')).toBeAttached();
+        await expect(page.locator('.reader-error')).toHaveCount(0);
+    });
+
+    test('every visible menu work loads reader content', async ({ page }) => {
+        const workTitles = await page.locator('#menu .menu-author-item a').allTextContents();
+
+        for (const title of workTitles) {
+            await page.locator('#menu-open-button').click();
+            const workLink = page.locator('#menu .menu-author-item a', { hasText: title }).first();
+            await workLink.locator('xpath=../../preceding-sibling::label[1]').click();
+            await workLink.click();
+
+            await expect(page.locator('#modal-title')).toHaveText(title);
+            await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+            await expect(page.locator('#modal-body .reader-flow [id]')).not.toHaveCount(0);
+            await expect(page.locator('.reader-error')).toHaveCount(0);
+            await page.locator('#modal-close').click();
+        }
+    });
+
+    test('menu-selected works load after revisiting and scrolling quote-context tabs', async ({ page }) => {
+        await page.evaluate(() => {
+            appData.quotes.allQuotes = [{
+                workId: '2',
+                location: '58.21',
+                quote: 'A quote-linked Letters passage.'
+            }];
+            showNewQuote('random');
+        });
+        await page.locator('#quoteLink').click();
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await expect(page.locator('.reader-flow')).toBeAttached();
+        await page.locator('.reader-viewport').evaluate(element => {
+            element.scrollTop = Math.min(
+                element.scrollHeight - element.clientHeight,
+                element.scrollTop + 500
+            );
+        });
+        await page.locator('#modal-close').click();
+
+        const expectReaderContent = async () => {
+            await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+            await expect(page.locator('#modal-body .reader-flow [id]')).not.toHaveCount(0);
+            await expect(page.locator('.reader-error')).toHaveCount(0);
+        };
+        const openMenuWork = async title => {
+            await page.locator('#menu-open-button').click();
+            const workLink = page.locator('#menu .menu-author-item a', { hasText: title }).first();
+            await workLink.locator('xpath=../../preceding-sibling::label[1]').click();
+            await workLink.click();
+            await expect(page.locator('#modal-title')).toHaveText(title);
+            await expectReaderContent();
+        };
+
+        await openMenuWork('The Golden Sayings');
+        await page.locator('.reader-viewport').evaluate(element => {
+            element.scrollTop = Math.min(
+                element.scrollHeight - element.clientHeight,
+                element.scrollTop + 300
+            );
+        });
+        await page.locator('#modal-close').click();
+
+        for (const title of [
+            'Letters from a Stoic',
+            'The Golden Sayings',
+            'Letters from a Stoic',
+            'The Golden Sayings'
+        ]) {
+            await page.locator('.book-tab-open').filter({ hasText: title }).click();
+            await expect(page.locator('#modal-title')).toHaveText(title);
+            await expectReaderContent();
+            await page.locator('.reader-viewport').evaluate(element => {
+                element.scrollTop = Math.min(
+                    element.scrollHeight - element.clientHeight,
+                    element.scrollTop + 250
+                );
+            });
+            await page.locator('#modal-close').click();
+        }
+
+        await openMenuWork('Tusculan Disputations');
+        await page.locator('#modal-close').click();
+    });
+
     test('a quote deep link restores its target in an already-open work', async ({ page }) => {
         await page.evaluate(() => openWork('2', '58.21'));
         await expect(page.locator('#modal-body [id="58.21"]')).toBeAttached({ timeout: 15000 });
@@ -180,6 +276,33 @@ test.describe('Quote interaction', () => {
         await expect(page.locator('#modal-body [id="99.12"]')).toBeAttached({ timeout: 15000 });
         await expect(page.locator('#modal-body')).toHaveAttribute('data-reader-location', '99.12');
         await expect.poll(() => page.evaluate(() => getBookTab('2').location)).toBe('99.12');
+    });
+
+    test('switching works or following a quote deep link updates progress without a CSS transition', async ({ page }) => {
+        await page.evaluate(() => {
+            const indicator = document.getElementById('reader-progress-indicator');
+            window.readerProgressTransitions = 0;
+            indicator.addEventListener('transitionrun', event => {
+                if (event.propertyName === 'width') window.readerProgressTransitions += 1;
+            });
+            openWork('2', '58.21');
+        });
+        await expect(page.locator('#modal-body [id="58.21"]')).toBeAttached({ timeout: 15000 });
+        await page.evaluate(() => {
+            window.readerProgressTransitions = 0;
+            openWork('4', '19.1');
+        });
+        await expect(page.locator('#modal-body [id="19.1"]')).toBeAttached({ timeout: 15000 });
+        await expect(page.locator('#modal-content')).not.toHaveClass(/reader-progress-instant/);
+        expect(await page.evaluate(() => window.readerProgressTransitions)).toBe(0);
+
+        await page.evaluate(() => {
+            window.readerProgressTransitions = 0;
+            openWork('4', '56.2');
+        });
+        await expect(page.locator('#modal-body [id="56.2"]')).toBeAttached({ timeout: 15000 });
+        await expect(page.locator('#modal-content')).not.toHaveClass(/reader-progress-instant/);
+        expect(await page.evaluate(() => window.readerProgressTransitions)).toBe(0);
     });
 
     test('quote emphasis persists until minimize and returns when reopening a minimized work', async ({ page }) => {
@@ -864,16 +987,67 @@ test.describe('Reader settings', () => {
 
     test('Reset app confirms before clearing app state and reloading', async ({ page }) => {
         await openSettings(page);
+        const resetNavigation = page.waitForURL(/reset-app=1/);
         page.once('dialog', dialog => dialog.accept());
         await page.locator('#reset-app').click();
 
-        await page.waitForURL(/refresh=/);
+        await resetNavigation;
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
         await expect(page.locator('#book-tab-dock')).toBeHidden();
         const bookmarks = await page.evaluate(() =>
             localStorage.getItem('stoic-reader-bookmarks')
         );
         expect(bookmarks).toBeNull();
+    });
+
+    test('Reset app prevents pending reader saves from restoring minimized tabs', async ({ page }) => {
+        await page.locator('.reader-viewport').evaluate(element => {
+            element.scrollTop += 300;
+            element.dispatchEvent(new Event('scroll'));
+        });
+        await openSettings(page);
+        const resetNavigation = page.waitForURL(/reset-app=1/);
+        page.once('dialog', dialog => dialog.accept());
+        await page.locator('#reset-app').click();
+
+        await resetNavigation;
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        expect(await page.evaluate(() => localStorage.getItem('stoic-reader-state'))).toBeNull();
+    });
+
+    test('Reset navigation discards reader state written before reload', async ({ page }) => {
+        await page.evaluate(() => {
+            localStorage.setItem('stoic-reader-state', JSON.stringify({
+                version: 2,
+                openBooks: [{ workId: '4', location: '19.1', minimized: true, error: false }],
+                lastLocations: { 4: '19.1' }
+            }));
+        });
+        await page.goto('/?refresh=test&reset-app=1');
+
+        await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('#book-tab-dock')).toBeHidden();
+        expect(await page.evaluate(() => localStorage.getItem('stoic-reader-state'))).toBeNull();
+        await expect(page).not.toHaveURL(/reset-app=/);
+    });
+
+    test('a pre-reset app tab cannot restore reader state after another tab resets', async ({ page }) => {
+        const stalePage = await page.context().newPage();
+        try {
+            await stalePage.goto('/');
+            await expect(stalePage.locator('#quote a')).toBeVisible({ timeout: 15000 });
+
+            await page.evaluate(() => {
+                rotateReaderStateEpoch();
+                localStorage.removeItem('stoic-reader-state');
+            });
+            await stalePage.evaluate(() => saveReaderState());
+
+            expect(await page.evaluate(() => localStorage.getItem('stoic-reader-state'))).toBeNull();
+        } finally {
+            await stalePage.close();
+        }
     });
 
     test('Reset app leaves data intact when confirmation is cancelled', async ({ page }) => {
