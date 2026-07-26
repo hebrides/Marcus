@@ -229,9 +229,9 @@ function applyReaderSettings() {
     const body = document.body;
     body.classList.toggle('theme-day', settings.theme === 'day');
     body.classList.toggle('reader-large', settings.largeText);
-    body.classList.remove('reader-font-goudy', 'reader-font-georgia', 'reader-font-system');
+    body.classList.remove('reader-font-goudy', 'reader-font-merriweather', 'reader-font-raleway');
     body.classList.add(`reader-font-${settings.font}`);
-    body.classList.remove('reader-spacing-normal', 'reader-spacing-relaxed');
+    body.classList.remove('reader-spacing-tight', 'reader-spacing-normal', 'reader-spacing-relaxed');
     body.classList.add(`reader-spacing-${settings.spacing}`);
 }
 
@@ -244,7 +244,9 @@ function setReaderModalControls(mode) {
     document.getElementById('reader-page-previous').hidden = !isReader;
     document.getElementById('reader-page-next').hidden = !isReader;
     document.getElementById('reader-progress').style.display = isReader ? 'block' : 'none';
-    if (!isReader) document.getElementById('modal-content').classList.remove('fullscreen');
+    const content = document.getElementById('modal-content');
+    if (!isReader) content.classList.remove('fullscreen');
+    content.classList.toggle('is-settings', mode === 'settings');
 }
 
 function restoreBookmarks() {
@@ -1192,6 +1194,33 @@ function moveReaderPage(direction) {
     setReaderSpread(nextSpread, true);
 }
 
+function handleReaderKeyboardNavigation(event) {
+    if (event.defaultPrevented ||
+        !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) ||
+        appState.currentView !== 'work' ||
+        !document.getElementById('modal-toggle').checked) return;
+
+    const target = event.target;
+    if (target instanceof HTMLElement &&
+        (target.isContentEditable || /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(target.tagName))) {
+        return;
+    }
+
+    const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+    const content = document.getElementById('modal-content');
+    if (content.classList.contains('fullscreen')) {
+        moveReaderPage(direction);
+    } else {
+        const viewport = modalBody.querySelector('.reader-viewport');
+        if (!viewport) return;
+        viewport.scrollBy({
+            top: direction * viewport.clientHeight * .85,
+            behavior: 'smooth'
+        });
+    }
+    event.preventDefault();
+}
+
 function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
     const flow = modalBody.querySelector('.reader-flow');
     const fullscreen = document.getElementById('modal-content').classList.contains('fullscreen');
@@ -1537,15 +1566,30 @@ function attachReaderSpreadInteractions() {
 
     let wheelDistance = 0;
     let wheelTimer;
+    let gestureLocked = false;
+    let gestureTimer;
+    const turnGesturePage = direction => {
+        if (gestureLocked) return;
+        gestureLocked = true;
+        window.clearTimeout(gestureTimer);
+        gestureTimer = window.setTimeout(() => {
+            gestureLocked = false;
+        }, 450);
+        moveReaderPage(direction);
+    };
     flow.addEventListener('wheel', event => {
-        if (!document.getElementById('modal-content').classList.contains('fullscreen') ||
-            Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+        if (!document.getElementById('modal-content').classList.contains('fullscreen')) return;
+        const distance = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+            ? event.deltaX
+            : event.deltaY;
+        if (!distance) return;
         event.preventDefault();
-        wheelDistance += event.deltaX;
+        if (gestureLocked) return;
+        wheelDistance += distance;
         window.clearTimeout(wheelTimer);
         wheelTimer = window.setTimeout(() => { wheelDistance = 0; }, 160);
         if (Math.abs(wheelDistance) >= flow.clientWidth * .15) {
-            moveReaderPage(wheelDistance > 0 ? 1 : -1);
+            turnGesturePage(wheelDistance > 0 ? 1 : -1);
             wheelDistance = 0;
         }
     }, { passive: false });
@@ -1562,8 +1606,10 @@ function attachReaderSpreadInteractions() {
         const horizontal = touch.clientX - touchStart.x;
         const vertical = touch.clientY - touchStart.y;
         touchStart = null;
-        if (Math.abs(horizontal) < 50 || Math.abs(horizontal) <= Math.abs(vertical)) return;
-        moveReaderPage(horizontal < 0 ? 1 : -1);
+        if (!document.getElementById('modal-content').classList.contains('fullscreen') ||
+            Math.max(Math.abs(horizontal), Math.abs(vertical)) < 50) return;
+        const distance = Math.abs(horizontal) > Math.abs(vertical) ? horizontal : vertical;
+        turnGesturePage(distance < 0 ? 1 : -1);
     }, { passive: true });
 
     flow.addEventListener('scroll', updateReaderProgress, { passive: true });
@@ -1600,87 +1646,60 @@ function showChat(myAuthor) {
 
 function showSettings() {
     appState.currentView = 'settings';
+    document.getElementById('modal-content').classList.remove('focused-reading');
     setReaderModalControls('settings');
-    const extendedLabel = appState.showExtendedLibrary ? 'Enabled' : 'Disabled';
-    const scopeLabel = appState.chatScope === 'strict-stoic'
-        ? 'Strict Stoic'
-        : 'Broader Classical Ethics';
     const settings = appState.readerSettings;
-    const bookmarkList = appState.bookmarks.length === 0
-        ? '<p class="setting-note">No saved bookmarks yet.</p>'
-        : `<ul class="bookmark-list">${appState.bookmarks.map(bookmark => {
-            const work = appData.works.find(item => item.id === bookmark.workId);
-            return work
-                ? `<li><button type="button" class="bookmark-link" data-work-id="${work.id}" data-location="${bookmark.location}">${work.title} - ${formatBookLocation(work, bookmark.location)}</button></li>`
-                : '';
-        }).join('')}</ul>`;
-    const starterPathList = (appData.starterPaths || []).length === 0
-        ? '<p class="setting-note">No starter paths are available yet.</p>'
-        : `<div class="starter-path-list">${appData.starterPaths.map((path, index) =>
-            `<button type="button" class="starter-path-link" data-starter-path-index="${index}">${path.title}</button>`
-        ).join('')}</div>`;
 
     modalTitle.innerHTML = 'Settings';
     modalBody.innerHTML = `
         <div id="modal-text" class="settings-view">
-            <h3>Reading</h3>
-            <label class="setting-toggle">
-                <span>Day mode</span>
-                <input id="setting-day-mode" type="checkbox" ${settings.theme === 'day' ? 'checked' : ''} />
-                <span class="setting-switch" aria-hidden="true"></span>
-            </label>
-            <label class="setting-toggle">
-                <span>Large text</span>
-                <input id="setting-large-text" type="checkbox" ${settings.largeText ? 'checked' : ''} />
-                <span class="setting-switch" aria-hidden="true"></span>
-            </label>
-            <label class="setting-choice" for="setting-font">
-                <span>Reading font</span>
-                <select id="setting-font">
-                    <option value="goudy" ${settings.font === 'goudy' ? 'selected' : ''}>Sorts Mill Goudy</option>
-                    <option value="georgia" ${settings.font === 'georgia' ? 'selected' : ''}>Georgia</option>
-                    <option value="system" ${settings.font === 'system' ? 'selected' : ''}>System serif</option>
-                </select>
-            </label>
-            <p class="setting-note">Default: Sorts Mill Goudy at 19px.</p>
-            <label class="setting-choice" for="setting-spacing">
-                <span>Letter spacing</span>
-                <select id="setting-spacing">
-                    <option value="normal" ${settings.spacing === 'normal' ? 'selected' : ''}>Standard</option>
-                    <option value="relaxed" ${settings.spacing === 'relaxed' ? 'selected' : ''}>Relaxed</option>
-                </select>
-            </label>
-            <p class="setting-note">Default: standard spacing.</p>
+            <div class="settings-preview">
+                <p>\u201cThe impediment to action advances action. What stands in the way becomes the way.\u201d</p>
+                <span class="settings-preview-caption">Marcus Aurelius, Meditations</span>
+            </div>
+
+            <h3>Appearance</h3>
+
+            <div class="setting-row">
+                <span class="setting-label">Theme</span>
+                <div class="setting-options" data-setting="theme">
+                    <button type="button" class="setting-opt ${settings.theme === 'night' ? 'is-selected' : ''}" data-value="night">Night</button>
+                    <button type="button" class="setting-opt ${settings.theme === 'day' ? 'is-selected' : ''}" data-value="day">Day</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">Font</span>
+                <div class="setting-options" data-setting="font">
+                    <button type="button" class="setting-opt ${settings.font === 'goudy' ? 'is-selected' : ''}" data-value="goudy">Goudy</button>
+                    <button type="button" class="setting-opt ${settings.font === 'merriweather' ? 'is-selected' : ''}" data-value="merriweather">Merriweather</button>
+                    <button type="button" class="setting-opt ${settings.font === 'raleway' ? 'is-selected' : ''}" data-value="raleway">Raleway</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">Text size</span>
+                <div class="setting-options" data-setting="largeText">
+                    <button type="button" class="setting-opt ${!settings.largeText ? 'is-selected' : ''}" data-value="false">Normal</button>
+                    <button type="button" class="setting-opt ${settings.largeText ? 'is-selected' : ''}" data-value="true">Large</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">Spacing</span>
+                <div class="setting-options" data-setting="spacing">
+                    <button type="button" class="setting-opt ${settings.spacing === 'tight' ? 'is-selected' : ''}" data-value="tight">Tight</button>
+                    <button type="button" class="setting-opt ${settings.spacing === 'normal' ? 'is-selected' : ''}" data-value="normal">Standard</button>
+                    <button type="button" class="setting-opt ${settings.spacing === 'relaxed' ? 'is-selected' : ''}" data-value="relaxed">Relaxed</button>
+                </div>
+            </div>
+
             <hr>
-            <h3>Bookmarks</h3>
-            ${bookmarkList}
-            <hr>
-            <h3>Library</h3>
-            <label class="setting-toggle">
-                <span>Extended library</span>
-                <input id="setting-extended-library" type="checkbox" ${appState.showExtendedLibrary ? 'checked' : ''} />
-                <span class="setting-switch" aria-hidden="true"></span>
-            </label>
-            <p class="setting-note">Core Stoic Canon by default. Extended library is currently ${extendedLabel.toLowerCase()}.</p>
-            <label class="setting-choice" for="setting-chat-scope">
-                <span>Stoic chat scope</span>
-                <select id="setting-chat-scope">
-                    <option value="strict-stoic" ${appState.chatScope === 'strict-stoic' ? 'selected' : ''}>Strict Stoic</option>
-                    <option value="broader-classical-ethics" ${appState.chatScope === 'broader-classical-ethics' ? 'selected' : ''}>Broader Classical Ethics</option>
-                </select>
-            </label>
-            <p class="setting-note">Current scope: ${scopeLabel}.</p>
-            <p><strong>Inclusion checks:</strong> Public-domain, clean structure, translation quality.</p>
-            <h3>Starter paths</h3>
-            <p class="setting-note">Choose a guided starting point without crowding the book menu.</p>
-            ${starterPathList}
-            <hr />
-            <p><strong>Saved reader state:</strong> Open books and reading positions are stored only in this browser.</p>
-            <button type="button" id="clear-reader-state">Clear saved reader state</button>
-            <hr>
-            <h3>App data</h3>
-            <p class="setting-note">Reset clears this app's books, bookmarks, reading settings, and offline cache. Your browser's other site data is unaffected.</p>
-            <button type="button" id="reset-app">Reset app</button>
+            <h3>Reset App</h3>
+            <div class="settings-actions">
+                <button type="button" id="clear-reader-state">Clear saved state</button>
+                <button type="button" id="reset-app">Reset app</button>
+            </div>
         </div>`;
     modalLoading.style.display = 'none';
     modalBody.classList.add('settings-mode');
@@ -1688,10 +1707,30 @@ function showSettings() {
     document.getElementById('modal-toggle').checked = true;
 }
 
+function showConfirm(title, message, onConfirm) {
+    const overlay = document.createElement('div');
+    overlay.id = 'confirm-overlay';
+    overlay.innerHTML = `
+        <div class="confirm-dialog">
+            <h4 class="confirm-title">${title}</h4>
+            <p>${message}</p>
+            <div class="confirm-actions">
+                <button type="button" class="confirm-cancel">Cancel</button>
+                <button type="button" class="confirm-ok">Confirm</button>
+            </div>
+        </div>`;
+    const close = () => overlay.remove();
+    overlay.querySelector('.confirm-cancel').addEventListener('click', close);
+    overlay.querySelector('.confirm-ok').addEventListener('click', () => { close(); onConfirm(); });
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.body.appendChild(overlay);
+}
+
 function resetApp() {
-    if (!window.confirm('Reset The Stoic Reader on this browser? This clears saved books, bookmarks, settings, and offline data.')) {
-        return;
-    }
+    showConfirm(
+        'Reset Stoic Reader?',
+        'This clears all saved books, bookmarks, settings, and offline cache on this browser.',
+        () => {
 
     appState.isResetting = true;
     rotateReaderStateEpoch();
@@ -1735,6 +1774,8 @@ function resetApp() {
     } else {
         clearOfflineCache();
     }
+
+    }); // end showConfirm callback
 }
 
 function showDataProtectionPolicy() {
@@ -1758,14 +1799,52 @@ function restoreState() {
     return;
 }
 
+function toggleFocusedReading() {
+    document.getElementById('modal-content').classList.toggle('focused-reading');
+    const location = appState.readerAnchorLocation || modalBody.dataset.readerLocation;
+    const anchor = location && modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
+    layoutReaderSpread(anchor);
+}
+
 function attachEventListeners() {
     // attach dismissMenu() to all static a href links in menu
     document.querySelectorAll('#menu a').forEach(link => {
         link.addEventListener('click', dismissMenu);
     });
+    // Double-click / double-tap on modal header → focused single-column reading
+    let headerClickTimer = null;
+    let lastHeaderTap = 0;
+    const modalHeader = document.getElementById('modal-header');
+    modalHeader.addEventListener('click', event => {
+        if (appState.currentView !== 'work' ||
+            event.target.closest('button, label') ||
+            document.getElementById('modal-content').classList.contains('fullscreen')) return;
+        if (headerClickTimer) {
+            clearTimeout(headerClickTimer);
+            headerClickTimer = null;
+            toggleFocusedReading();
+        } else {
+            headerClickTimer = setTimeout(() => { headerClickTimer = null; }, 350);
+        }
+    });
+    modalHeader.addEventListener('touchend', event => {
+        if (appState.currentView !== 'work' ||
+            event.target.closest('button, label') ||
+            document.getElementById('modal-content').classList.contains('fullscreen')) return;
+        const now = Date.now();
+        if (now - lastHeaderTap < 400) {
+            event.preventDefault();
+            toggleFocusedReading();
+            lastHeaderTap = 0;
+        } else {
+            lastHeaderTap = now;
+        }
+    }, { passive: false });
+
     // make sure when modal toggle is unchecked, currentView is set to 'quote'
     document.getElementById('modal-toggle').addEventListener('change', function() {
         if (!this.checked) {
+            document.getElementById('modal-content').classList.remove('focused-reading');
             if (appState.currentView === 'work' && appState.activeBookId) {
                 clearReaderPassageHighlight(appState.activeBookId);
                 if (appState.closeAction === 'close') {
@@ -1842,6 +1921,7 @@ function attachEventListeners() {
     document.getElementById('modal-close').addEventListener('click', minimizeBook);
     document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
     document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
+    document.addEventListener('keydown', handleReaderKeyboardNavigation);
     let readerResizeTimer;
     window.addEventListener('resize', () => {
         if (appState.currentView !== 'work' ||
@@ -1885,53 +1965,45 @@ function attachEventListeners() {
 
     modalBody.addEventListener('click', event => {
         if (event.target.id === 'clear-reader-state') {
-            localStorage.removeItem(READER_STATE_KEY);
-            appState.openBooks = [];
-            appState.lastLocations = {};
-            appState.activeBookId = null;
-            appState.readerViews.clear();
-            appState.readerChunks.clear();
-            appState.renderedWorkId = null;
-            renderBookTabs();
-            event.target.disabled = true;
-            event.target.textContent = 'Saved reader state cleared';
+            showConfirm(
+                'Clear Saved Reading State?',
+                'This removes your open books and reading positions. Bookmarks and settings are kept.',
+                () => {
+                    localStorage.removeItem(READER_STATE_KEY);
+                    appState.openBooks = [];
+                    appState.lastLocations = {};
+                    appState.activeBookId = null;
+                    appState.readerViews.clear();
+                    appState.readerChunks.clear();
+                    appState.renderedWorkId = null;
+                    renderBookTabs();
+                }
+            );
         } else if (event.target.id === 'reset-app') {
             resetApp();
-        } else if (event.target.classList.contains('starter-path-link')) {
-            const path = appData.starterPaths?.[Number(event.target.dataset.starterPathIndex)];
-            const firstWorkId = path?.workIds?.find(workId => {
-                const work = appData.works.find(item => item.id === workId);
-                return work && (appState.showExtendedLibrary || work.tier !== 'extended');
-            });
-            if (firstWorkId) openWork(firstWorkId);
+        } else if (event.target.classList.contains('setting-opt')) {
+            const group = event.target.closest('.setting-options');
+            if (!group) return;
+            const settingName = group.dataset.setting;
+            const value = event.target.dataset.value;
+            const settings = appState.readerSettings;
+            if (settingName === 'theme') {
+                settings.theme = value;
+            } else if (settingName === 'font') {
+                settings.font = value;
+            } else if (settingName === 'spacing') {
+                settings.spacing = value;
+            } else if (settingName === 'largeText') {
+                settings.largeText = value === 'true';
+            } else {
+                return;
+            }
+            group.querySelectorAll('.setting-opt').forEach(btn => btn.classList.remove('is-selected'));
+            event.target.classList.add('is-selected');
+            saveReaderSettings();
+            applyReaderSettings();
         } else if (event.target.classList.contains('bookmark-link')) {
             openWork(event.target.dataset.workId, event.target.dataset.location, true);
         }
-    });
-    modalBody.addEventListener('change', event => {
-        const settings = appState.readerSettings;
-        if (event.target.id === 'setting-day-mode') {
-            settings.theme = event.target.checked ? 'day' : 'night';
-        } else if (event.target.id === 'setting-large-text') {
-            settings.largeText = event.target.checked;
-        } else if (event.target.id === 'setting-font') {
-            settings.font = event.target.value;
-        } else if (event.target.id === 'setting-spacing') {
-            settings.spacing = event.target.value;
-        } else if (event.target.id === 'setting-extended-library') {
-            toggleExtendedLibrary();
-            showSettings();
-            return;
-        } else if (event.target.id === 'setting-chat-scope') {
-            appState.chatScope = event.target.value;
-            updateScopeLabels();
-            showNewQuote('random');
-            showSettings();
-            return;
-        } else {
-            return;
-        }
-        saveReaderSettings();
-        applyReaderSettings();
     });
 }

@@ -116,3 +116,73 @@ Open items to verify during live testing on master:
 - Standard `gutenberg` profile works for English-only Gutenberg editions
 - Data pipeline: `web/stoics/parse_stoic_sources.py` → `web/stoics/ingest.sh` → `data-all-quotes.json`
 - Fake data generator/validator: `web/FAKE_DATA/test.sh`
+
+
+-- 
+
+## 🖼️ Feature: Curated Background Images & Screensaver Mode
+
+### Background Images (Settings)
+- Add a curated set of background images selectable in Settings (replace the current single `img/bg.jpg`)
+- Sourced from Unsplash (landscape, classical architecture, nature — tone-matching the app aesthetic)
+- Settings option: background image picker (thumbnail grid or named list)
+- Also expose a "Background video" option (short looping Unsplash video, muted)
+- Store selection in localStorage under existing settings key
+
+### Screensaver / Ambient Mode
+- Full-screen ambient display: quotes cycle automatically, background image/video cycles
+- Toggle in Settings ("Screensaver mode" on/off)
+- Activates on idle or can be launched directly
+- Quote cycling interval configurable (e.g. 30s / 1min / 5min)
+- Background cycling independent of quote cycling
+- Tap/click anywhere exits screensaver
+- Should work as a standalone "morning ritual" display
+
+**Status:** not scoped for build. Capture for v2.x roadmap.
+
+---
+
+## 🎓 Future Feature: Scholar Mode — "Read Original" 
+
+- Per-work menu: "Read Original" → shows available historical
+  editions/manuscripts for that specific text, not just one fixed source.
+- Should support multiple originals per work where they exist (e.g. different
+  manuscript traditions or early printed editions), not assume one canonical
+  scan.
+- Likely presented as scanned page images (visual artifact), possibly with
+  parallel/adjacent translation — needs UX design pass, not just a toggle.
+
+### Candidate sources to evaluate for scanning/rights/quality
+- **Internet Archive (archive.org)** — broadest general source; multiple
+  historical editions/printings per work, high-res scans, some IIIF support.
+- **Perseus Digital Library (Tufts)** — strong specifically for classical
+  Greek/Latin texts (Marcus Aurelius, Epictetus, Seneca), critical editions
+  with provenance/edition notes alongside translations.
+- **Bibliothèque nationale de France — Gallica** — deep manuscript and
+  early-print holdings, strong Latin/Greek coverage, IIIF support.
+- **Vatican Library (DigiVatLib)** — genuine manuscript-level sources (not
+  just old printings), high-res scans.
+- **World Digital Library / Library of Congress** — smaller, well-curated,
+  good metadata.
+- **Wikisource** — not scans, but transcribed original-language text with
+  edition/source notes; useful for cross-referencing and validation.
+
+### Known provenance notes (relevant to sourcing)
+- Marcus Aurelius' *Meditations* survives via Byzantine manuscripts (no
+  surviving autograph).
+- Epictetus survives via Arrian's records of his teaching, not his own hand.
+- Seneca's letters have a comparatively solid direct manuscript tradition.
+
+### Open questions before build
+- Licensing/rights verification per scan source (public domain status of the
+  *scan itself*, not just the underlying text, varies by institution).
+- Whether to store/host scans or link out to source institution viewers.
+- Image format/size strategy for mobile — high-res manuscript scans are heavy.
+- How this interacts with the *separate* "Prescaffolded / original pagination"
+  feature (preserving publication layout) — related but distinct: that's about
+  layout of a printed edition, this is about the physical/historical artifact
+  itself.
+
+**Status:** not scoped for build. Revisit after core reader + Quote of the Day
++ Aurelius Fund CTA ship.
+

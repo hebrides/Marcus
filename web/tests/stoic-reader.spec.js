@@ -369,6 +369,94 @@ test.describe('Modal controls', () => {
         expect(savedState.openBooks).toHaveLength(1);
     });
 
+    test('arrow keys scroll the one-column reader viewport', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        const viewport = page.locator('.reader-viewport');
+        await expect(viewport).toBeVisible();
+
+        await page.keyboard.press('ArrowDown');
+
+        await expect.poll(() => viewport.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    });
+
+    test('arrow keys turn fullscreen reader spreads', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+
+        if (await page.evaluate(() => window.innerWidth <= 900)) return;
+
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        const flow = page.locator('.reader-flow');
+        const initialScroll = await flow.evaluate(element => element.scrollLeft);
+
+        await page.keyboard.press('ArrowRight');
+
+        await expect.poll(() => flow.evaluate(element => element.scrollLeft))
+            .toBeGreaterThan(initialScroll);
+    });
+
+    test('fullscreen touchpad swipes turn exactly one spread in either direction', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+
+        if (await page.evaluate(() => window.innerWidth <= 900)) return;
+
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        const flow = page.locator('.reader-flow');
+        const initialSpread = await page.evaluate(() => appState.readerSpreadIndex);
+
+        await flow.evaluate(element => {
+            for (let index = 0; index < 3; index += 1) {
+                element.dispatchEvent(new WheelEvent('wheel', {
+                    bubbles: true,
+                    cancelable: true,
+                    deltaX: element.clientWidth
+                }));
+            }
+        });
+        await expect.poll(() => page.evaluate(() => appState.readerSpreadIndex))
+            .toBe(initialSpread + 1);
+
+        await page.waitForTimeout(500);
+        await flow.evaluate(element => {
+            element.dispatchEvent(new WheelEvent('wheel', {
+                bubbles: true,
+                cancelable: true,
+                deltaX: -element.clientWidth
+            }));
+        });
+        await expect.poll(() => page.evaluate(() => appState.readerSpreadIndex))
+            .toBe(initialSpread);
+    });
+
+    test('vertical touchpad swipes turn exactly one fullscreen spread', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+
+        if (await page.evaluate(() => window.innerWidth <= 900)) return;
+
+        await expect(page.locator('#reader-page-next')).toBeEnabled({ timeout: 15000 });
+        const flow = page.locator('.reader-flow');
+        const initialSpread = await page.evaluate(() => appState.readerSpreadIndex);
+
+        await flow.evaluate(element => {
+            for (let index = 0; index < 3; index += 1) {
+                element.dispatchEvent(new WheelEvent('wheel', {
+                    bubbles: true,
+                    cancelable: true,
+                    deltaY: element.clientWidth
+                }));
+            }
+        });
+
+        await expect.poll(() => page.evaluate(() => appState.readerSpreadIndex))
+            .toBe(initialSpread + 1);
+    });
+
     test('clicking the overlay dismisses the modal', async ({ page }) => {
         // The overlay sits behind the modal content (z-index 50 vs 51).  Click at the
         // top-left corner of the viewport where the overlay is exposed and not covered
@@ -526,6 +614,32 @@ test.describe('Modal controls', () => {
         expect(passageStyle.color).toBe('rgb(255, 255, 255)');
         expect(passageStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
         expect(passageStyle.textDecorationLine).toContain('underline');
+    });
+
+    test('double-clicking the header toggles focused single-column reading', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+
+        const content = page.locator('#modal-content');
+        await expect(content).not.toHaveClass(/focused-reading/);
+
+        await page.locator('#modal-title').dblclick();
+        await expect(content).toHaveClass(/focused-reading/);
+        // Fullscreen button must be hidden — it has no meaning in focused scroll mode
+        await expect(page.locator('#modal-fullscreen')).toBeHidden();
+
+        await page.locator('#modal-title').dblclick();
+        await expect(content).not.toHaveClass(/focused-reading/);
+        await expect(page.locator('#modal-fullscreen')).toBeVisible();
+    });
+
+    test('double-clicking the header is blocked when in two-column fullscreen', async ({ page }) => {
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
+        await page.locator('#modal-fullscreen').click();
+
+        await page.locator('#modal-title').dblclick();
+        await expect(page.locator('#modal-content')).not.toHaveClass(/focused-reading/);
     });
 
     test('fullscreen toggle adds fullscreen class on first click', async ({ page }) => {
@@ -930,7 +1044,7 @@ test.describe('Reader settings', () => {
 
     test('persists the Day mode toggle across reloads', async ({ page }) => {
         await openSettings(page);
-        await page.locator('#setting-day-mode').check();
+        await page.locator('.setting-options[data-setting="theme"] .setting-opt[data-value="day"]').click();
 
         await expect(page.locator('body')).toHaveClass(/theme-day/);
 
@@ -941,7 +1055,7 @@ test.describe('Reader settings', () => {
 
     test('persists the Large text toggle across reloads', async ({ page }) => {
         await openSettings(page);
-        await page.locator('#setting-large-text').check();
+        await page.locator('.setting-options[data-setting="largeText"] .setting-opt[data-value="true"]').click();
 
         await expect(page.locator('body')).toHaveClass(/reader-large/);
 
@@ -952,18 +1066,18 @@ test.describe('Reader settings', () => {
 
     test('persists the curated font choice across reloads', async ({ page }) => {
         await openSettings(page);
-        await page.locator('#setting-font').selectOption('georgia');
+        await page.locator('.setting-options[data-setting="font"] .setting-opt[data-value="merriweather"]').click();
 
-        await expect(page.locator('body')).toHaveClass(/reader-font-georgia/);
+        await expect(page.locator('body')).toHaveClass(/reader-font-merriweather/);
 
         await page.reload();
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
-        await expect(page.locator('body')).toHaveClass(/reader-font-georgia/);
+        await expect(page.locator('body')).toHaveClass(/reader-font-merriweather/);
     });
 
     test('persists the letter-spacing choice across reloads', async ({ page }) => {
         await openSettings(page);
-        await page.locator('#setting-spacing').selectOption('relaxed');
+        await page.locator('.setting-options[data-setting="spacing"] .setting-opt[data-value="relaxed"]').click();
 
         await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
 
@@ -972,7 +1086,7 @@ test.describe('Reader settings', () => {
         await expect(page.locator('body')).toHaveClass(/reader-spacing-relaxed/);
     });
 
-    test('keeps library scope and starter paths in Settings, not the main menu', async ({ page }) => {
+    test('Library and Starter Paths are removed from Settings', async ({ page }) => {
         await page.locator('#modal-close').click();
         await page.locator('#menu-open-button').click();
         await expect(page.locator('#menu')).not.toContainText('Starter Paths');
@@ -980,16 +1094,19 @@ test.describe('Reader settings', () => {
         await expect(page.locator('#menu')).not.toContainText('Core Stoic Canon');
         await page.locator('#settings-link').click();
 
-        await expect(page.locator('#setting-extended-library')).toBeVisible();
-        await expect(page.locator('#setting-chat-scope')).toBeVisible();
-        await expect(page.locator('.starter-path-link')).toHaveCount(3);
+        await expect(page.locator('#setting-extended-library')).toHaveCount(0);
+        await expect(page.locator('#setting-chat-scope')).toHaveCount(0);
+        await expect(page.locator('.starter-path-link')).toHaveCount(0);
+        await expect(page.locator('.settings-view')).toContainText('Appearance');
+        await expect(page.locator('.settings-view')).toContainText('Reset App');
     });
 
     test('Reset app confirms before clearing app state and reloading', async ({ page }) => {
         await openSettings(page);
         const resetNavigation = page.waitForURL(/reset-app=1/);
-        page.once('dialog', dialog => dialog.accept());
         await page.locator('#reset-app').click();
+        await expect(page.locator('.confirm-dialog')).toBeVisible();
+        await page.locator('.confirm-ok').click();
 
         await resetNavigation;
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
@@ -1007,8 +1124,9 @@ test.describe('Reader settings', () => {
         });
         await openSettings(page);
         const resetNavigation = page.waitForURL(/reset-app=1/);
-        page.once('dialog', dialog => dialog.accept());
         await page.locator('#reset-app').click();
+        await expect(page.locator('.confirm-dialog')).toBeVisible();
+        await page.locator('.confirm-ok').click();
 
         await resetNavigation;
         await expect(page.locator('#quote a')).toBeVisible({ timeout: 15000 });
@@ -1052,10 +1170,12 @@ test.describe('Reader settings', () => {
 
     test('Reset app leaves data intact when confirmation is cancelled', async ({ page }) => {
         await openSettings(page);
-        await page.locator('#setting-day-mode').check();
-        page.once('dialog', dialog => dialog.dismiss());
+        await page.locator('.setting-options[data-setting="theme"] .setting-opt[data-value="day"]').click();
         await page.locator('#reset-app').click();
+        await expect(page.locator('.confirm-dialog')).toBeVisible();
+        await page.locator('.confirm-cancel').click();
 
+        await expect(page.locator('.confirm-dialog')).toBeHidden();
         await expect(page.locator('#modal-title')).toHaveText('Settings');
         await expect(page).not.toHaveURL(/refresh=/);
         const settings = await page.evaluate(() =>
