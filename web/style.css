@@ -476,6 +476,7 @@ body.theme-day #menu-open-button:hover {
     align-items: center;
     width: 100%;
     color: var(--text-hi);
+    user-select: none;
 }
 
 #modal-title {
@@ -898,9 +899,9 @@ body.theme-day .settings-preview {
 }
 
 .settings-actions button:hover {
-    background: var(--hover-bg);
-    border-color: var(--text-muted);
-    color: var(--text-hi);
+    background: var(--select-bg);
+    border-color: transparent;
+    color: var(--select-text);
 }
 
 #modal-content.focused-reading {
@@ -1056,4 +1057,53 @@ body.theme-day .settings-preview {
         flex: 0 0 145px;
         max-width: 145px;
     }
+}
+
+/* ── Bookmark dropdown menu ──────────────────────────────────────────────── */
+
+#bookmark-menu {
+    position: fixed;
+    z-index: 2000;
+    min-width: 220px;
+    max-width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    overflow: hidden;
+    padding: 4px 0;
+}
+
+.bookmark-menu-item {
+    display: block;
+    width: 100%;
+    padding: 9px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: .05em;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background .1s, color .1s;
+}
+
+.bookmark-menu-item:hover {
+    background: var(--select-bg);
+    color: var(--select-text);
+}
+
+.bookmark-menu-nav {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.bookmark-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
 }

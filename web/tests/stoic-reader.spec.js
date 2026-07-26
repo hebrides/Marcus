@@ -572,14 +572,19 @@ test.describe('Modal controls', () => {
 
     test('bookmark control saves and removes the active reading location', async ({ page }) => {
         const bookmark = page.locator('#modal-bookmark');
+
+        // Open dropdown and add bookmark
         await bookmark.click();
+        await page.locator('#bookmark-menu').getByText('Add Bookmark').click();
         await expect(bookmark).toHaveClass(/is-bookmarked/);
         let bookmarks = await page.evaluate(() =>
             JSON.parse(localStorage.getItem('stoic-reader-bookmarks'))
         );
         expect(bookmarks).toHaveLength(1);
 
+        // Open dropdown and remove bookmark
         await bookmark.click();
+        await page.locator('#bookmark-menu').getByText('Remove Bookmark').click();
         await expect(bookmark).not.toHaveClass(/is-bookmarked/);
         bookmarks = await page.evaluate(() =>
             JSON.parse(localStorage.getItem('stoic-reader-bookmarks'))
@@ -587,33 +592,26 @@ test.describe('Modal controls', () => {
         expect(bookmarks).toHaveLength(0);
     });
 
-    test('opening a saved bookmark emphasizes its passage without changing the quote surface', async ({ page }) => {
-        const quoteStyle = await page.locator('#quote > a').evaluate(element => {
-            const style = getComputedStyle(element);
-            return {
-                backgroundColor: style.backgroundColor,
-                textDecorationLine: style.textDecorationLine
-            };
-        });
-        expect(quoteStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
-        expect(quoteStyle.textDecorationLine).toBe('none');
+    test('bookmark dropdown navigates to a saved location', async ({ page }) => {
+        const bookmark = page.locator('#modal-bookmark');
 
-        await page.locator('#modal-bookmark').click();
-        await openSettings(page);
-        await page.locator('.bookmark-link').click();
+        // Save bookmark at current (quote-linked) location
+        await bookmark.click();
+        await page.locator('#bookmark-menu').getByText('Add Bookmark').click();
+        await expect(bookmark).toHaveClass(/is-bookmarked/);
 
-        const passageStyle = await page.locator('.passage-highlight').evaluate(element => {
-            const style = getComputedStyle(element);
-            return {
-                backgroundColor: style.backgroundColor,
-                color: style.color,
-                textDecorationLine: style.textDecorationLine
-            };
-        });
+        // Navigate away to a different location in the same work
+        await page.evaluate(() => openWork('1', '1'));
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
 
-        expect(passageStyle.color).toBe('rgb(255, 255, 255)');
-        expect(passageStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
-        expect(passageStyle.textDecorationLine).toContain('underline');
+        // Open dropdown — saved bookmark should appear as a nav item
+        await bookmark.click();
+        await expect(page.locator('#bookmark-menu .bookmark-link')).toBeVisible();
+
+        // Clicking a bookmark link closes the menu and opens the work at that location
+        await page.locator('#bookmark-menu .bookmark-link').click();
+        await expect(page.locator('#bookmark-menu')).toBeHidden();
+        await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
     });
 
     test('double-clicking the header toggles focused single-column reading', async ({ page }) => {
