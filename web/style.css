@@ -476,6 +476,7 @@ body.theme-day #menu-open-button:hover {
     align-items: center;
     width: 100%;
     color: var(--text-hi);
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -549,6 +550,7 @@ body.theme-day #menu-open-button:hover {
     border: none;
     background: transparent;
     color: var(--stroke);
+    -webkit-user-select: none;
     user-select: none;
 }
 #modal-close:hover, #modal-bookmark:hover, #modal-fullscreen:hover {
