@@ -239,7 +239,6 @@ body.theme-day main {
 }
 
 .book-tab:not(.is-active) {
-    color: var(--text-muted);
     box-shadow: 0 -2px 8px rgba(0,0,0,.15);
 }
 
