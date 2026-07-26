@@ -567,7 +567,7 @@ body.theme-day #menu-open-button:hover {
 }
 
 #modal-bookmark.is-bookmarked svg path {
-    fill: #d7a35f;
+    fill: var(--stroke);
 }
 
 #modal-image {
@@ -867,6 +867,13 @@ body.theme-day .settings-preview {
 
 .bookmark-list {
     list-style: none;
+    margin-bottom: 16px;
+}
+
+.bookmarks-empty {
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 8px 0;
 }
 
 .bookmark-link {
@@ -1071,7 +1078,6 @@ body.theme-day .settings-preview {
     max-width: 320px;
     background: var(--surface);
     border: 1px solid var(--border-strong);
-    border-radius: 6px;
     box-shadow: 0 6px 24px rgba(0,0,0,.35);
     overflow: hidden;
     padding: 4px 0;

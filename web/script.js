@@ -323,18 +323,19 @@ function showBookmarkMenu(e) {
     addItem.addEventListener('click', () => { toggleBookmark(); closeBookmarkMenu(); });
     menu.appendChild(addItem);
 
-    if (appState.bookmarks.length > 0) {
+    const workBookmarks = appState.bookmarks.filter(b => b.workId === appState.currentWork.id);
+    if (workBookmarks.length > 0) {
         const divider = document.createElement('div');
         divider.className = 'bookmark-menu-divider';
         menu.appendChild(divider);
 
-        appState.bookmarks.forEach(bookmark => {
+        workBookmarks.forEach(bookmark => {
             const work = appData.works?.find(w => w.id === bookmark.workId);
             if (!work) return;
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'bookmark-menu-item bookmark-menu-nav bookmark-link';
-            item.title = `${work.title} \u2014 ${formatBookLocation(work, bookmark.location)}`;
+            item.title = formatBookLocation(work, bookmark.location);
             item.textContent = item.title;
             item.addEventListener('click', () => {
                 closeBookmarkMenu();
@@ -1769,6 +1770,42 @@ function showSettings() {
     document.getElementById('modal-toggle').checked = true;
 }
 
+function showBookmarksModal() {
+    appState.currentView = 'bookmarks';
+    document.getElementById('modal-content').classList.remove('focused-reading');
+    setReaderModalControls('settings');
+
+    modalTitle.innerHTML = 'Bookmarks';
+
+    if (appState.bookmarks.length === 0) {
+        modalBody.innerHTML = `<div id="modal-text" class="settings-view"><p class="bookmarks-empty">No bookmarks saved yet.</p></div>`;
+    } else {
+        const byWork = new Map();
+        appState.bookmarks.forEach(bookmark => {
+            if (!byWork.has(bookmark.workId)) byWork.set(bookmark.workId, []);
+            byWork.get(bookmark.workId).push(bookmark);
+        });
+
+        let html = '<div id="modal-text" class="settings-view">';
+        byWork.forEach((bookmarks, workId) => {
+            const work = appData.works?.find(w => w.id === workId);
+            if (!work) return;
+            html += `<h3>${work.title}</h3><ul class="bookmark-list">`;
+            bookmarks.forEach(bookmark => {
+                html += `<li><button type="button" class="bookmark-link" data-work-id="${workId}" data-location="${bookmark.location}">${formatBookLocation(work, bookmark.location)}</button></li>`;
+            });
+            html += '</ul>';
+        });
+        html += '</div>';
+        modalBody.innerHTML = html;
+    }
+
+    modalLoading.style.display = 'none';
+    modalBody.classList.add('settings-mode');
+    modalBody.classList.add('is-visible');
+    document.getElementById('modal-toggle').checked = true;
+}
+
 function showConfirm(title, message, onConfirm) {
     const overlay = document.createElement('div');
     overlay.id = 'confirm-overlay';
@@ -2022,6 +2059,14 @@ function attachEventListeners() {
             e.preventDefault();
             dismissMenu();
             showSettings();
+        });
+    }
+    const bookmarksLink = document.getElementById('bookmarks-link');
+    if (bookmarksLink) {
+        bookmarksLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            dismissMenu();
+            showBookmarksModal();
         });
     }
 
