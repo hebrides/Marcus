@@ -601,7 +601,7 @@ test.describe('Modal controls', () => {
         await expect(bookmark).toHaveClass(/is-bookmarked/);
 
         // Navigate away to a different location in the same work
-        await page.evaluate(() => openWork('1', '1'));
+        await page.evaluate(() => openWork(appState.currentWork.id, '1'));
         await expect(page.locator('#modal-data-loading')).toBeHidden({ timeout: 15000 });
 
         // Open dropdown — saved bookmark should appear as a nav item

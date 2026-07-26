@@ -709,6 +709,7 @@ body.theme-day #menu-open-button:hover {
 }
 
 #modal-body [id] {
+    position: relative;
     background-color: transparent;
     transition: background-color 2.4s ease-out;
 }
@@ -1115,4 +1116,56 @@ body.theme-day .settings-preview {
     height: 1px;
     background: var(--border);
     margin: 4px 0;
+}
+
+/* ── Margin bookmark icons ───────────────────────────────────────────────── */
+
+.margin-bookmark,
+#margin-bookmark-trigger {
+    position: absolute;
+    left: -26px;
+    top: 2px;
+    width: 18px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity .15s, color .15s;
+}
+
+.margin-bookmark:hover,
+#margin-bookmark-trigger:hover {
+    opacity: 1;
+    color: var(--text-hi);
+}
+
+.margin-bookmark svg,
+#margin-bookmark-trigger svg {
+    width: 14px;
+    height: 18px;
+}
+
+#margin-bookmark-trigger {
+    position: fixed;
+    opacity: 0.35;
+}
+
+#margin-bookmark-trigger:hover {
+    opacity: 0.7;
+}
+
+#margin-bookmark-menu {
+    position: fixed;
+    z-index: 2000;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    overflow: hidden;
+    padding: 4px 0;
 }
