@@ -899,9 +899,8 @@ body.theme-day .settings-preview {
 }
 
 .settings-actions button:hover {
-    background: var(--select-bg);
-    border-color: transparent;
-    color: var(--select-text);
+    background: var(--hover-bg);
+    color: var(--hover-text);
 }
 
 #modal-content.focused-reading {

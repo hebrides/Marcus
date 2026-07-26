@@ -1759,8 +1759,8 @@ function showSettings() {
             <hr>
             <h3>Reset App</h3>
             <div class="settings-actions">
-                <button type="button" id="clear-reader-state">Clear saved state</button>
-                <button type="button" id="reset-app">Reset app</button>
+                <button type="button" data-action="clear-reader-state">Clear saved state</button>
+                <button type="button" data-action="reset-app">Reset app</button>
             </div>
         </div>`;
     modalLoading.style.display = 'none';
@@ -2026,7 +2026,7 @@ function attachEventListeners() {
     }
 
     modalBody.addEventListener('click', event => {
-        if (event.target.id === 'clear-reader-state') {
+        if (event.target.dataset.action === 'clear-reader-state') {
             showConfirm(
                 'Clear Saved Reading State?',
                 'This removes your open books and reading positions. Bookmarks and settings are kept.',
@@ -2041,7 +2041,7 @@ function attachEventListeners() {
                     renderBookTabs();
                 }
             );
-        } else if (event.target.id === 'reset-app') {
+        } else if (event.target.dataset.action === 'reset-app') {
             resetApp();
         } else if (event.target.classList.contains('setting-opt')) {
             const group = event.target.closest('.setting-options');
