@@ -297,6 +297,68 @@ function toggleBookmark() {
     updateBookmarkControl();
 }
 
+function closeBookmarkMenu() {
+    const menu = document.getElementById('bookmark-menu');
+    if (menu) menu.remove();
+}
+
+function showBookmarkMenu(e) {
+    if (document.getElementById('bookmark-menu')) {
+        closeBookmarkMenu();
+        return;
+    }
+    if (!appState.currentWork) return;
+
+    const location = getBookTab(appState.currentWork.id)?.location || '1';
+    const key = bookmarkKey(appState.currentWork.id, location);
+    const isBookmarked = appState.bookmarks.some(b => b.key === key);
+
+    const menu = document.createElement('div');
+    menu.id = 'bookmark-menu';
+
+    const addItem = document.createElement('button');
+    addItem.type = 'button';
+    addItem.className = 'bookmark-menu-item';
+    addItem.textContent = isBookmarked ? 'Remove Bookmark' : 'Add Bookmark\u2026';
+    addItem.addEventListener('click', () => { toggleBookmark(); closeBookmarkMenu(); });
+    menu.appendChild(addItem);
+
+    if (appState.bookmarks.length > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'bookmark-menu-divider';
+        menu.appendChild(divider);
+
+        appState.bookmarks.forEach(bookmark => {
+            const work = appData.works?.find(w => w.id === bookmark.workId);
+            if (!work) return;
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'bookmark-menu-item bookmark-menu-nav bookmark-link';
+            item.title = `${work.title} \u2014 ${formatBookLocation(work, bookmark.location)}`;
+            item.textContent = item.title;
+            item.addEventListener('click', () => {
+                closeBookmarkMenu();
+                openWork(bookmark.workId, bookmark.location, true);
+            });
+            menu.appendChild(item);
+        });
+    }
+
+    const btn = document.getElementById('modal-bookmark');
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    document.body.appendChild(menu);
+
+    const outsideHandler = (ev) => {
+        if (!menu.contains(ev.target) && ev.target !== btn) {
+            closeBookmarkMenu();
+            document.removeEventListener('click', outsideHandler, true);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
+}
+
 function showStartupError(error) {
     const openedFromFile = window.location.protocol === 'file:';
     const instructions = openedFromFile
@@ -1917,7 +1979,7 @@ function attachEventListeners() {
             layoutReaderSpread(anchor, releaseReaderAnchorWrites);
         }
     });
-    document.getElementById('modal-bookmark').addEventListener('click', toggleBookmark);
+    document.getElementById('modal-bookmark').addEventListener('click', showBookmarkMenu);
     document.getElementById('modal-close').addEventListener('click', minimizeBook);
     document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
     document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
