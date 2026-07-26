@@ -549,6 +549,7 @@ body.theme-day #menu-open-button:hover {
     border: none;
     background: transparent;
     color: var(--stroke);
+    user-select: none;
 }
 #modal-close:hover, #modal-bookmark:hover, #modal-fullscreen:hover {
     opacity: 80%;
