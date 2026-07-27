@@ -315,7 +315,7 @@ function renderMarginBookmarks(workId) {
         btn.dataset.location = bookmark.location;
         btn.dataset.workId = workId;
         btn.setAttribute('aria-label', 'Remove bookmark');
-        btn.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="currentColor" stroke="none"/></svg>`;
+        btn.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
         target.insertBefore(btn, target.firstChild);
     });
 }
@@ -351,7 +351,7 @@ function attachMarginBookmarkTrigger() {
                 const targetRect = target.getBoundingClientRect();
                 trigger.style.position = 'fixed';
                 trigger.style.top = targetRect.top + 'px';
-                trigger.style.left = (flowRect.left - 27) + 'px';
+                trigger.style.left = (flowRect.left - 30) + 'px';
                 trigger.style.display = '';
             } else {
                 trigger.style.display = 'none';
@@ -943,7 +943,6 @@ function rememberBookLocation(workId, location) {
         appState.lastLocations[workId] = String(location);
         saveReaderState();
         renderBookTabs();
-        updateBookmarkControl();
     }
 }
 
@@ -1358,9 +1357,9 @@ function showWork(location = '1', highlightPassage = false) {
                         appState.currentWork?.id === workId;
                     layoutReaderSpread(target, () => {
                         if (!isCurrentRender()) return;
+                        appState.renderedWorkId = workId;
                         attachReaderSpreadInteractions();
                         renderMarginBookmarks(workId);
-                        appState.renderedWorkId = workId;
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
                         modalLoading.style.display = 'none';
