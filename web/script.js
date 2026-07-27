@@ -1333,7 +1333,7 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
                 : Math.max(0, Math.floor(flow.scrollLeft / (columnWidth + gap)));
             // A deep link should begin in the left reading column, even when that
             // column is the second half of the surrounding source spread.
-            setReaderSpread(targetColumnIndex / 2, false, flow);
+            setReaderSpread(Math.floor(targetColumnIndex / 2), false, flow);
             if (readerData) {
                 const visualRatio = getFullscreenReaderProgressRatio(flow, readerData);
                 if (Number.isFinite(visualRatio)) readerData.visualProgressRatio = visualRatio;
