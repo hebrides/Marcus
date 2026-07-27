@@ -299,6 +299,7 @@ function toggleBookmark() {
 }
 
 function renderMarginBookmarks(workId) {
+    return;
     if (!workId) return;
     const view = appState.readerViews.get(workId) ||
         (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
@@ -321,6 +322,7 @@ function renderMarginBookmarks(workId) {
 }
 
 function attachMarginBookmarkTrigger() {
+    return;
     const existing = document.getElementById('margin-bookmark-trigger');
     if (existing) existing.remove();
 
