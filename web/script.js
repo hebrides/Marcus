@@ -1117,10 +1117,10 @@ function restoreReaderView(workId, location, highlightPassage) {
 
     requestAnimationFrame(() => {
         ensureReaderLocationRendered(workId, location);
+        // renderMarginBookmarks(workId);
         const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
         layoutReaderSpread(target, () => {
             attachReaderSpreadInteractions();
-            renderMarginBookmarks(workId);
             appState.readerLayoutReady = true;
             setReaderControlsReady(true);
             releaseReaderAnchorWrites();
@@ -1351,15 +1351,15 @@ function showWork(location = '1', highlightPassage = false) {
                 loadingStartedAt,
                 () => {
                     if (renderToken !== appState.readerRenderToken) return;
+                    appState.renderedWorkId = workId;
+                    // renderMarginBookmarks(workId);
                     const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
                     const isCurrentRender = () =>
                         renderToken === appState.readerRenderToken &&
                         appState.currentWork?.id === workId;
                     layoutReaderSpread(target, () => {
                         if (!isCurrentRender()) return;
-                        appState.renderedWorkId = workId;
                         attachReaderSpreadInteractions();
-                        renderMarginBookmarks(workId);
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
                         modalLoading.style.display = 'none';
