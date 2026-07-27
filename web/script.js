@@ -295,179 +295,6 @@ function toggleBookmark() {
     }
     saveBookmarks();
     updateBookmarkControl();
-    renderMarginBookmarks(appState.currentWork?.id);
-}
-
-function renderMarginBookmarks(workId) {
-    return;
-    if (!workId) return;
-    const view = appState.readerViews.get(workId) ||
-        (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
-    if (!view) return;
-
-    view.querySelectorAll('.margin-bookmark').forEach(el => el.remove());
-
-    appState.bookmarks.filter(b => b.workId === workId).forEach(bookmark => {
-        const target = view.querySelector('[id="' + CSS.escape(String(bookmark.location)) + '"]');
-        if (!target) return;
-        const container = document.createElement('div');
-        container.className = 'margin-bookmark';
-        container.dataset.location = bookmark.location;
-        container.dataset.workId = workId;
-        container.style.position = 'absolute';
-        container.style.left = '-35px';
-        container.style.top = '0';
-        container.style.width = '30px';
-        container.style.height = '30px';
-        container.style.pointerEvents = 'auto';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.style.width = '100%';
-        btn.style.height = '100%';
-        btn.style.padding = '0';
-        btn.style.border = '0';
-        btn.style.background = 'transparent';
-        btn.style.cursor = 'pointer';
-        btn.setAttribute('aria-label', 'Remove bookmark');
-        btn.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            showMarginBookmarkMenu(btn, bookmark.location, workId);
-        });
-        container.appendChild(btn);
-        target.insertBefore(container, target.firstChild);
-    });
-}
-
-function attachMarginBookmarkTrigger() {
-    return;
-    const existing = document.getElementById('margin-bookmark-trigger');
-    if (existing) existing.remove();
-
-    const trigger = document.createElement('button');
-    trigger.id = 'margin-bookmark-trigger';
-    trigger.type = 'button';
-    trigger.setAttribute('aria-label', 'Add bookmark');
-    trigger.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
-    trigger.style.display = 'none';
-    document.body.appendChild(trigger);
-
-    let hoverLocation = null;
-
-    modalBody.addEventListener('mousemove', e => {
-        const viewport = modalBody.querySelector('.reader-viewport');
-        if (!viewport) { trigger.style.display = 'none'; hoverLocation = null; return; }
-        const flow = viewport.querySelector('.reader-flow');
-        if (!flow) { trigger.style.display = 'none'; hoverLocation = null; return; }
-        const flowRect = flow.getBoundingClientRect();
-
-        if (e.clientX >= flowRect.left - 32 && e.clientX <= flowRect.left + 8) {
-            const pageEdgeRight = document.getElementById('reader-page-previous')?.getBoundingClientRect().right ?? 0;
-            const sampleX = Math.max(flowRect.left + 20, pageEdgeRight + 10);
-            const el = document.elementFromPoint(Math.min(sampleX, flowRect.right - 20), e.clientY);
-            const target = el && el.closest('[id]');
-            if (target && !appState.bookmarks.some(b => b.workId === appState.currentWork?.id && b.location === target.id)) {
-                hoverLocation = target.id;
-                const targetRect = target.getBoundingClientRect();
-                trigger.style.position = 'fixed';
-                trigger.style.top = targetRect.top + 'px';
-                trigger.style.left = (flowRect.left - 30) + 'px';
-                trigger.style.display = '';
-            } else {
-                trigger.style.display = 'none';
-                hoverLocation = null;
-            }
-        } else {
-            trigger.style.display = 'none';
-            hoverLocation = null;
-        }
-    });
-
-    modalBody.addEventListener('mouseleave', () => {
-        trigger.style.display = 'none';
-        hoverLocation = null;
-    });
-
-    trigger.addEventListener('click', () => {
-        if (!hoverLocation || !appState.currentWork) return;
-        const workId = appState.currentWork.id;
-        appState.bookmarks.push({
-            key: bookmarkKey(workId, hoverLocation),
-            workId,
-            location: hoverLocation,
-            createdAt: Date.now()
-        });
-        saveBookmarks();
-        updateBookmarkControl();
-        renderMarginBookmarks(workId);
-        trigger.style.display = 'none';
-        hoverLocation = null;
-    });
-
-    modalBody.addEventListener('touchstart', e => {
-        const viewport = modalBody.querySelector('.reader-viewport');
-        if (!viewport) return;
-        const flow = viewport.querySelector('.reader-flow');
-        if (!flow) return;
-        const flowRect = flow.getBoundingClientRect();
-        const touch = e.touches[0];
-        if (touch.clientX >= flowRect.left - 32 && touch.clientX <= flowRect.left + 8) {
-            const pageEdgeRight = document.getElementById('reader-page-previous')?.getBoundingClientRect().right ?? 0;
-            const sampleX = Math.max(flowRect.left + 20, pageEdgeRight + 10);
-            const el = document.elementFromPoint(Math.min(sampleX, flowRect.right - 20), touch.clientY);
-            const target = el && el.closest('[id]');
-            if (target && !appState.bookmarks.some(b => b.workId === appState.currentWork?.id && b.location === target.id)) {
-                const workId = appState.currentWork?.id;
-                if (!workId) return;
-                appState.bookmarks.push({
-                    key: bookmarkKey(workId, target.id),
-                    workId,
-                    location: target.id,
-                    createdAt: Date.now()
-                });
-                saveBookmarks();
-                updateBookmarkControl();
-                renderMarginBookmarks(workId);
-                e.preventDefault();
-            }
-        }
-    }, { passive: false });
-}
-
-function showMarginBookmarkMenu(btn, location, workId) {
-    const existing = document.getElementById('margin-bookmark-menu');
-    if (existing) existing.remove();
-
-    const menu = document.createElement('div');
-    menu.id = 'margin-bookmark-menu';
-
-    const removeItem = document.createElement('button');
-    removeItem.type = 'button';
-    removeItem.className = 'bookmark-menu-item';
-    removeItem.textContent = 'Remove this bookmark';
-    removeItem.addEventListener('click', () => {
-        const key = bookmarkKey(workId, location);
-        const idx = appState.bookmarks.findIndex(b => b.key === key);
-        if (idx !== -1) appState.bookmarks.splice(idx, 1);
-        saveBookmarks();
-        updateBookmarkControl();
-        renderMarginBookmarks(workId);
-        menu.remove();
-    });
-    menu.appendChild(removeItem);
-
-    const btnRect = btn.getBoundingClientRect();
-    menu.style.top = btnRect.top + 'px';
-    menu.style.left = (btnRect.right + 4) + 'px';
-    document.body.appendChild(menu);
-
-    const outsideHandler = ev => {
-        if (!menu.contains(ev.target) && ev.target !== btn) {
-            menu.remove();
-            document.removeEventListener('click', outsideHandler, true);
-        }
-    };
-    setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
 }
 
 function closeBookmarkMenu() {
@@ -1085,7 +912,6 @@ function appendNextReaderChunk(workId = appState.renderedWorkId) {
     flow.insertAdjacentHTML('beforeend', readerData.chunks[readerData.nextChunkIndex]);
     readerData.nextChunkIndex += 1;
     updateReaderProgress();
-    renderMarginBookmarks(appState.renderedWorkId);
     return true;
 }
 
@@ -1102,7 +928,6 @@ function prependPreviousReaderChunk(workId = appState.renderedWorkId) {
         viewport.scrollTop += viewport.scrollHeight - previousHeight;
     }
     updateReaderProgress();
-    renderMarginBookmarks(appState.renderedWorkId);
     return true;
 }
 
@@ -1137,11 +962,9 @@ function restoreReaderView(workId, location, highlightPassage) {
 
     requestAnimationFrame(() => {
         ensureReaderLocationRendered(workId, location);
-        // renderMarginBookmarks(workId);
         const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
         layoutReaderSpread(target, () => {
             attachReaderSpreadInteractions();
-            renderMarginBookmarks(workId);
             appState.readerLayoutReady = true;
             setReaderControlsReady(true);
             releaseReaderAnchorWrites();
@@ -1373,7 +1196,6 @@ function showWork(location = '1', highlightPassage = false) {
                 () => {
                     if (renderToken !== appState.readerRenderToken) return;
                     appState.renderedWorkId = workId;
-                    // renderMarginBookmarks(workId);
                     const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
                     const isCurrentRender = () =>
                         renderToken === appState.readerRenderToken &&
@@ -1381,7 +1203,6 @@ function showWork(location = '1', highlightPassage = false) {
                     layoutReaderSpread(target, () => {
                         if (!isCurrentRender()) return;
                         attachReaderSpreadInteractions();
-                        renderMarginBookmarks(workId);
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
                         modalLoading.style.display = 'none';
@@ -1880,8 +1701,6 @@ function attachReaderSpreadInteractions() {
         anchorTimer = window.setTimeout(() => rememberReaderAnchor(flow, workId), 120);
     }, { passive: true });
 
-    attachMarginBookmarkTrigger();
-    renderMarginBookmarks(appState.currentWork?.id);
 }
 
 function showChat(myAuthor) {    
@@ -2292,9 +2111,6 @@ function attachEventListeners() {
             applyReaderSettings();
         } else if (event.target.classList.contains('bookmark-link')) {
             openWork(event.target.dataset.workId, event.target.dataset.location, false);
-        } else if (event.target.closest('.margin-bookmark')) {
-            const btn = event.target.closest('.margin-bookmark');
-            showMarginBookmarkMenu(btn, btn.dataset.location, btn.dataset.workId);
         }
     });
 }
