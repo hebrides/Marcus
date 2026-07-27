@@ -299,30 +299,35 @@ function toggleBookmark() {
 }
 
 function renderMarginBookmarks(workId) {
-    return;
     if (!workId) return;
     const view = appState.readerViews.get(workId) ||
         (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
     if (!view) return;
 
-    view.querySelectorAll('.margin-bookmark').forEach(el => el.remove());
+    view.querySelectorAll('.inline-bookmark').forEach(el => el.remove());
 
     appState.bookmarks.filter(b => b.workId === workId).forEach(bookmark => {
         const target = view.querySelector('[id="' + CSS.escape(String(bookmark.location)) + '"]');
         if (!target) return;
+        const indicator = document.createElement('div');
+        indicator.className = 'inline-bookmark';
+        indicator.dataset.location = bookmark.location;
+        indicator.dataset.workId = workId;
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'margin-bookmark';
-        btn.dataset.location = bookmark.location;
-        btn.dataset.workId = workId;
+        btn.className = 'inline-bookmark-btn';
         btn.setAttribute('aria-label', 'Remove bookmark');
         btn.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
-        target.insertBefore(btn, target.firstChild);
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showMarginBookmarkMenu(btn, bookmark.location, workId);
+        });
+        indicator.appendChild(btn);
+        target.insertBefore(indicator, target.firstChild);
     });
 }
 
 function attachMarginBookmarkTrigger() {
-    return;
     const existing = document.getElementById('margin-bookmark-trigger');
     if (existing) existing.remove();
 

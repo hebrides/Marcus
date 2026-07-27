@@ -562,10 +562,6 @@ body.theme-day #menu-open-button:hover {
     margin-right: 8px;
 }
 
-#modal-bookmark.is-bookmarked {
-    opacity: 1;
-}
-
 #modal-image {
     width: 100%;
     max-width: 300px;
@@ -1114,46 +1110,47 @@ body.theme-day .settings-preview {
     margin: 4px 0;
 }
 
-/* ── Margin bookmark icons ───────────────────────────────────────────────── */
+/* ── Inline bookmark indicators ──────────────────────────────────────────── */
 
-.margin-bookmark,
-#margin-bookmark-trigger {
-    position: absolute;
-    left: -30px;
-    top: 2px;
-    width: 30px;
-    height: 30px;
+.inline-bookmark {
+    display: inline-block;
+    margin-right: 0.5em;
+    vertical-align: super;
+    font-size: 0.75em;
+}
+
+.inline-bookmark-btn {
+    width: 20px;
+    height: 20px;
     padding: 0;
     border: 0;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    display: flex;
-    align-items: flex-start;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
     opacity: 0.7;
     transition: opacity .15s, color .15s;
 }
 
-.margin-bookmark:hover,
-#margin-bookmark-trigger:hover {
+.inline-bookmark-btn:hover {
     opacity: 1;
     color: var(--text-hi);
 }
 
-.margin-bookmark svg,
-#margin-bookmark-trigger svg {
-    width: 30px;
-    height: 30px;
+.inline-bookmark-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
-.margin-bookmark svg path {
+.inline-bookmark-btn svg path {
     fill: rgba(255,255,255,.2);
     stroke: currentColor;
     stroke-width: 2;
 }
 
-.margin-bookmark:hover svg path {
+.inline-bookmark-btn:hover svg path {
     fill: rgba(255,255,255,.55);
 }
 
