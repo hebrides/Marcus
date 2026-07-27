@@ -267,6 +267,24 @@ function bookmarkKey(workId, location) {
     return `${workId}:${location}`;
 }
 
+function updateBookmarkFlag() {
+    const flag = document.getElementById('reader-bookmark-flag');
+    if (!flag || !appState.currentWork || appState.currentView !== 'work') {
+        flag?.classList.remove('is-visible');
+        return;
+    }
+    const bounds = modalBody.getBoundingClientRect();
+    const workBookmarks = appState.bookmarks.filter(b => b.workId === appState.currentWork.id);
+    const visible = workBookmarks.some(b => {
+        const el = modalBody.querySelector('[id="' + CSS.escape(String(b.location)) + '"]');
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.bottom > bounds.top && r.top < bounds.bottom &&
+               r.right > bounds.left && r.left < bounds.right;
+    });
+    flag.classList.toggle('is-visible', visible);
+}
+
 function updateBookmarkControl() {
     const button = document.getElementById('modal-bookmark');
     if (!appState.currentWork || !button) return;
@@ -295,6 +313,7 @@ function toggleBookmark() {
     }
     saveBookmarks();
     updateBookmarkControl();
+    updateBookmarkFlag();
     renderMarginBookmarks(appState.currentWork?.id);
 }
 
@@ -1797,6 +1816,7 @@ function rememberReaderAnchor(flow = modalBody.querySelector('.reader-flow'), wo
     modalBody.dataset.readerLocation = focalAnchor.id;
     rememberBookLocation(workId, focalAnchor.id);
     updateReaderProgress();
+    updateBookmarkFlag();
 }
 
 function attachReaderSpreadInteractions() {
