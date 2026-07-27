@@ -351,7 +351,7 @@ function attachMarginBookmarkTrigger() {
                 const targetRect = target.getBoundingClientRect();
                 trigger.style.position = 'fixed';
                 trigger.style.top = targetRect.top + 'px';
-                trigger.style.left = (flowRect.left - 32) + 'px';
+                trigger.style.left = (flowRect.left - 27) + 'px';
                 trigger.style.display = '';
             } else {
                 trigger.style.display = 'none';
@@ -1121,6 +1121,7 @@ function restoreReaderView(workId, location, highlightPassage) {
         const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
         layoutReaderSpread(target, () => {
             attachReaderSpreadInteractions();
+            renderMarginBookmarks(workId);
             appState.readerLayoutReady = true;
             setReaderControlsReady(true);
             releaseReaderAnchorWrites();
@@ -1358,6 +1359,7 @@ function showWork(location = '1', highlightPassage = false) {
                     layoutReaderSpread(target, () => {
                         if (!isCurrentRender()) return;
                         attachReaderSpreadInteractions();
+                        renderMarginBookmarks(workId);
                         appState.renderedWorkId = workId;
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
