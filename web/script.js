@@ -299,37 +299,46 @@ function toggleBookmark() {
 }
 
 function renderMarginBookmarks(workId) {
-    return;
     if (!workId) return;
     const view = appState.readerViews.get(workId) ||
         (appState.renderedWorkId === workId ? modalBody.querySelector('.reader-viewport') : null);
     if (!view) return;
 
-    view.querySelectorAll('.inline-bookmark').forEach(el => el.remove());
+    view.querySelectorAll('.margin-bookmark').forEach(el => el.remove());
 
     appState.bookmarks.filter(b => b.workId === workId).forEach(bookmark => {
         const target = view.querySelector('[id="' + CSS.escape(String(bookmark.location)) + '"]');
         if (!target) return;
-        const indicator = document.createElement('div');
-        indicator.className = 'inline-bookmark';
-        indicator.dataset.location = bookmark.location;
-        indicator.dataset.workId = workId;
+        const container = document.createElement('div');
+        container.className = 'margin-bookmark';
+        container.dataset.location = bookmark.location;
+        container.dataset.workId = workId;
+        container.style.position = 'absolute';
+        container.style.left = '-35px';
+        container.style.top = '0';
+        container.style.width = '30px';
+        container.style.height = '30px';
+        container.style.pointerEvents = 'auto';
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'inline-bookmark-btn';
+        btn.style.width = '100%';
+        btn.style.height = '100%';
+        btn.style.padding = '0';
+        btn.style.border = '0';
+        btn.style.background = 'transparent';
+        btn.style.cursor = 'pointer';
         btn.setAttribute('aria-label', 'Remove bookmark');
         btn.innerHTML = `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M16 8h18v34l-9-7-9 7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             showMarginBookmarkMenu(btn, bookmark.location, workId);
         });
-        indicator.appendChild(btn);
-        target.insertBefore(indicator, target.firstChild);
+        container.appendChild(btn);
+        target.insertBefore(container, target.firstChild);
     });
 }
 
 function attachMarginBookmarkTrigger() {
-    return;
     const existing = document.getElementById('margin-bookmark-trigger');
     if (existing) existing.remove();
 
@@ -1130,6 +1139,7 @@ function restoreReaderView(workId, location, highlightPassage) {
         const target = modalBody.querySelector(`[id="${CSS.escape(String(location))}"]`);
         layoutReaderSpread(target, () => {
             attachReaderSpreadInteractions();
+            renderMarginBookmarks(workId);
             appState.readerLayoutReady = true;
             setReaderControlsReady(true);
             releaseReaderAnchorWrites();
@@ -1369,6 +1379,7 @@ function showWork(location = '1', highlightPassage = false) {
                     layoutReaderSpread(target, () => {
                         if (!isCurrentRender()) return;
                         attachReaderSpreadInteractions();
+                        renderMarginBookmarks(workId);
                         appState.readerLayoutReady = true;
                         setReaderControlsReady(true);
                         modalLoading.style.display = 'none';
