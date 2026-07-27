@@ -1123,10 +1123,10 @@ body.theme-day .settings-preview {
 .margin-bookmark,
 #margin-bookmark-trigger {
     position: absolute;
-    left: -26px;
+    left: -32px;
     top: 2px;
-    width: 18px;
-    height: 22px;
+    width: 24px;
+    height: 30px;
     padding: 0;
     border: 0;
     background: transparent;
@@ -1147,8 +1147,8 @@ body.theme-day .settings-preview {
 
 .margin-bookmark svg,
 #margin-bookmark-trigger svg {
-    width: 14px;
-    height: 18px;
+    width: 18px;
+    height: 24px;
 }
 
 #margin-bookmark-trigger {

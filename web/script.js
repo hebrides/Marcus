@@ -342,14 +342,16 @@ function attachMarginBookmarkTrigger() {
         const flowRect = flow.getBoundingClientRect();
 
         if (e.clientX >= flowRect.left - 32 && e.clientX <= flowRect.left + 8) {
-            const el = document.elementFromPoint(flowRect.left + 20, e.clientY);
+            const pageEdgeRight = document.getElementById('reader-page-previous')?.getBoundingClientRect().right ?? 0;
+            const sampleX = Math.max(flowRect.left + 20, pageEdgeRight + 10);
+            const el = document.elementFromPoint(Math.min(sampleX, flowRect.right - 20), e.clientY);
             const target = el && el.closest('[id]');
             if (target && !appState.bookmarks.some(b => b.workId === appState.currentWork?.id && b.location === target.id)) {
                 hoverLocation = target.id;
                 const targetRect = target.getBoundingClientRect();
                 trigger.style.position = 'fixed';
                 trigger.style.top = targetRect.top + 'px';
-                trigger.style.left = (flowRect.left - 26) + 'px';
+                trigger.style.left = (flowRect.left - 32) + 'px';
                 trigger.style.display = '';
             } else {
                 trigger.style.display = 'none';
@@ -390,7 +392,9 @@ function attachMarginBookmarkTrigger() {
         const flowRect = flow.getBoundingClientRect();
         const touch = e.touches[0];
         if (touch.clientX >= flowRect.left - 32 && touch.clientX <= flowRect.left + 8) {
-            const el = document.elementFromPoint(flowRect.left + 20, touch.clientY);
+            const pageEdgeRight = document.getElementById('reader-page-previous')?.getBoundingClientRect().right ?? 0;
+            const sampleX = Math.max(flowRect.left + 20, pageEdgeRight + 10);
+            const el = document.elementFromPoint(Math.min(sampleX, flowRect.right - 20), touch.clientY);
             const target = el && el.closest('[id]');
             if (target && !appState.bookmarks.some(b => b.workId === appState.currentWork?.id && b.location === target.id)) {
                 const workId = appState.currentWork?.id;
