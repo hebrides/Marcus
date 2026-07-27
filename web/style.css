@@ -582,40 +582,6 @@ body.theme-day #menu-open-button:hover {
     max-height: none;
 }
 
-#reader-bookmark-flag {
-    position: absolute;
-    top: 50px;
-    left: -4px;
-    width: 30px;
-    height: 30px;
-    color: var(--text-muted);
-    opacity: 0;
-    pointer-events: none;
-    transform: rotate(15deg);
-    transition: opacity 0.3s ease;
-    z-index: 10;
-}
-
-#reader-bookmark-flag.is-visible {
-    opacity: 0.75;
-}
-
-#reader-bookmark-flag svg {
-    width: 30px;
-    height: 30px;
-}
-
-#reader-bookmark-flag svg path {
-    fill: rgba(255,255,255,.2);
-    stroke: currentColor;
-    stroke-width: 2;
-}
-
-#modal-content.fullscreen #reader-bookmark-flag {
-    left: 50%;
-    transform: translateX(-50%) rotate(15deg);
-}
-
 .reader-viewport {
     box-sizing: border-box;
     width: 100%;
