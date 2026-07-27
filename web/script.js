@@ -1325,15 +1325,21 @@ function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
                 anchor.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
             }
             const flowBounds = flow.getBoundingClientRect();
+            // WebKit's getBoundingClientRect on a multi-column-fragmented element
+            // returns the union rect spanning every fragment; getClientRects()[0]
+            // returns the first fragment specifically, which is what we want.
+            const anchorLeft = anchor
+                ? (anchor.getClientRects()[0]?.left ?? anchor.getBoundingClientRect().left)
+                : 0;
             const targetColumnIndex = anchor
                 ? Math.max(0, Math.floor(
-                    (anchor.getBoundingClientRect().left - flowBounds.left + flow.scrollLeft) /
+                    (anchorLeft - flowBounds.left + flow.scrollLeft) /
                     (columnWidth + gap)
                 ))
                 : Math.max(0, Math.floor(flow.scrollLeft / (columnWidth + gap)));
             // A deep link should begin in the left reading column, even when that
             // column is the second half of the surrounding source spread.
-            setReaderSpread(Math.floor(targetColumnIndex / 2), false, flow);
+            setReaderSpread(targetColumnIndex / 2, false, flow);
             if (readerData) {
                 const visualRatio = getFullscreenReaderProgressRatio(flow, readerData);
                 if (Number.isFinite(visualRatio)) readerData.visualProgressRatio = visualRatio;
