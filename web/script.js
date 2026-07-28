@@ -339,6 +339,10 @@ function showBookmarkMenu(e) {
             item.textContent = item.title;
             item.addEventListener('click', () => {
                 closeBookmarkMenu();
+                // Force the fresh-render path (same as a quote deep link).
+                // The cached-view path leaves WebKit with stale multi-column
+                // fragment positions, so the bookmark lands on the wrong spread.
+                discardReaderView(bookmark.workId);
                 openWork(bookmark.workId, bookmark.location, false);
             });
             menu.appendChild(item);
@@ -2116,6 +2120,7 @@ function attachEventListeners() {
             saveReaderSettings();
             applyReaderSettings();
         } else if (event.target.classList.contains('bookmark-link')) {
+            discardReaderView(event.target.dataset.workId);
             openWork(event.target.dataset.workId, event.target.dataset.location, false);
         }
     });
