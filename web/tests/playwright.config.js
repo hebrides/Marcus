@@ -1,5 +1,13 @@
 const { defineConfig, devices } = require('@playwright/test');
+const fs = require('fs');
 const path = require('path');
+
+// Share a port with web/run.sh: STOIC_READER_PORT env var wins, then the
+// port written to web/.dev-port by run.sh, then a stable fallback.
+const portFile = path.join(__dirname, '..', '.dev-port');
+const filePort = fs.existsSync(portFile) ? fs.readFileSync(portFile, 'utf8').trim() : '';
+const PORT = process.env.STOIC_READER_PORT || filePort || '3000';
+const BASE_URL = `http://localhost:${PORT}`;
 
 module.exports = defineConfig({
     testDir: '.',
@@ -17,7 +25,7 @@ module.exports = defineConfig({
     reporter: 'list',
 
     use: {
-        baseURL: 'http://localhost:3000',
+        baseURL: BASE_URL,
         // Collect traces on first retry so failures are debuggable
         trace: 'on-first-retry',
     },
@@ -25,8 +33,8 @@ module.exports = defineConfig({
     // Serve the web/ directory via Python's built-in HTTP server.
     // Using Python avoids adding a Node.js server dependency.
     webServer: {
-        command: `python3 -m http.server 3000 --directory ${path.join(__dirname, '..')}`,
-        url: 'http://localhost:3000',
+        command: `python3 -m http.server ${PORT} --directory ${path.join(__dirname, '..')}`,
+        url: BASE_URL,
         reuseExistingServer: !process.env.CI,
         timeout: 10000,
     },

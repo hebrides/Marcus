@@ -339,11 +339,13 @@ function showBookmarkMenu(e) {
             item.textContent = item.title;
             item.addEventListener('click', () => {
                 closeBookmarkMenu();
-                // Force the fresh-render path (same as a quote deep link).
-                // The cached-view path leaves WebKit with stale multi-column
-                // fragment positions, so the bookmark lands on the wrong spread.
-                discardReaderView(bookmark.workId);
-                openWork(bookmark.workId, bookmark.location, false);
+                // Dropdown is always for the currently-open work, so a fast
+                // in-place swap keeps the transition instant and avoids the
+                // modal loading spinner.
+                if (!swapReaderToLocation(bookmark.workId, bookmark.location)) {
+                    discardReaderView(bookmark.workId);
+                    openWork(bookmark.workId, bookmark.location, false);
+                }
             });
             menu.appendChild(item);
         });
@@ -1241,6 +1243,75 @@ function showWork(location = '1', highlightPassage = false) {
         });
 }
 
+// Fast in-place jump to a new location within the currently-rendered work.
+// Mirrors the fresh-render path (beginModalLoading -> setTimeout ->
+// showModalContent -> rAF -> rAF -> layoutReaderSpread) so WebKit fully
+// tears down and rebuilds its multi-column fragment state — but skips the
+// spinner, fade, and MINIMUM_LOADING_TIME wait so navigation feels instant.
+function swapReaderToLocation(workId, location) {
+    const readerData = appState.readerChunks.get(workId);
+    if (!readerData || appState.renderedWorkId !== workId ||
+        !modalBody.querySelector('.reader-viewport')) return false;
+
+    suppressReaderProgressTransition();
+    const renderToken = (appState.readerRenderToken || 0) + 1;
+    appState.readerRenderToken = renderToken;
+    appState.readerAnchorGeneration += 1;
+    appState.readerAnchorWritesBlocked = true;
+
+    const loc = String(location);
+    if (readerData.progressAnimationFrame) {
+        window.cancelAnimationFrame(readerData.progressAnimationFrame);
+    }
+    delete readerData.visualProgressRatio;
+
+    const targetChunkIndex = getReaderChunkIndex(readerData.chunks, loc);
+    const firstChunkIndex = Math.max(0, targetChunkIndex - 1);
+    const nextChunkIndex = Math.min(readerData.chunks.length, firstChunkIndex + 3);
+    readerData.previousChunkIndex = firstChunkIndex - 1;
+    readerData.nextChunkIndex = nextChunkIndex;
+    const content = readerData.chunks.slice(firstChunkIndex, nextChunkIndex).join('');
+
+    // Empty first so WebKit unmounts the old multi-column fragments before
+    // we hand it new ones — matches what beginModalLoading does.
+    modalBody.classList.remove('settings-mode');
+    modalBody.innerHTML = '';
+    appState.readerLayoutReady = false;
+    setReaderControlsReady(false);
+
+    const isCurrentRender = () =>
+        renderToken === appState.readerRenderToken &&
+        appState.renderedWorkId === workId;
+
+    requestAnimationFrame(() => {
+        if (!isCurrentRender()) return;
+        modalBody.innerHTML =
+            `<div class="reader-viewport"><div class="reader-spread-clip">` +
+            `<article class="reader-flow">${content}</article></div></div>`;
+        appState.readerAnchorLocation = loc;
+        modalBody.dataset.readerLocation = loc;
+        requestAnimationFrame(() => {
+            if (!isCurrentRender()) return;
+            requestAnimationFrame(() => {
+                if (!isCurrentRender()) return;
+                ensureReaderLocationRendered(workId, loc);
+                const target = modalBody.querySelector(`[id="${CSS.escape(loc)}"]`);
+                layoutReaderSpread(target, () => {
+                    if (!isCurrentRender()) return;
+                    attachReaderSpreadInteractions();
+                    appState.readerLayoutReady = true;
+                    setReaderControlsReady(true);
+                    releaseReaderAnchorWrites();
+                }, isCurrentRender);
+            });
+        });
+    });
+
+    rememberBookLocation(workId, loc);
+    updateBookmarkControl();
+    return true;
+}
+
 function moveReaderPage(direction) {
     const content = document.getElementById('modal-content');
     if (appState.currentView !== 'work' ||
@@ -2120,8 +2191,12 @@ function attachEventListeners() {
             saveReaderSettings();
             applyReaderSettings();
         } else if (event.target.classList.contains('bookmark-link')) {
-            discardReaderView(event.target.dataset.workId);
-            openWork(event.target.dataset.workId, event.target.dataset.location, false);
+            const targetWorkId = event.target.dataset.workId;
+            const targetLocation = event.target.dataset.location;
+            if (appState.renderedWorkId === targetWorkId &&
+                swapReaderToLocation(targetWorkId, targetLocation)) return;
+            discardReaderView(targetWorkId);
+            openWork(targetWorkId, targetLocation, false);
         }
     });
 }

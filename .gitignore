@@ -21,9 +21,11 @@ DerivedData
 
 # Playwright creates these during local test runs; baselines remain in snapshots.
 web/tests/test-results/
+web/tests/stoic-reader.spec.js-snapshot/s
 
 #CocoaPods
 Pods
 Pods-Classes-Maybe
 
+#Other 
 *.pdf

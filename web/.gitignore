@@ -1,3 +1,6 @@
+# Port written by run.sh so tests can share the dev server origin.
+.dev-port
+
 # Ignore all files in the FAKE_DATA folder
 FAKE_DATA/*
 
@@ -7,3 +10,4 @@ FAKE_DATA/*
 !FAKE_DATA/makedata.js
 !FAKE_DATA/clean.sh
 
+stoic-reader.spec.js-snapshots
