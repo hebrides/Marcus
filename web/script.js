@@ -107,7 +107,8 @@ const DEFAULT_READER_SETTINGS = {
     theme: 'night',
     largeText: false,
     font: 'goudy',
-    spacing: 'normal'
+    spacing: 'normal',
+    showLocation: true
 };
 
 function createReaderStateEpoch() {
@@ -229,10 +230,12 @@ function applyReaderSettings() {
     const body = document.body;
     body.classList.toggle('theme-day', settings.theme === 'day');
     body.classList.toggle('reader-large', settings.largeText);
+    body.classList.toggle('reader-show-location', !!settings.showLocation);
     body.classList.remove('reader-font-goudy', 'reader-font-merriweather', 'reader-font-raleway');
     body.classList.add(`reader-font-${settings.font}`);
     body.classList.remove('reader-spacing-tight', 'reader-spacing-normal', 'reader-spacing-relaxed');
     body.classList.add(`reader-spacing-${settings.spacing}`);
+    updateLocationBadge();
 }
 
 function setReaderModalControls(mode) {
@@ -243,10 +246,12 @@ function setReaderModalControls(mode) {
     bookmark.hidden = !isReader;
     document.getElementById('reader-page-previous').hidden = !isReader;
     document.getElementById('reader-page-next').hidden = !isReader;
+    document.getElementById('reader-toc').hidden = !isReader;
     document.getElementById('reader-progress').style.display = isReader ? 'block' : 'none';
     const content = document.getElementById('modal-content');
     if (!isReader) content.classList.remove('fullscreen');
     content.classList.toggle('is-settings', mode === 'settings');
+    updateLocationBadge();
 }
 
 function restoreBookmarks() {
@@ -364,6 +369,176 @@ function showBookmarkMenu(e) {
         }
     };
     setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
+}
+
+// Escape a raw HTML text fragment for safe rendering inside the TOC menu.
+function escapeText(text) {
+    return String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Extract heading entries (h1-h4 with ids) from the current work's partitions.
+// Returns [{id, level, text}]. Heading text is decoded from HTML entities.
+function extractHeadingEntries(partitions) {
+    const decoder = document.createElement('div');
+    const entries = [];
+    const seen = new Set();
+    const pattern = /<h([1-4])\s+[^>]*\bid=(["'])([^"']+)\2[^>]*>([\s\S]*?)<\/h\1>/gi;
+    partitions.forEach(partition => {
+        let match;
+        while ((match = pattern.exec(partition))) {
+            const id = match[3];
+            if (seen.has(id)) continue;
+            seen.add(id);
+            decoder.innerHTML = match[4].replace(/<[^>]+>/g, '');
+            entries.push({
+                id,
+                level: parseInt(match[1], 10),
+                text: (decoder.textContent || '').trim()
+            });
+        }
+    });
+    return entries;
+}
+
+// Turn a location id like "1.2" into a fallback label using locationSyntax
+// (e.g., "Book 1, Verse 2"). If the raw heading text carries meaning
+// (isn't just a bare Roman numeral or number), prefer it.
+function tocLabelFor(work, entry) {
+    const raw = entry.text || '';
+    const isBareNumber = /^\s*\d+\s*$/.test(raw);
+    const isBareRoman = /^\s*[IVXLCDM]+\.?\s*$/i.test(raw);
+    if (raw && !isBareNumber && !isBareRoman) return raw;
+    return formatBookLocation(work, entry.id);
+}
+
+// Build a nested TOC tree by dot-depth of ids. Each node has {id, label, children}.
+// Falls back to synthetic top-level nodes derived from the work's locationSyntax
+// when no h-tag headings exist.
+function buildTableOfContents(work, partitions) {
+    const entries = extractHeadingEntries(partitions);
+    if (entries.length === 0) {
+        const anchors = new Set(getReaderAnchors(partitions));
+        const topLevel = Array.from(anchors)
+            .filter(id => !id.includes('.'))
+            .sort((a, b) => versionCompare(a, b));
+        return topLevel.map(id => ({
+            id,
+            label: formatBookLocation(work, id),
+            children: []
+        }));
+    }
+    // Sort by numeric location so nesting works even if partitions weren't ordered.
+    entries.sort((a, b) => versionCompare(a.id, b.id));
+    const nodesById = new Map();
+    const roots = [];
+    entries.forEach(entry => {
+        const node = { id: entry.id, label: tocLabelFor(work, entry), children: [] };
+        nodesById.set(entry.id, node);
+        const parts = entry.id.split('.');
+        for (let i = parts.length - 1; i >= 1; i--) {
+            const parentId = parts.slice(0, i).join('.');
+            const parent = nodesById.get(parentId);
+            if (parent) { parent.children.push(node); return; }
+        }
+        roots.push(node);
+    });
+    return roots;
+}
+
+function renderTocNodes(nodes, work, depth = 0) {
+    if (nodes.length === 0) return '';
+    return `<ul class="toc-list toc-depth-${depth}">` + nodes.map(node => {
+        const label = escapeText(node.label);
+        const locAttr = escapeText(node.id);
+        const jump = `<button type="button" class="toc-jump" data-location="${locAttr}">${label}</button>`;
+        if (node.children.length === 0) return `<li class="toc-item" data-location="${locAttr}">${jump}</li>`;
+        // Top level opens by default so users see structure without extra clicks.
+        const openAttr = depth === 0 ? ' open' : '';
+        return `<li class="toc-item toc-has-children" data-location="${locAttr}">` +
+            `<details${openAttr}><summary>${jump}</summary>` +
+            renderTocNodes(node.children, work, depth + 1) +
+            `</details></li>`;
+    }).join('') + `</ul>`;
+}
+
+function closeTableOfContents() {
+    const panel = document.getElementById('toc-panel');
+    if (panel) panel.remove();
+    const backdrop = document.getElementById('toc-backdrop');
+    if (backdrop) backdrop.remove();
+}
+
+function showTableOfContents(highlightLocation) {
+    closeTableOfContents();
+    const work = appState.currentWork;
+    if (!work) return;
+    const readerData = appState.readerChunks.get(work.id);
+    if (!readerData) return;
+
+    // Reconstruct the partition text from cached chunks (chunk boundaries
+    // sit between top-level blocks, so headings survive intact).
+    const partitions = readerData.chunks;
+    const tree = buildTableOfContents(work, partitions);
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'toc-backdrop';
+    backdrop.addEventListener('click', closeTableOfContents);
+    document.body.appendChild(backdrop);
+
+    const panel = document.createElement('div');
+    panel.id = 'toc-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', `Table of Contents for ${work.title}`);
+    panel.innerHTML =
+        `<div class="toc-header">` +
+            `<h3>Table of Contents</h3>` +
+            `<button type="button" class="toc-close" aria-label="Close table of contents">&times;</button>` +
+        `</div>` +
+        `<div class="toc-subtitle">${escapeText(work.title)}</div>` +
+        `<div class="toc-body">${tree.length === 0
+            ? `<p class="toc-empty">No structural markers found for this work.</p>`
+            : renderTocNodes(tree, work)}</div>`;
+    document.body.appendChild(panel);
+
+    panel.querySelector('.toc-close').addEventListener('click', closeTableOfContents);
+    panel.addEventListener('click', ev => {
+        const jump = ev.target.closest?.('.toc-jump');
+        if (!jump) return;
+        ev.preventDefault();
+        const location = jump.dataset.location;
+        closeTableOfContents();
+        if (!swapReaderToLocation(work.id, location)) {
+            discardReaderView(work.id);
+            openWork(work.id, location, false);
+        }
+    });
+
+    if (highlightLocation) {
+        const currentItem = tocFindCurrentItem(panel, highlightLocation);
+        if (currentItem) {
+            currentItem.classList.add('toc-current');
+            let ancestor = currentItem.parentElement;
+            while (ancestor && ancestor !== panel) {
+                if (ancestor.tagName === 'DETAILS') ancestor.open = true;
+                ancestor = ancestor.parentElement;
+            }
+            window.requestAnimationFrame(() =>
+                currentItem.scrollIntoView({ block: 'center', behavior: 'instant' })
+            );
+        }
+    }
+}
+
+function tocFindCurrentItem(panel, location) {
+    const parts = String(location).split('.');
+    while (parts.length > 0) {
+        const candidate = parts.join('.');
+        const match = panel.querySelector(`.toc-item[data-location="${CSS.escape(candidate)}"]`);
+        if (match) return match;
+        parts.pop();
+    }
+    return null;
 }
 
 function showStartupError(error) {
@@ -1332,30 +1507,114 @@ function moveReaderPage(direction) {
 }
 
 function handleReaderKeyboardNavigation(event) {
-    if (event.defaultPrevented ||
-        !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) ||
-        appState.currentView !== 'work' ||
-        !document.getElementById('modal-toggle').checked) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
 
     const target = event.target;
     if (target instanceof HTMLElement &&
-        (target.isContentEditable || /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(target.tagName))) {
+        (target.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName))) {
         return;
     }
 
-    const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
-    const content = document.getElementById('modal-content');
-    if (content.classList.contains('fullscreen')) {
-        moveReaderPage(direction);
-    } else {
-        const viewport = modalBody.querySelector('.reader-viewport');
-        if (!viewport) return;
-        viewport.scrollBy({
-            top: direction * viewport.clientHeight * .85,
-            behavior: 'smooth'
-        });
+    const modalOpen = document.getElementById('modal-toggle').checked;
+    const inReader = modalOpen && appState.currentView === 'work';
+    const key = event.key;
+    const upperKey = key.length === 1 ? key.toUpperCase() : key;
+
+    if (inReader && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
+        const direction = key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1;
+        const content = document.getElementById('modal-content');
+        if (content.classList.contains('fullscreen')) {
+            moveReaderPage(direction);
+        } else {
+            const viewport = modalBody.querySelector('.reader-viewport');
+            if (!viewport) return;
+            viewport.scrollBy({
+                top: direction * viewport.clientHeight * .85,
+                behavior: 'smooth'
+            });
+        }
+        event.preventDefault();
+        return;
     }
-    event.preventDefault();
+
+    if (target instanceof HTMLElement && target.tagName === 'BUTTON') return;
+
+    const settings = appState.readerSettings;
+
+    switch (upperKey) {
+        case 'D':
+            settings.theme = settings.theme === 'day' ? 'night' : 'day';
+            saveReaderSettings();
+            applyReaderSettings();
+            refreshSettingsIfOpen();
+            event.preventDefault();
+            return;
+        case 'X':
+            if (modalOpen) {
+                if (inReader) {
+                    minimizeBook();
+                } else {
+                    document.getElementById('modal-toggle').checked = false;
+                }
+                event.preventDefault();
+            }
+            return;
+        case 'F': {
+            const fonts = ['goudy', 'merriweather', 'raleway'];
+            const nextFont = fonts[(fonts.indexOf(settings.font) + 1) % fonts.length];
+            settings.font = nextFont;
+            saveReaderSettings();
+            applyReaderSettings();
+            refreshSettingsIfOpen();
+            event.preventDefault();
+            return;
+        }
+        case 'L':
+            settings.largeText = !settings.largeText;
+            saveReaderSettings();
+            applyReaderSettings();
+            refreshSettingsIfOpen();
+            event.preventDefault();
+            return;
+        case 'S': {
+            const spacings = ['tight', 'normal', 'relaxed'];
+            const nextSpacing = spacings[(spacings.indexOf(settings.spacing) + 1) % spacings.length];
+            settings.spacing = nextSpacing;
+            saveReaderSettings();
+            applyReaderSettings();
+            refreshSettingsIfOpen();
+            event.preventDefault();
+            return;
+        }
+        case 'P':
+            settings.showLocation = !settings.showLocation;
+            saveReaderSettings();
+            applyReaderSettings();
+            refreshSettingsIfOpen();
+            event.preventDefault();
+            return;
+    }
+
+    if (!inReader) return;
+
+    switch (upperKey) {
+        case 'T':
+            showTableOfContents();
+            event.preventDefault();
+            return;
+        case 'C':
+            document.getElementById('modal-fullscreen').click();
+            event.preventDefault();
+            return;
+    }
+}
+
+function refreshSettingsIfOpen() {
+    const content = document.getElementById('modal-content');
+    if (content?.classList.contains('is-settings') &&
+        document.getElementById('modal-toggle').checked) {
+        showSettings();
+    }
 }
 
 function layoutReaderSpread(anchor, onReady, isCurrent = () => true) {
@@ -1543,7 +1802,28 @@ function getFullscreenReaderProgressRatio(flow, readerData) {
         timeline.totalWords;
 }
 
+function updateLocationBadge(overrideLocation) {
+    const badge = document.getElementById('reader-location');
+    if (!badge) return;
+    const work = appState.currentWork;
+    const settings = appState.readerSettings || DEFAULT_READER_SETTINGS;
+    const location = overrideLocation ||
+        appState.readerAnchorLocation ||
+        (work && getBookTab(work.id)?.location);
+    const shouldShow = settings.showLocation &&
+        appState.currentView === 'work' && work && location;
+    if (!shouldShow) {
+        badge.hidden = true;
+        badge.textContent = '';
+        return;
+    }
+    badge.hidden = false;
+    const text = formatBookLocation(work, location);
+    if (badge.textContent !== text) badge.textContent = text;
+}
+
 function updateReaderProgress(constrainToScrollDirection = false) {
+    updateLocationBadge();
     const progress = document.getElementById('reader-progress');
     const indicator = document.getElementById('reader-progress-indicator');
     const flow = modalBody.querySelector('.reader-flow');
@@ -1565,7 +1845,17 @@ function updateReaderProgress(constrainToScrollDirection = false) {
             .map(element => element.closest?.('[id]'))
             .find(element => element?.id && anchors.includes(element.id));
         if (focalAnchor) currentAnchor = focalAnchor.id;
+    } else if (fullscreen && viewportBounds) {
+        const flowBounds = flow.getBoundingClientRect();
+        const focalX = flowBounds.left + Math.min(flow.clientWidth, viewportBounds.width) / 4;
+        const focalY = viewportBounds.top + viewportBounds.height / 2;
+        const focalElements = document.elementsFromPoint(focalX, focalY);
+        const focalAnchor = focalElements
+            .map(element => element.closest?.('[id]'))
+            .find(element => element?.id && anchors.includes(element.id));
+        if (focalAnchor) currentAnchor = focalAnchor.id;
     }
+    updateLocationBadge(currentAnchor);
     const anchorIndex = timeline.indexById.get(currentAnchor) ?? -1;
     if (anchors.length === 0) return;
 
@@ -1838,11 +2128,23 @@ function showSettings() {
                 </div>
             </div>
 
-            <hr>
-            <h3>Reset App</h3>
+            <br>
+            <h3>Features</h3>
+
+            <div class="setting-row">
+                <span class="setting-label">Display citation path while reading</span>
+                <button type="button" class="setting-toggle ${settings.showLocation ? 'is-on' : ''}"
+                        data-setting="showLocation" role="switch"
+                        aria-checked="${settings.showLocation ? 'true' : 'false'}">
+                    <span class="setting-toggle-track"><span class="setting-toggle-thumb"></span></span>
+                </button>
+            </div>
+
+            <br>
+            <h3>Reset</h3>
             <div class="settings-actions">
-                <button type="button" data-action="clear-reader-state">Clear saved state</button>
-                <button type="button" data-action="reset-app">Reset app</button>
+                <button type="button" data-action="clear-reader-state">Clean Up Reader Desktop</button>
+                <button type="button" data-action="reset-app">Reset Application</button>
             </div>
         </div>`;
     modalLoading.style.display = 'none';
@@ -2101,6 +2403,12 @@ function attachEventListeners() {
     document.getElementById('modal-close').addEventListener('click', minimizeBook);
     document.getElementById('reader-page-previous').addEventListener('click', () => moveReaderPage(-1));
     document.getElementById('reader-page-next').addEventListener('click', () => moveReaderPage(1));
+    document.getElementById('reader-toc').addEventListener('click', () => showTableOfContents());
+    document.getElementById('reader-location').addEventListener('click', () => {
+        const location = appState.readerAnchorLocation ||
+            getBookTab(appState.currentWork?.id)?.location;
+        showTableOfContents(location);
+    });
     document.addEventListener('keydown', handleReaderKeyboardNavigation);
     let readerResizeTimer;
     window.addEventListener('resize', () => {
@@ -2169,6 +2477,17 @@ function attachEventListeners() {
             );
         } else if (event.target.dataset.action === 'reset-app') {
             resetApp();
+        } else if (event.target.closest('.setting-toggle')) {
+            const toggle = event.target.closest('.setting-toggle');
+            const settingName = toggle.dataset.setting;
+            if (settingName === 'showLocation') {
+                const next = !appState.readerSettings.showLocation;
+                appState.readerSettings.showLocation = next;
+                toggle.classList.toggle('is-on', next);
+                toggle.setAttribute('aria-checked', next ? 'true' : 'false');
+                saveReaderSettings();
+                applyReaderSettings();
+            }
         } else if (event.target.classList.contains('setting-opt')) {
             const group = event.target.closest('.setting-options');
             if (!group) return;
